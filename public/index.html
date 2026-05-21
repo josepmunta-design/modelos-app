@@ -54,7 +54,7 @@ function resolveRepoBasePath(){
 const GH_OWNER = "josepmunta-design";
 const GH_REPO  = "tmps-data";
 
-const API_BASE = 'https://modelos-app.vercel.app';
+const API_BASE = 'https://modelos.tumentorpsicologia.com';
 const API_TOKEN = 'tmps-modelos-privado-2026-X7k9pQ';
 const USE_PRIVATE_PROXY = true;
 
@@ -140,6 +140,80 @@ function dataUrlCandidates(p, options = {}){
     : [gh(clean), cdnData(clean)];
   if (options.raw !== false) urls.push(rawGhData(clean));
   return [...new Set(urls)];
+}
+
+const PRIVATE_IMAGE_BLOB_URLS = new Map();
+
+function privateDataPathFromUrl(url){
+  const raw = String(url || '').trim();
+  if (!raw) return '';
+
+  if (isProxyUrl(raw)){
+    try{
+      const u = new URL(raw, location.href);
+      return decodeURIComponent(u.searchParams.get('path') || '').replace(/^\/+/, '').replace(/^data\//, '');
+    }catch(e){
+      return '';
+    }
+  }
+
+  const dataMatch = raw.match(/\/data\/([^?#]+)/);
+  if (dataMatch?.[1]) return decodeURIComponent(dataMatch[1]).replace(/^\/+/, '');
+
+  return '';
+}
+
+function privateImageUrl(path){
+  return proxyDataUrl(path);
+}
+
+async function loadPrivateImageBlobUrl(url){
+  const finalUrl = String(url || '').trim();
+  if (!isProxyUrl(finalUrl)) return finalUrl;
+  if (PRIVATE_IMAGE_BLOB_URLS.has(finalUrl)) return PRIVATE_IMAGE_BLOB_URLS.get(finalUrl);
+
+  const response = await fetch(finalUrl, {
+    headers: {
+      Authorization: `Bearer ${API_TOKEN}`,
+      Accept: 'image/*,*/*'
+    }
+  });
+
+  if (!response.ok){
+    throw new Error("HTTP " + response.status + " " + finalUrl);
+  }
+
+  const blobUrl = URL.createObjectURL(await response.blob());
+  PRIVATE_IMAGE_BLOB_URLS.set(finalUrl, blobUrl);
+  return blobUrl;
+}
+
+function setImgSrcWithPrivateProxy(imgEl, src){
+  if (!imgEl || !src) return;
+
+  if (!isProxyUrl(src)){
+    imgEl.src = src;
+    return;
+  }
+
+  imgEl.dataset.privateProxySrc = src;
+  loadPrivateImageBlobUrl(src)
+    .then((blobUrl) => {
+      if (!imgEl || imgEl.dataset.privateProxySrc !== src) return;
+      imgEl.src = blobUrl;
+    })
+    .catch(() => {
+      if (!imgEl || imgEl.dataset.privateProxySrc !== src) return;
+      imgEl.dispatchEvent(new Event('error'));
+    });
+}
+
+function hydratePrivateProxyImages(root = document){
+  if (!root || !USE_PRIVATE_PROXY) return;
+  root.querySelectorAll?.('img').forEach((imgEl) => {
+    const src = imgEl.getAttribute('data-private-src') || imgEl.getAttribute('src') || imgEl.getAttribute('data-photo-url') || '';
+    if (isProxyUrl(src)) setImgSrcWithPrivateProxy(imgEl, src);
+  });
 }
 
 /* ============================
@@ -9646,6 +9720,10 @@ function normAuthorKey(s){
 function buildAuthorPhotoUrl(file){
   const clean = String(file ?? '').trim();
   if (!clean) return null;
+  const normalizedPath = clean.replace(/^\/+/, '').replace(/^data\//i, '').replace(/^Core\/fotos\//i, '');
+  if (USE_PRIVATE_PROXY){
+    return privateImageUrl(`Core/fotos/${normalizedPath}`);
+  }
   const encodedPath = clean.split('/').map(part => encodeURIComponent(part)).join('/');
   const base = IS_LOCAL_DEV && !IS_GHPAGES ? cdnBase() + '/data' : DATA_BASE;
   return `${base}/Core/fotos/${encodedPath}?v=${encodeURIComponent(__ASSET_VER || ASSET_FALLBACK_VER)}`;
@@ -9654,6 +9732,9 @@ function buildAuthorPhotoUrl(file){
 function authorPhotoRawUrlFromEncodedPath(encodedPath){
   const clean = String(encodedPath || '').trim().replace(/^\/+/, '');
   if (!clean) return '';
+  if (USE_PRIVATE_PROXY){
+    return privateImageUrl(`Core/fotos/${decodeURIComponent(clean)}`);
+  }
   const version = encodeURIComponent(__ASSET_VER || ASSET_FALLBACK_VER);
   return `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/data/Core/fotos/${clean}?v=${version}`;
 }
@@ -9661,6 +9742,9 @@ function authorPhotoRawUrlFromEncodedPath(encodedPath){
 function authorPhotoVidaUrlsFromEncodedPath(encodedPath){
   const clean = String(encodedPath || '').trim().replace(/^\/+/, '');
   if (!clean) return [];
+  if (USE_PRIVATE_PROXY){
+    return [privateImageUrl(`Core/imagenes/vida/${decodeURIComponent(clean)}`)];
+  }
   const version = encodeURIComponent(__ASSET_VER || ASSET_FALLBACK_VER);
   const base = IS_LOCAL_DEV && !IS_GHPAGES ? cdnBase() + '/data' : DATA_BASE;
   return [
@@ -9672,8 +9756,9 @@ function authorPhotoVidaUrlsFromEncodedPath(encodedPath){
 function authorPhotoFallbackUrlsFromUrl(url){
   const raw = String(url || '').trim();
   if (!raw) return [];
+  const proxyPath = privateDataPathFromUrl(raw);
   const match = raw.match(/\/data\/Core\/fotos\/([^?#]+)/);
-  const encodedPath = match?.[1] || '';
+  const encodedPath = proxyPath.replace(/^Core\/fotos\//i, '') || match?.[1] || '';
   const rawUrl = authorPhotoRawUrlFromEncodedPath(encodedPath);
   return Array.from(new Set([
     rawUrl,
@@ -9688,6 +9773,9 @@ function buildLifeAuthorImageUrls(file){
   const fullPath = /^Core\/imagenes\/vida\//i.test(normalizedPath)
     ? normalizedPath
     : `Core/imagenes/vida/${normalizedPath}`;
+  if (USE_PRIVATE_PROXY){
+    return [privateImageUrl(fullPath)];
+  }
   const encodedPath = fullPath.split('/').map(part => encodeURIComponent(part)).join('/');
   const version = encodeURIComponent(__ASSET_VER || ASSET_FALLBACK_VER);
   const base = IS_LOCAL_DEV && !IS_GHPAGES ? cdnBase() + '/data' : DATA_BASE;
@@ -9709,14 +9797,20 @@ function buildVidaIndexedImageUrls(file, basePath){
 }
 
 function isLifeAuthorImageUrl(url){
-  return String(url || '').includes('/Core/imagenes/vida/');
+  const path = privateDataPathFromUrl(url);
+  return String(url || '').includes('/Core/imagenes/vida/') || /^Core\/imagenes\/vida\//i.test(path);
 }
 
 function setContextOriginImgSource(img, url, fallbackUrls = []){
   if (!img || !url) return;
   img.classList.toggle('is-life-author-image', isLifeAuthorImageUrl(url));
-  img.setAttribute('src', url);
   img.setAttribute('data-fallback-srcs', fallbackUrls.filter(Boolean).join('|'));
+  if (isProxyUrl(url)){
+    img.setAttribute('data-private-src', url);
+  }else{
+    img.removeAttribute('data-private-src');
+  }
+  setImgSrcWithPrivateProxy(img, url);
 }
 
 function getDirectModelPhotoEntry(model, idx){
@@ -9991,7 +10085,7 @@ function setPhotoImgLoading(imgEl, src){
   if (!imgEl) return;
   imgEl.classList.remove('is-loaded');
   imgEl.style.opacity = '';
-  if (src) imgEl.src = src;
+  if (src) setImgSrcWithPrivateProxy(imgEl, src);
 }
 
 function setPhotoImgLoaded(imgEl){
@@ -10028,9 +10122,7 @@ function setupModelCardPhotoRetry(imgEl, baseUrl){
     return;
   }
 
-  if (!imgEl.getAttribute('src')){
-    setPhotoImgLoading(imgEl, candidates[0] || baseUrl);
-  }
+  setPhotoImgLoading(imgEl, candidates[0] || baseUrl);
 }
 
 function hydrateModelCardAvatars(){
@@ -10173,9 +10265,7 @@ function setupAuthorPhotoRetry(imgEl, baseUrl, modelId){
     return;
   }
 
-  if (!imgEl.getAttribute('src')){
-    setPhotoImgLoading(imgEl, candidates[0] || baseUrl);
-  }
+  setPhotoImgLoading(imgEl, candidates[0] || baseUrl);
 }
 
 function normalizeIsoText(s){
@@ -16532,6 +16622,7 @@ if (window.__SMH){
   window.__SMH.setAuthor(m.autores || '');
   window.__SMH.rescan();
 }
+hydratePrivateProxyImages(modelInfoEl);
 
 const authorImgEl = modelInfoEl.querySelector('img.mp-author-photo[data-photo-url]');
 if (authorImgEl){
@@ -16817,11 +16908,17 @@ function contextOriginImageFile(key, model = null){
 }
 
 function contextOriginImageCdnUrl(file){
+  if (USE_PRIVATE_PROXY){
+    return privateImageUrl(`Core/imagenes/${file.replace(/^\/+/, '').replace(/^data\//i, '').replace(/^Core\/imagenes\//i, '')}`);
+  }
   const base = IS_LOCAL_DEV && !IS_GHPAGES ? cdnBase() + '/data' : DATA_BASE;
   return `${base}/Core/imagenes/${file.split('/').map(encodeURIComponent).join('/')}?v=${encodeURIComponent(__ASSET_VER || Date.now())}`;
 }
 
 function contextOriginImageRawUrl(file){
+  if (USE_PRIVATE_PROXY){
+    return privateImageUrl(`Core/imagenes/${file.replace(/^\/+/, '').replace(/^data\//i, '').replace(/^Core\/imagenes\//i, '')}`);
+  }
   return `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/main/data/Core/imagenes/${file.split('/').map(encodeURIComponent).join('/')}?v=${encodeURIComponent(__ASSET_VER || Date.now())}`;
 }
 
@@ -16853,10 +16950,12 @@ function contextOriginMedia(key, title, model = null){
   const [firstUrl, ...fallbackUrls] = urls;
   if(!firstUrl) return '';
   const imageClass = isLifeAuthorImageUrl(firstUrl) ? ' class="is-life-author-image"' : '';
+  const initialSrc = isProxyUrl(firstUrl) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' : firstUrl;
+  const privateSrcAttr = isProxyUrl(firstUrl) ? ` data-private-src="${escapeHtml(firstUrl)}"` : '';
 
   return `
     <div class="mp-contextOrigin-media" data-context-origin-key="${escapeHtml(key)}">
-      <img${imageClass} src="${escapeHtml(firstUrl)}" data-fallback-srcs="${escapeHtml(fallbackUrls.join('|'))}" alt="${escapeHtml(title)}" loading="lazy" decoding="async" onerror="const list=(this.getAttribute('data-fallback-srcs')||'').split('|').filter(Boolean); const next=list.shift(); if(next){ setContextOriginImgSource(this, next, list); } else { this.style.display='none'; }">
+      <img${imageClass} src="${escapeHtml(initialSrc)}"${privateSrcAttr} data-fallback-srcs="${escapeHtml(fallbackUrls.join('|'))}" alt="${escapeHtml(title)}" loading="lazy" decoding="async" onerror="const list=(this.getAttribute('data-fallback-srcs')||'').split('|').filter(Boolean); const next=list.shift(); if(next){ setContextOriginImgSource(this, next, list); } else { this.style.display='none'; }">
     </div>
   `;
 }
@@ -16871,8 +16970,10 @@ function contextOriginImageTag(key, title, model = null, headerImageUrl = ''){
     usesHeaderZoom ? 'is-context-header-zoom' : ''
   ].filter(Boolean).join(' ');
   const imageClass = classes ? ` class="${escapeHtml(classes)}"` : '';
+  const initialSrc = isProxyUrl(firstUrl) ? 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==' : firstUrl;
+  const privateSrcAttr = isProxyUrl(firstUrl) ? ` data-private-src="${escapeHtml(firstUrl)}"` : '';
 
-  return `<img${imageClass} src="${escapeHtml(firstUrl)}" data-fallback-srcs="${escapeHtml(fallbackUrls.join('|'))}" alt="${escapeHtml(title)}" loading="lazy" decoding="async" onerror="const list=(this.getAttribute('data-fallback-srcs')||'').split('|').filter(Boolean); const next=list.shift(); if(next){ setContextOriginImgSource(this, next, list); } else { this.style.display='none'; }">`;
+  return `<img${imageClass} src="${escapeHtml(initialSrc)}"${privateSrcAttr} data-fallback-srcs="${escapeHtml(fallbackUrls.join('|'))}" alt="${escapeHtml(title)}" loading="lazy" decoding="async" onerror="const list=(this.getAttribute('data-fallback-srcs')||'').split('|').filter(Boolean); const next=list.shift(); if(next){ setContextOriginImgSource(this, next, list); } else { this.style.display='none'; }">`;
 }
 
 function renderContextOriginBlock(title, items, iconKey = '', model = null){
