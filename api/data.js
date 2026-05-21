@@ -28,13 +28,28 @@ const API_SECRET = process.env.API_SECRET;
 //   anything that is not .json
 const PATH_ALLOWLIST = /^[a-zA-Z0-9_\-\/]+\.json$/;
 
-// Your frontend origin.
+// Allowed frontend origins.
 // Important: CORS uses only protocol + domain, not the full path.
-const ALLOWED_ORIGIN = 'https://modelos.tumentorpsicologia.com';
+// Do NOT include /apps/modelos/ here.
+const ALLOWED_ORIGINS = [
+  'https://modelos.tumentorpsicologia.com',
+  'https://modelos-app.vercel.app'
+];
 
 export default async function handler(req, res) {
-  // ── CORS ──────────────────────────────────────────────────
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+  // ── CORS / Origin restriction ──────────────────────────────
+  const origin = req.headers.origin;
+
+  // If the request comes from a browser and the Origin is not allowed, block it.
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return res.status(403).json({ error: 'Forbidden origin' });
+  }
+
+  // If the Origin is allowed, echo that exact origin.
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
   res.setHeader('Vary', 'Origin');
