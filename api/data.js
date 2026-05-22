@@ -1,19 +1,21 @@
 // =============================================================
 // api/data.js  —  Vercel Serverless Function
 // Proxies requests to the PRIVATE GitHub repo, authenticated
-// with a server-side token the browser never sees.
+// with a server-side GitHub token the browser never sees.
 //
 // Deploy to Vercel and set these environment variables:
 //   GITHUB_TOKEN   → GitHub Personal Access Token, read-only, private repo
 //   GITHUB_OWNER   → e.g. "josepmunta-design"
 //   GITHUB_REPO    → e.g. "tmps-data"
-//   API_SECRET     → any random string your frontend sends as Bearer token
+//
+// IMPORTANT:
+// - The frontend must NOT send Authorization.
+// - Do NOT expose any token in modelos.html.
 // =============================================================
 
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const API_SECRET = process.env.API_SECRET;
 
 // Allowed frontend origins.
 // CORS uses only protocol + domain, not the full path.
@@ -48,15 +50,29 @@ function getContentTypeFromPath(path) {
 function isAllowedPath(path) {
   if (!path) return false;
 
-  // Bloquea rutas peligrosas
-  if (path.includes('..')) return false;
-  if (path.startsWith('/')) return false;
-  if (path.startsWith('.')) return false;
-  if (path.includes('\\')) return false;
+  const value = String(path);
 
-  const lowerPath = path.toLowerCase();
+  // Bloquea rutas peligrosas
+  if (value.includes('..')) return false;
+  if (value.startsWith('/')) return false;
+  if (value.startsWith('.')) return false;
+  if (value.includes('\\')) return false;
+
+  // Bloquea URLs externas o intentos raros
+  if (/^https?:\/\//i.test(value)) return false;
+  if (/^\/\//.test(value)) return false;
+  if (value.includes(':')) return false;
+
+  const lowerPath = value.toLowerCase();
 
   return ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
+}
+
+function cleanRequestedPath(rawPath) {
+  return String(rawPath || '')
+    .trim()
+    .replace(/^\/+/, '')
+    .replace(/^data\//, '');
 }
 
 export default async function handler(req, res) {
@@ -72,7 +88,7 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') {
@@ -84,18 +100,10 @@ export default async function handler(req, res) {
   }
 
   // ── Environment checks ────────────────────────────────────
-  if (!GITHUB_OWNER || !GITHUB_REPO || !GITHUB_TOKEN || !API_SECRET) {
+  if (!GITHUB_OWNER || !GITHUB_REPO || !GITHUB_TOKEN) {
     return res.status(500).json({
-      error: 'Server configuration error'
+      error: 'Server configuration error: missing GitHub environment variables'
     });
-  }
-
-  // ── Auth: check Bearer token ───────────────────────────────
-  const authHeader = req.headers.authorization || '';
-  const incomingToken = authHeader.replace(/^Bearer\s+/i, '').trim();
-
-  if (incomingToken !== API_SECRET) {
-    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   // ── Validate requested path ────────────────────────────────
@@ -103,10 +111,7 @@ export default async function handler(req, res) {
     ? req.query.path[0]
     : req.query.path;
 
-  const filePath = String(rawPath || '')
-    .trim()
-    .replace(/^\/+/, '')
-    .replace(/^data\//, '');
+  const filePath = cleanRequestedPath(rawPath);
 
   if (!filePath) {
     return res.status(400).json({
