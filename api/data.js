@@ -9,13 +9,18 @@
 //   GITHUB_REPO    → e.g. "tmps-data"
 //
 // IMPORTANT:
-// - The frontend must NOT send Authorization.
-// - Do NOT expose any token in modelos.html.
+// - The frontend sends only the user's Supabase access token.
+// - Do NOT expose server-side tokens in modelos.html.
 // =============================================================
 
 const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://yritadgaurvplltgubii.supabase.co';
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+const SUPABASE_API_KEY = SUPABASE_SECRET_KEY
+  || process.env.SUPABASE_ANON_KEY
+  || 'sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm';
 
 // Allowed frontend origins.
 // CORS uses only protocol + domain, not the full path.
@@ -75,7 +80,37 @@ function cleanRequestedPath(rawPath) {
     .replace(/^data\//, '');
 }
 
+async function validateSupabaseUser(token) {
+  if (!SUPABASE_URL || !SUPABASE_API_KEY) {
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  const baseUrl = String(SUPABASE_URL).replace(/\/+$/, '');
+  const authRes = await fetch(`${baseUrl}/auth/v1/user`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      apikey: SUPABASE_API_KEY
+    }
+  });
+
+  if (!authRes.ok) return null;
+  return authRes.json();
+}
+
+async function hasActiveSubscriptionAccess(user) {
+  // Future subscription gate:
+  // 1. Use user.id from the already validated Supabase user.
+  // 2. Query the Supabase subscriptions table server-side.
+  // 3. Allow access only when status is "active" or "trialing".
+  // 4. Return false here and respond with 403 when no valid subscription exists.
+  //
+  // Stripe is intentionally not connected yet, and this function does not
+  // query Supabase today. It only marks the insertion point for the next step.
+  return true;
+}
+
 export default async function handler(req, res) {
+  // 1. CORS
   // ── CORS / Origin restriction ──────────────────────────────
   const origin = req.headers.origin;
 
@@ -88,7 +123,7 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Vary', 'Origin');
 
   if (req.method === 'OPTIONS') {
@@ -100,10 +135,44 @@ export default async function handler(req, res) {
   }
 
   // ── Environment checks ────────────────────────────────────
+  // 2. Validación Supabase Auth
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ")
+    ? authHeader.slice("Bearer ".length)
+    : "";
+
+  if (!token) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+
+  // Environment checks
   if (!GITHUB_OWNER || !GITHUB_REPO || !GITHUB_TOKEN) {
     return res.status(500).json({
       error: 'Server configuration error: missing GitHub environment variables'
     });
+  }
+
+  if (!SUPABASE_URL || !SUPABASE_API_KEY) {
+    return res.status(500).json({
+      error: 'Server configuration error: missing Supabase environment variables'
+    });
+  }
+
+  try {
+    const user = await validateSupabaseUser(token);
+
+    if (!user || !user.id) {
+      return res.status(401).json({ error: 'Sesión inválida' });
+    }
+
+    const hasSubscriptionAccess = await hasActiveSubscriptionAccess(user);
+
+    if (!hasSubscriptionAccess) {
+      return res.status(403).json({ error: 'Suscripcion requerida' });
+    }
+  } catch (err) {
+    console.error('[data proxy] Supabase auth error:', err);
+    return res.status(401).json({ error: 'Sesión inválida' });
   }
 
   // ── Validate requested path ────────────────────────────────
@@ -127,6 +196,7 @@ export default async function handler(req, res) {
   }
 
   // ── Fetch from private GitHub repo ────────────────────────
+  // 3. Proxy GitHub
   const encodedPath = filePath
     .split('/')
     .map(encodeURIComponent)
