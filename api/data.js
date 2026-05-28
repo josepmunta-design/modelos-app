@@ -1,3 +1,5 @@
+import { hasActiveSubscription } from './_billing.js';
+
 // =============================================================
 // api/data.js  —  Vercel Serverless Function
 // Proxies requests to the PRIVATE GitHub repo, authenticated
@@ -17,7 +19,7 @@ const GITHUB_OWNER = process.env.GITHUB_OWNER;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://yritadgaurvplltgubii.supabase.co';
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 const SUPABASE_API_KEY = SUPABASE_SECRET_KEY
   || process.env.SUPABASE_ANON_KEY
   || 'sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm';
@@ -25,6 +27,7 @@ const SUPABASE_API_KEY = SUPABASE_SECRET_KEY
 // Allowed frontend origins.
 // CORS uses only protocol + domain, not the full path.
 const ALLOWED_ORIGINS = [
+  'https://apps.tumentorpsicologia.com',
   'https://modelos.tumentorpsicologia.com',
   'https://modelos-app.vercel.app'
 ];
@@ -118,15 +121,8 @@ async function validateSupabaseUser(token) {
 }
 
 async function hasActiveSubscriptionAccess(user) {
-  // Future subscription gate:
-  // 1. Use user.id from the already validated Supabase user.
-  // 2. Query the Supabase subscriptions table server-side.
-  // 3. Allow access only when status is "active" or "trialing".
-  // 4. Return false here and respond with 403 when no valid subscription exists.
-  //
-  // Stripe is intentionally not connected yet, and this function does not
-  // query Supabase today. It only marks the insertion point for the next step.
-  return true;
+  if (!user?.id) return false;
+  return hasActiveSubscription(user.id);
 }
 
 export default async function handler(req, res) {
