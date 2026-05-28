@@ -39,6 +39,10 @@ const ALLOWED_EXTENSIONS = [
   '.svg'
 ];
 
+const ALLOWED_DIRECTORY_PATHS = [
+  'Core/imagenes/vida/landing'
+];
+
 function getContentTypeFromPath(path) {
   const p = String(path || '').toLowerCase();
 
@@ -50,6 +54,11 @@ function getContentTypeFromPath(path) {
   if (p.endsWith('.svg')) return 'image/svg+xml; charset=utf-8';
 
   return 'application/octet-stream';
+}
+
+function isAllowedDirectoryPath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  return ALLOWED_DIRECTORY_PATHS.includes(value);
 }
 
 function isAllowedPath(path) {
@@ -70,7 +79,18 @@ function isAllowedPath(path) {
 
   const lowerPath = value.toLowerCase();
 
-  return ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
+  return isAllowedDirectoryPath(value)
+    || ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
+}
+
+function isPublicLandingAssetPath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  const lowerPath = value.toLowerCase();
+  return isAllowedDirectoryPath(value)
+    || (
+      lowerPath.startsWith('core/imagenes/vida/landing/')
+      && ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext))
+    );
 }
 
 function cleanRequestedPath(rawPath) {
@@ -134,6 +154,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const rawPath = Array.isArray(req.query.path)
+    ? req.query.path[0]
+    : req.query.path;
+
+  const filePath = cleanRequestedPath(rawPath);
+  const publicLandingRequest = isPublicLandingAssetPath(filePath);
+
   // ── Environment checks ────────────────────────────────────
   // 2. Validación Supabase Auth
   const authHeader = req.headers.authorization || "";
@@ -141,7 +168,7 @@ export default async function handler(req, res) {
     ? authHeader.slice("Bearer ".length)
     : "";
 
-  if (!token) {
+  if (!publicLandingRequest && !token) {
     return res.status(401).json({ error: 'No autorizado' });
   }
 
@@ -152,13 +179,13 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!SUPABASE_URL || !SUPABASE_API_KEY) {
+  if (!publicLandingRequest && (!SUPABASE_URL || !SUPABASE_API_KEY)) {
     return res.status(500).json({
       error: 'Server configuration error: missing Supabase environment variables'
     });
   }
 
-  try {
+  if (!publicLandingRequest) try {
     const user = await validateSupabaseUser(token);
 
     if (!user || !user.id) {
@@ -176,12 +203,6 @@ export default async function handler(req, res) {
   }
 
   // ── Validate requested path ────────────────────────────────
-  const rawPath = Array.isArray(req.query.path)
-    ? req.query.path[0]
-    : req.query.path;
-
-  const filePath = cleanRequestedPath(rawPath);
-
   if (!filePath) {
     return res.status(400).json({
       error: 'Missing ?path= parameter'
@@ -205,10 +226,11 @@ export default async function handler(req, res) {
   const ghUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/data/${encodedPath}`;
 
   try {
+    const directoryRequest = isAllowedDirectoryPath(filePath);
     const ghRes = await fetch(ghUrl, {
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
-        Accept: 'application/vnd.github.raw',
+        Accept: directoryRequest ? 'application/vnd.github+json' : 'application/vnd.github.raw',
         'User-Agent': 'modelos-proxy/1.0'
       }
     });
@@ -222,12 +244,14 @@ export default async function handler(req, res) {
       });
     }
 
-    const contentType = getContentTypeFromPath(filePath);
+    const contentType = directoryRequest
+      ? 'application/json; charset=utf-8'
+      : getContentTypeFromPath(filePath);
     const arrayBuffer = await ghRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     // JSON: cache más corto
-    if (filePath.toLowerCase().endsWith('.json')) {
+    if (directoryRequest || filePath.toLowerCase().endsWith('.json')) {
       res.setHeader('Cache-Control', 'public, s-maxage=300, max-age=60');
     } else {
       // Imágenes: cache más largo
