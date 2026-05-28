@@ -30,12 +30,18 @@ export default async function handler(req, res) {
       'line_items[0][quantity]': 1,
       'metadata[supabase_user_id]': user.id,
       'subscription_data[metadata][supabase_user_id]': user.id,
+      billing_address_collection: 'required',
+      'tax_id_collection[enabled]': true,
+      'tax_id_collection[required]': 'if_supported',
+      'phone_number_collection[enabled]': true,
       success_url: `${appUrl}/?checkout=success`,
       cancel_url: `${appUrl}/?checkout=cancel`
     };
 
     if (existingSubscription?.stripe_customer_id) {
       form.customer = existingSubscription.stripe_customer_id;
+      form['customer_update[name]'] = 'auto';
+      form['customer_update[address]'] = 'auto';
     } else if (user.email) {
       form.customer_email = user.email;
     }
