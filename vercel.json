@@ -1,24 +1,16 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1.js"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
-      "src": "/",
-      "dest": "/public/index.html"
+      "source": "/modelos",
+      "destination": "/modelos/index.html"
     },
     {
-      "src": "/modelos/?",
-      "dest": "/public/modelos/index.html"
-    },
-    {
-      "src": "/modelos/([^/]+)/?",
-      "dest": "/public/modelos/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
+      "source": "/modelos/:id",
+      "destination": "/modelos/index.html"
     }
   ]
 }
