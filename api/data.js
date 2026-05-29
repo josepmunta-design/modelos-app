@@ -96,6 +96,16 @@ function isPublicLandingAssetPath(path) {
     );
 }
 
+function isPublicModelDataPath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  const lowerPath = value.toLowerCase();
+
+  return isPublicLandingAssetPath(value)
+    || lowerPath === 'core/escuelas/index.json'
+    || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
+    || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
+}
+
 function cleanRequestedPath(rawPath) {
   return String(rawPath || '')
     .trim()
@@ -155,7 +165,7 @@ export default async function handler(req, res) {
     : req.query.path;
 
   const filePath = cleanRequestedPath(rawPath);
-  const publicLandingRequest = isPublicLandingAssetPath(filePath);
+  const publicRequest = isPublicModelDataPath(filePath);
 
   // ── Environment checks ────────────────────────────────────
   // 2. Validación Supabase Auth
@@ -164,7 +174,7 @@ export default async function handler(req, res) {
     ? authHeader.slice("Bearer ".length)
     : "";
 
-  if (!publicLandingRequest && !token) {
+  if (!publicRequest && !token) {
     return res.status(401).json({ error: 'No autorizado' });
   }
 
@@ -175,13 +185,13 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!publicLandingRequest && (!SUPABASE_URL || !SUPABASE_API_KEY)) {
+  if (!publicRequest && (!SUPABASE_URL || !SUPABASE_API_KEY)) {
     return res.status(500).json({
       error: 'Server configuration error: missing Supabase environment variables'
     });
   }
 
-  if (!publicLandingRequest) try {
+  if (!publicRequest) try {
     const user = await validateSupabaseUser(token);
 
     if (!user || !user.id) {
