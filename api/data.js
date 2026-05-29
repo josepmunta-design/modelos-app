@@ -96,32 +96,50 @@ function isPublicLandingAssetPath(path) {
     );
 }
 
+const PUBLIC_IMAGE_EXTENSIONS = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.gif',
+  '.svg'
+];
+
+function isPublicImagePath(path) {
+  const lowerPath = String(path || '').toLowerCase();
+
+  return (
+    lowerPath.startsWith('core/fotos/')
+    || lowerPath.startsWith('core/imagenes/vida/')
+  ) && PUBLIC_IMAGE_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
+}
+
 function isPublicModelDataPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();
 
-  const isImageOrJson = ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
+  // Bloqueo explícito: los JSON completos nunca son públicos.
+  if (lowerPath.startsWith('core/modelos/')) {
+    return false;
+  }
 
   return isPublicLandingAssetPath(value)
+
+    // Índices de escuelas.
     || lowerPath === 'core/escuelas/index.json'
     || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
+
+    // Solo JSON públicos generados.
     || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value)
 
-    // Índices de fotos necesarios para resolver foto de autor y hero visual.
+    // Índices concretos de fotos.
     || lowerPath === 'core/fotos/foto.json'
     || lowerPath === 'core/fotos.json'
     || lowerPath === 'core/foto.json'
     || lowerPath === 'core/imagenes/vida/index.json'
 
-    // Imágenes públicas usadas en fichas abiertas.
-    || (
-      lowerPath.startsWith('core/fotos/')
-      && isImageOrJson
-    )
-    || (
-      lowerPath.startsWith('core/imagenes/vida/')
-      && isImageOrJson
-    );
+    // Imágenes, pero NO JSON arbitrarios.
+    || isPublicImagePath(value);
 }
 
 function cleanRequestedPath(rawPath) {
