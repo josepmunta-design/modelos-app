@@ -25,27 +25,27 @@ export default async function handler(req, res) {
     const appUrl = getPublicAppUrl();
 
     const form = {
-      mode: 'subscription',
-      locale: 'es',
+  mode: 'subscription',
+  locale: 'es',
 
-      client_reference_id: user.id,
+  client_reference_id: user.id,
 
-      'line_items[0][price]': process.env.STRIPE_PRICE_ID,
-      'line_items[0][quantity]': 1,
+  'line_items[0][price]': process.env.STRIPE_PRICE_ID,
+  'line_items[0][quantity]': 1,
 
-      'metadata[supabase_user_id]': user.id,
-      'subscription_data[metadata][supabase_user_id]': user.id,
+  'metadata[supabase_user_id]': user.id,
+  'subscription_data[metadata][supabase_user_id]': user.id,
 
-      billing_address_collection: 'required',
+  billing_address_collection: 'required',
 
-      'tax_id_collection[enabled]': true,
-      'tax_id_collection[required]': 'if_supported',
+  'tax_id_collection[enabled]': true,
+  'tax_id_collection[required]': 'if_supported',
 
-      'custom_text[submit][message]': 'Para factura, introduce tu NIF/CIF/VAT en el campo de identificación fiscal de Stripe.',
+  'custom_text[submit][message]': 'Si eres autónomo/a o particular en España, abre el desplegable de identificación fiscal y selecciona “ES NIF”. Si tienes IVA intracomunitario, selecciona “IVA de ES”.',
 
-      success_url: `${appUrl}/?checkout=success`,
-      cancel_url: `${appUrl}/?checkout=cancel`
-    };
+  success_url: `${appUrl}/?checkout=success`,
+  cancel_url: `${appUrl}/?checkout=cancel`
+};
 
     if (existingSubscription?.stripe_customer_id) {
       form.customer = existingSubscription.stripe_customer_id;
