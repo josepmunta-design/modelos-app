@@ -100,10 +100,28 @@ function isPublicModelDataPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();
 
+  const isImageOrJson = ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
+
   return isPublicLandingAssetPath(value)
     || lowerPath === 'core/escuelas/index.json'
     || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
-    || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
+    || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value)
+
+    // Índices de fotos necesarios para resolver foto de autor y hero visual.
+    || lowerPath === 'core/fotos/foto.json'
+    || lowerPath === 'core/fotos.json'
+    || lowerPath === 'core/foto.json'
+    || lowerPath === 'core/imagenes/vida/index.json'
+
+    // Imágenes públicas usadas en fichas abiertas.
+    || (
+      lowerPath.startsWith('core/fotos/')
+      && isImageOrJson
+    )
+    || (
+      lowerPath.startsWith('core/imagenes/vida/')
+      && isImageOrJson
+    );
 }
 
 function cleanRequestedPath(rawPath) {
