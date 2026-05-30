@@ -38,9 +38,7 @@ export default async function handler(req, res) {
 
       billing_address_collection: 'required',
 
-      'automatic_tax[enabled]': true,
-
-      'tax_id_collection[enabled]': true,
+      'tax_id_collection[enabled]': 'true',
       'tax_id_collection[required]': 'if_supported',
 
       'custom_text[submit][message]': 'Si eres autónomo/a o particular en España, abre el desplegable de identificación fiscal y selecciona “ES NIF”. Si tienes IVA intracomunitario, selecciona “IVA de ES”.',
@@ -48,6 +46,10 @@ export default async function handler(req, res) {
       success_url: `${appUrl}/?checkout=success`,
       cancel_url: `${appUrl}/?checkout=cancel`
     };
+
+    if (process.env.STRIPE_AUTOMATIC_TAX === 'true') {
+      form['automatic_tax[enabled]'] = 'true';
+    }
 
     if (existingSubscription?.stripe_customer_id) {
       form.customer = existingSubscription.stripe_customer_id;
@@ -65,6 +67,9 @@ export default async function handler(req, res) {
     return res.status(200).json({ url: session.url });
   } catch (err) {
     console.error('[create-checkout-session] error:', err);
-    return res.status(500).json({ error: 'No se pudo crear la sesion de pago' });
+    return res.status(500).json({
+      error: 'No se pudo crear la sesion de pago',
+      detail: process.env.NODE_ENV !== 'production' ? err.message : undefined
+    });
   }
 }
