@@ -1,0 +1,2660 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apps Tu Mentor Psicolog&iacute;a</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      color: #f7efe3;
+      background: #050605;
+      --line: rgba(245, 226, 194, 0.18);
+      --line-strong: rgba(245, 226, 194, 0.36);
+      --muted: #c4b8a8;
+      --soft: #8f9a91;
+      --accent: #d8b67b;
+      --accent-strong: #f5dbab;
+      --panel: rgba(13, 16, 14, 0.7);
+      --panel-strong: rgba(21, 25, 22, 0.88);
+      --danger: #ffb8ad;
+      --shadow: 0 24px 90px rgba(0, 0, 0, 0.52);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #050605;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 78px 78px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.78), transparent 82%);
+    }
+
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      min-height: 74px;
+      padding: 14px clamp(18px, 4vw, 54px);
+      border-bottom: 1px solid rgba(245, 226, 194, 0.11);
+      background: linear-gradient(180deg, rgba(5, 6, 5, 0.82), rgba(5, 6, 5, 0.42));
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .mark {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 0;
+      display: grid;
+      place-items: center;
+      background: transparent;
+    }
+
+    .brand-logo {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 800;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: var(--soft);
+      font-size: 0.82rem;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .session-email {
+      max-width: 34vw;
+      color: var(--muted);
+      font-size: 0.88rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    button,
+    .button-link {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #f8eddb;
+      background: rgba(255, 255, 255, 0.07);
+      font: inherit;
+      font-size: 0.92rem;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    button:hover,
+    button:focus-visible,
+    .button-link:hover,
+    .button-link:focus-visible {
+      border-color: rgba(245, 219, 171, 0.58);
+      outline: none;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .login-button,
+    .primary-link,
+    .submit-button {
+      border-color: rgba(245, 219, 171, 0.52);
+      color: #17130d;
+      background: linear-gradient(180deg, #f2daa6, #cda360);
+      box-shadow: 0 14px 34px rgba(205, 163, 96, 0.18);
+    }
+
+    .login-button:hover,
+    .primary-link:hover,
+    .submit-button:hover,
+    .login-button:focus-visible,
+    .primary-link:focus-visible,
+    .submit-button:focus-visible {
+      filter: brightness(1.06);
+      background: linear-gradient(180deg, #f5dfb1, #d3a969);
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.72;
+    }
+
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 106vh;
+      display: grid;
+      align-items: stretch;
+      padding: 92px clamp(18px, 6vw, 76px) 190px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, #06090a, #0b1214 58%, #050605);
+    }
+
+    .hero-image {
+      position: absolute;
+      inset: 74px 0 0 0;
+      z-index: 0;
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      background: #070908;
+      box-shadow: none;
+    }
+
+    .hero-image img {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      opacity: 0;
+      transform: scale(1.03);
+      filter: saturate(1.02) contrast(1.03) brightness(1);
+      transition: opacity 1100ms ease, transform 4200ms ease;
+    }
+
+    .hero-image img.is-visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .hero-image::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(2, 5, 6, 0.98) 0%, rgba(2, 5, 6, 0.76) 28%, rgba(2, 5, 6, 0.2) 52%, rgba(2, 5, 6, 0) 72%),
+        linear-gradient(0deg, rgba(3, 8, 9, 0.88) 0%, rgba(3, 8, 9, 0.48) 18%, rgba(3, 8, 9, 0.08) 56%, rgba(3, 8, 9, 0) 100%);
+    }
+
+    .hero-image::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+      background-size: 74px 74px;
+    }
+
+    .hero-layout {
+      position: relative;
+      z-index: 5;
+      min-height: calc(106vh - 282px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+      align-items: end;
+      gap: clamp(28px, 5vw, 76px);
+      width: min(1530px, 100%);
+      margin: 0 auto;
+      padding: clamp(42px, 8vw, 96px) clamp(24px, 4vw, 42px) clamp(30px, 6vw, 54px);
+    }
+
+    .hero-content {
+      position: relative;
+      width: min(850px, 100%);
+    }
+
+    .eyebrow {
+      margin: 0 0 24px;
+      color: var(--accent-strong);
+      font-size: 0.76rem;
+      font-weight: 850;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      margin-right: 8px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      vertical-align: 0.12em;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 900px;
+      font-size: clamp(3.3rem, 6.4vw, 6.1rem);
+      line-height: 1.02;
+      font-weight: 880;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+
+    .lead {
+      max-width: 760px;
+      margin: 28px 0 0;
+      color: rgba(247, 239, 227, 0.78);
+      font-size: clamp(1rem, 1.4vw, 1.16rem);
+      line-height: 1.72;
+    }
+
+    .hero-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .hero-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 7px 12px;
+      border: 1px solid rgba(245, 226, 194, 0.16);
+      border-radius: 999px;
+      color: rgba(247, 239, 227, 0.74);
+      background: rgba(255, 255, 255, 0.055);
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-start;
+      margin-top: 34px;
+    }
+
+    .hero-login-cta {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .hero-login-note {
+      color: rgba(247, 239, 227, 0.54);
+      font-size: 0.78rem;
+      font-weight: 650;
+    }
+
+    .primary-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      padding: 13px 18px;
+      border-radius: 8px;
+      font-weight: 850;
+    }
+
+    .hero-rail {
+      align-self: end;
+      width: min(430px, 100%);
+      margin-bottom: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px 16px;
+      padding: 12px 14px;
+      border: 1px solid rgba(245, 226, 194, 0.15);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(18, 23, 24, 0.48), rgba(10, 14, 14, 0.2));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      transform: translateY(34px);
+    }
+
+    .rail-kicker {
+      margin: 0;
+      color: rgba(247, 239, 227, 0.56);
+      font-size: 0.72rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .rail-title {
+      margin: 0;
+      color: #fff8ec;
+      font-size: 0.98rem;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .rail-copy {
+      display: none;
+    }
+
+    .rail-meta {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      padding-top: 2px;
+      grid-row: 1 / span 2;
+      grid-column: 2;
+      min-width: 154px;
+    }
+
+    .rail-meta span {
+      min-height: 42px;
+      display: grid;
+      align-content: center;
+      gap: 2px;
+      padding: 8px;
+      border: 1px solid rgba(245, 226, 194, 0.13);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.045);
+      color: var(--accent-strong);
+      font-weight: 850;
+      font-size: 0.78rem;
+      line-height: 1.05;
+    }
+
+    .rail-meta small {
+      color: rgba(247, 239, 227, 0.54);
+      font-size: 0.58rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .section {
+      position: relative;
+      z-index: 2;
+      margin-top: -154px;
+      padding: 0 clamp(28px, 4vw, 70px) 66px;
+      background: transparent;
+    }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+      max-width: 1470px;
+      margin: 0 auto;
+    }
+
+    .app-card {
+      min-height: 120px;
+      display: grid;
+      align-content: space-between;
+      gap: 20px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      color: #f8efe1;
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.045) 52%, rgba(255, 255, 255, 0.025)),
+        rgba(12, 18, 18, 0.46);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 18px 52px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(18px) saturate(1.18);
+      -webkit-backdrop-filter: blur(18px) saturate(1.18);
+      text-decoration: none;
+      transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    }
+
+    .app-card:hover,
+    .app-card:focus-visible {
+      border-color: rgba(255, 255, 255, 0.34);
+      outline: none;
+      background:
+        linear-gradient(160deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.08) 52%, rgba(255, 255, 255, 0.035)),
+        rgba(18, 25, 25, 0.52);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.24),
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 20px 58px rgba(255, 255, 255, 0.08),
+        0 18px 52px rgba(0, 0, 0, 0.24);
+      transform: translateY(-2px);
+    }
+
+    .app-card h2 {
+      margin: 0 0 8px;
+      font-size: 1.04rem;
+      letter-spacing: 0;
+    }
+
+    .app-card p {
+      margin: 0;
+      color: var(--soft);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .tag {
+      width: fit-content;
+      padding: 6px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent-strong);
+      font-size: 0.74rem;
+      font-weight: 850;
+    }
+
+    .app-card.disabled {
+      pointer-events: none;
+      opacity: 0.56;
+    }
+
+    .model-info {
+      position: relative;
+      z-index: 2;
+      padding: 8px clamp(28px, 4vw, 70px) 88px;
+      background:
+        radial-gradient(circle at 18% 8%, rgba(216, 182, 123, 0.12), transparent 30%),
+        linear-gradient(180deg, rgba(5, 6, 5, 0), rgba(8, 12, 12, 0.84) 22%, #050605);
+    }
+
+    .model-info-inner {
+      width: min(1470px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(300px, 0.72fr) minmax(0, 1fr);
+      gap: clamp(28px, 5vw, 70px);
+      align-items: center;
+      padding: clamp(28px, 4vw, 54px);
+      border: 1px solid rgba(245, 226, 194, 0.16);
+      border-radius: 8px;
+      background:
+        linear-gradient(140deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.025) 44%, rgba(255, 255, 255, 0.012)),
+        rgba(9, 13, 13, 0.78);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      overflow: hidden;
+    }
+
+    .model-info-copy {
+      min-width: 0;
+    }
+
+    .model-info-kicker {
+      margin: 0 0 16px;
+      color: var(--accent-strong);
+      font-size: 0.76rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .model-info-title {
+      margin: 0;
+      max-width: 720px;
+      color: #fff7e8;
+      font-size: clamp(2.05rem, 4vw, 4.35rem);
+      line-height: 1.05;
+      font-weight: 880;
+      letter-spacing: 0;
+      text-wrap: balance;
+    }
+
+    .model-info-title strong {
+      color: var(--accent-strong);
+      font-weight: inherit;
+    }
+
+    .model-info-lead {
+      max-width: 620px;
+      margin: 22px 0 0;
+      color: rgba(247, 239, 227, 0.76);
+      font-size: clamp(1rem, 1.25vw, 1.12rem);
+      line-height: 1.72;
+    }
+
+    .model-info-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .model-info-stat {
+      min-height: 86px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      padding: 13px;
+      border: 1px solid rgba(245, 226, 194, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .model-info-stat strong {
+      color: var(--accent-strong);
+      font-size: clamp(1.35rem, 2.4vw, 2rem);
+      line-height: 1;
+    }
+
+    .model-info-stat span {
+      color: rgba(247, 239, 227, 0.72);
+      font-size: 0.78rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .model-info-list {
+      display: grid;
+      gap: 13px;
+      margin-top: 30px;
+    }
+
+    .model-info-item {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 13px;
+      align-items: start;
+    }
+
+    .model-info-number {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(245, 219, 171, 0.44);
+      border-radius: 8px;
+      color: #17130d;
+      background: linear-gradient(180deg, #f2daa6, #cda360);
+      font-size: 0.82rem;
+      font-weight: 900;
+      box-shadow: 0 12px 26px rgba(205, 163, 96, 0.16);
+    }
+
+    .model-info-item h3 {
+      margin: 0 0 4px;
+      color: #fff8ec;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+
+    .model-info-item p {
+      margin: 0;
+      color: rgba(196, 184, 168, 0.86);
+      font-size: 0.92rem;
+      line-height: 1.48;
+    }
+
+    .model-preview {
+      position: relative;
+      min-height: 600px;
+      display: grid;
+      align-items: center;
+      container-type: inline-size;
+    }
+
+    .model-preview-shell {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid rgba(245, 226, 194, 0.16);
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(18, 25, 25, 0.78), rgba(8, 11, 11, 0.92)),
+        #091010;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.36);
+    }
+
+    .model-preview-top {
+      display: grid;
+      grid-template-columns: minmax(120px, 0.38fr) minmax(0, 1fr);
+      gap: 14px;
+      min-height: 280px;
+    }
+
+    .model-preview-list,
+    .model-preview-hero,
+    .model-preview-panel {
+      border: 1px solid rgba(245, 226, 194, 0.12);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .model-preview-list {
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .model-preview-search {
+      height: 30px;
+      border-radius: 8px;
+      background: rgba(5, 6, 5, 0.62);
+      border: 1px solid rgba(245, 226, 194, 0.1);
+    }
+
+    .model-preview-row {
+      height: 38px;
+      border-radius: 8px;
+      background: linear-gradient(90deg, rgba(245, 219, 171, 0.16), rgba(255, 255, 255, 0.04));
+    }
+
+    .model-preview-row:nth-child(4),
+    .model-preview-row:nth-child(6) {
+      opacity: 0.56;
+    }
+
+    .model-preview-hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 280px;
+      padding: clamp(22px, 3vw, 36px);
+      background:
+        linear-gradient(90deg, rgba(4, 7, 8, 0.94), rgba(4, 7, 8, 0.48) 52%, rgba(4, 7, 8, 0.18)),
+        url("https://raw.githubusercontent.com/josepmunta-design/modelos-app/main/assets/fotos/Sigmund_Freud.jpg");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .model-preview-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 58px 58px;
+    }
+
+    .model-preview-label {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      width: fit-content;
+      margin: 0 0 18px;
+      padding: 7px 10px;
+      border: 1px solid rgba(245, 219, 171, 0.22);
+      border-radius: 999px;
+      color: var(--accent-strong);
+      background: rgba(5, 6, 5, 0.54);
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+
+    .model-preview-hero h3 {
+      position: relative;
+      z-index: 1;
+      max-width: 470px;
+      margin: 0;
+      color: #fff8ec;
+      font-size: clamp(1.65rem, 2.7vw, 2.9rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .model-preview-quote {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin: 22px 0 0;
+      color: rgba(247, 239, 227, 0.74);
+      font-size: 0.95rem;
+      line-height: 1.58;
+    }
+
+    .model-preview-bottom {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .model-preview-panel {
+      min-height: 146px;
+      padding: 14px;
+    }
+
+    .model-preview-panel span {
+      display: block;
+      margin-bottom: 14px;
+      color: rgba(245, 219, 171, 0.82);
+      font-size: 0.7rem;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .model-preview-bars {
+      display: grid;
+      gap: 9px;
+    }
+
+    .model-preview-bars i {
+      display: block;
+      height: 9px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #d8b67b, rgba(216, 182, 123, 0.12));
+    }
+
+    .model-preview-bars i:nth-child(2) {
+      width: 74%;
+    }
+
+    .model-preview-bars i:nth-child(3) {
+      width: 48%;
+    }
+
+    .model-preview-dots {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .model-preview-dots i {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      background: rgba(245, 219, 171, 0.18);
+    }
+
+    .model-preview-dots i:nth-child(2) {
+      background: rgba(155, 230, 211, 0.24);
+    }
+
+    .model-preview-dots i:nth-child(3) {
+      background: rgba(216, 182, 123, 0.34);
+    }
+
+    .model-preview-note {
+      margin: 18px 0 0;
+      color: rgba(196, 184, 168, 0.78);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .model-info-footer {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 16px;
+      border: 1px solid rgba(245, 226, 194, 0.14);
+      border-radius: 8px;
+      overflow: hidden;
+      background: rgba(245, 226, 194, 0.1);
+    }
+
+    .model-info-footer span {
+      display: grid;
+      gap: 5px;
+      padding: 16px;
+      background: rgba(5, 6, 5, 0.64);
+      color: rgba(247, 239, 227, 0.82);
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .model-info-footer strong {
+      color: var(--accent-strong);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    .model-real-shell {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      padding: 13px;
+      border: 1px solid rgba(245, 226, 194, 0.16);
+      border-radius: 8px;
+      background:
+        radial-gradient(120% 120% at 12% 0%, rgba(255, 255, 255, 0.1), transparent 42%),
+        linear-gradient(180deg, rgba(18, 25, 25, 0.86), rgba(8, 11, 11, 0.94));
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.36);
+    }
+
+    .model-real-head {
+      position: relative;
+      min-height: 270px;
+      overflow: hidden;
+      display: grid;
+      align-content: end;
+      padding: clamp(20px, 3vw, 34px);
+      border: 1px solid rgba(245, 226, 194, 0.12);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(4, 7, 8, 0.96), rgba(4, 7, 8, 0.64) 48%, rgba(4, 7, 8, 0.14)),
+        url("https://raw.githubusercontent.com/josepmunta-design/modelos-app/main/assets/fotos/Sigmund_Freud.jpg");
+      background-size: cover;
+      background-position: center;
+    }
+
+    .model-real-head::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.024) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px);
+      background-size: 58px 58px;
+    }
+
+    .model-real-head > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .model-real-tag {
+      width: fit-content;
+      margin: 0 0 12px;
+      padding: 6px 10px;
+      border: 1px solid rgba(245, 219, 171, 0.42);
+      border-radius: 999px;
+      color: var(--accent-strong);
+      background: rgba(5, 6, 5, 0.54);
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+
+    .model-real-title {
+      margin: 0;
+      max-width: 560px;
+      color: #fff8ec;
+      font-size: clamp(1.8rem, 3.1vw, 3.2rem);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .model-real-author {
+      margin: 10px 0 0;
+      color: rgba(247, 239, 227, 0.76);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .model-real-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .model-real-pills span {
+      padding: 5px 8px;
+      border: 1px solid rgba(245, 226, 194, 0.13);
+      border-radius: 999px;
+      color: rgba(247, 239, 227, 0.76);
+      background: rgba(0, 0, 0, 0.24);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .model-real-quote {
+      margin: 12px 0 0;
+      padding-left: 14px;
+      border-left: 3px solid rgba(245, 219, 171, 0.72);
+      color: #fff8ec;
+      font-size: 0.96rem;
+      line-height: 1.52;
+      font-weight: 750;
+    }
+
+    .model-real-graphs {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.82fr) minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .model-real-card {
+      position: relative;
+      overflow: hidden;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.055);
+      border-radius: 8px;
+      background:
+        radial-gradient(140% 120% at 18% 8%, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 52%),
+        radial-gradient(120% 130% at 92% 92%, rgba(216, 182, 123, 0.16), transparent 58%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 12px 34px rgba(0, 0, 0, 0.26);
+    }
+
+    .model-real-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.16;
+      background-image:
+        radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.18) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 72% 34%, rgba(255, 255, 255, 0.12) 0 1px, transparent 1.4px);
+      background-size: 38px 38px, 54px 54px;
+    }
+
+    .model-real-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .model-real-card h4 {
+      margin: 0 0 12px;
+      color: #f8efe1;
+      font-size: clamp(0.72rem, 1.2vw, 0.78rem);
+      font-weight: 850;
+      line-height: 1.25;
+      text-transform: uppercase;
+    }
+
+    .model-real-dim-layout {
+      display: grid;
+      grid-template-columns: minmax(104px, 132px) minmax(0, 1fr);
+      gap: 13px;
+      align-items: center;
+    }
+
+    .model-real-pie {
+      width: min(132px, 100%);
+      height: auto;
+      aspect-ratio: 1;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 14px 30px rgba(0, 0, 0, 0.28);
+    }
+
+    .model-real-dim-list,
+    .model-real-processes {
+      display: grid;
+      gap: 7px;
+    }
+
+    .model-real-dim-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 7px;
+      align-items: center;
+      padding: 5px 6px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      color: rgba(247, 239, 227, 0.84);
+      font-size: 0.72rem;
+      line-height: 1.2;
+    }
+
+    .model-real-dim-row span:nth-child(2) {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .model-real-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--dot);
+      box-shadow: 0 0 8px color-mix(in srgb, var(--dot) 48%, transparent);
+    }
+
+    .model-real-bar-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(84px, 0.72fr) auto;
+      gap: 9px;
+      align-items: center;
+      padding: 7px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.025);
+      color: rgba(247, 239, 227, 0.9);
+      font-size: 0.72rem;
+      line-height: 1.2;
+    }
+
+    .model-real-bar-row > span:first-child {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .model-real-bar-row > b,
+    .model-real-dim-row > b {
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .model-real-code {
+      display: inline-flex;
+      flex: 0 0 auto;
+      min-width: 30px;
+      justify-content: center;
+      margin-right: 0;
+      padding: 3px 7px;
+      border: 1px solid rgba(245, 219, 171, 0.32);
+      border-radius: 999px;
+      color: #fff8ec;
+      background: rgba(216, 182, 123, 0.22);
+      font-weight: 850;
+    }
+
+    .model-real-bar-track {
+      height: 9px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.24);
+    }
+
+    .model-real-bar-fill {
+      display: block;
+      width: var(--w);
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #f2daa6, #cda360);
+      box-shadow: 0 0 12px rgba(216, 182, 123, 0.32);
+    }
+
+    .model-real-acc {
+      display: grid;
+      gap: 9px;
+    }
+
+    .model-real-acc-row {
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .model-real-acc-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 13px;
+      color: #fff8ec;
+      font-size: 0.82rem;
+      font-weight: 850;
+    }
+
+    .model-real-count {
+      padding: 4px 8px;
+      border: 1px solid rgba(245, 219, 171, 0.28);
+      border-radius: 999px;
+      color: var(--accent-strong);
+      background: rgba(0, 0, 0, 0.2);
+      font-size: 0.75rem;
+      font-weight: 900;
+    }
+
+    .model-real-steps {
+      display: grid;
+      gap: 8px;
+      padding: 0 13px 13px;
+    }
+
+    .model-real-step {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 9px;
+      align-items: start;
+      color: rgba(247, 239, 227, 0.78);
+      font-size: 0.78rem;
+      line-height: 1.38;
+    }
+
+    .model-real-step b {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: #17130d;
+      background: linear-gradient(180deg, #f2daa6, #cda360);
+      font-size: 0.72rem;
+    }
+
+    @container (max-width: 720px) {
+      .model-real-graphs {
+        grid-template-columns: 1fr;
+      }
+
+      .model-real-card h4 {
+        font-size: 0.76rem;
+      }
+
+      .model-real-dim-layout {
+        grid-template-columns: minmax(118px, 150px) minmax(0, 1fr);
+      }
+
+      .model-real-bar-row {
+        grid-template-columns: minmax(0, 1fr) minmax(120px, 0.7fr) auto;
+      }
+    }
+
+    @container (max-width: 440px) {
+      .model-real-dim-layout,
+      .model-real-bar-row {
+        grid-template-columns: 1fr;
+      }
+
+      .model-real-pie {
+        margin: 0 auto;
+      }
+
+      .model-real-bar-track {
+        width: 100%;
+      }
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      place-items: center;
+      padding: 22px;
+      background: rgba(0, 0, 0, 0.58);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .modal.is-open {
+      display: grid;
+    }
+
+    .auth-panel {
+      width: min(430px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      background: linear-gradient(160deg, var(--panel-strong), var(--panel));
+      box-shadow: var(--shadow);
+    }
+
+    .auth-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      margin-bottom: 18px;
+    }
+
+    .auth-title {
+      margin: 0 0 7px;
+      font-size: 1.36rem;
+      font-weight: 850;
+    }
+
+    .auth-copy {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .close-button {
+      width: 40px;
+      min-height: 40px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      font-size: 1.2rem;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: #eadfce;
+      font-size: 0.88rem;
+      font-weight: 750;
+    }
+
+    input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 13px;
+      color: #fff8ec;
+      background: rgba(6, 8, 7, 0.72);
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: rgba(245, 219, 171, 0.72);
+      box-shadow: 0 0 0 3px rgba(216, 182, 123, 0.13);
+    }
+
+    .submit-button {
+      min-height: 48px;
+      margin-top: 2px;
+    }
+
+    .auth-links {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      min-height: 18px;
+    }
+
+    .auth-link {
+      min-height: 0;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      color: rgba(245, 219, 171, 0.76);
+      background: transparent;
+      box-shadow: none;
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-align: left;
+    }
+
+    .auth-link:hover,
+    .auth-link:focus-visible {
+      color: rgba(245, 219, 171, 0.96);
+      background: transparent;
+      text-decoration: underline;
+    }
+
+    .error {
+      display: none;
+      margin: 14px 0 0;
+      padding: 12px 13px;
+      border: 1px solid rgba(255, 184, 173, 0.34);
+      border-radius: 8px;
+      color: var(--danger);
+      background: rgba(100, 32, 24, 0.24);
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .error.is-ok {
+      border-color: rgba(155, 230, 211, 0.32);
+      color: #9be6d3;
+      background: rgba(32, 100, 80, 0.18);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 980px) {
+      .hero-layout {
+        grid-template-columns: 1fr;
+        align-content: end;
+        gap: 22px;
+      }
+
+      .hero-rail {
+        width: min(520px, 100%);
+        margin-bottom: 26px;
+      }
+
+      .section {
+        margin-top: -116px;
+      }
+
+      .apps-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .model-info-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .model-preview {
+        min-height: 0;
+      }
+
+      .model-real-graphs {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1280px) and (min-width: 981px) {
+      .model-real-graphs {
+        grid-template-columns: 1fr;
+      }
+
+      .model-real-dim-layout {
+        grid-template-columns: minmax(120px, 150px) minmax(0, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        align-items: flex-start;
+        min-height: 86px;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .session-email {
+        display: none;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 102px 18px 112px;
+      }
+
+      .hero-image {
+        inset: 86px 0 0;
+        border-radius: 0;
+      }
+
+      .hero-image::before {
+        background:
+          linear-gradient(90deg, rgba(0, 0, 0, 0.96) 0%, rgba(0, 0, 0, 0.68) 42%, rgba(0, 0, 0, 0) 78%),
+          linear-gradient(0deg, rgba(5, 6, 5, 0.9) 0%, rgba(5, 6, 5, 0.34) 34%, rgba(5, 6, 5, 0) 70%);
+      }
+
+      h1 {
+        font-size: clamp(2.45rem, 12.5vw, 4rem);
+      }
+
+      .hero-layout {
+        min-height: 760px;
+        padding: 38px 0 36px;
+      }
+
+      .hero-rail {
+        display: none;
+      }
+
+      .section {
+        margin-top: -82px;
+        padding: 0 18px 48px;
+      }
+
+      .apps-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .model-info {
+        padding: 0 18px 58px;
+      }
+
+      .model-info-inner {
+        padding: 22px;
+      }
+
+      .model-info-list {
+        gap: 16px;
+      }
+
+      .model-info-stats,
+      .model-real-graphs,
+      .model-real-dim-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .model-preview-top,
+      .model-preview-bottom,
+      .model-info-footer {
+        grid-template-columns: 1fr;
+      }
+
+      .model-real-pie {
+        margin: 0 auto;
+      }
+
+      .model-real-bar-row {
+        grid-template-columns: 1fr;
+      }
+
+      .model-preview-list {
+        display: none;
+      }
+
+      .model-preview-shell {
+        padding: 10px;
+      }
+
+      .model-preview-hero {
+        min-height: 330px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" aria-label="Tu Mentor Psicolog&iacute;a">
+      <div class="mark">
+        <img class="brand-logo" src="https://raw.githubusercontent.com/josepmunta-design/modelos-app/main/assets/logo/logo.png" alt="">
+      </div>
+      <div>
+        <p class="brand-title">Tu Mentor Psicolog&iacute;a</p>
+        <p class="brand-subtitle">Apps privadas</p>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <span class="session-email hidden" id="sessionEmail"></span>
+      <a class="button-link hidden" id="openModelosTop" href="/modelos/">Modelos</a>
+      <button class="login-button hidden" id="subscribeButton" type="button">Suscribirme</button>
+      <button class="hidden" id="billingPortalButton" type="button">Gestionar suscripci&oacute;n</button>
+      <button class="login-button" id="openLoginButton" type="button">Login</button>
+      <button class="hidden" id="signOutButton" type="button">Cerrar sesi&oacute;n</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="platformTitle">
+      <div class="hero-image" aria-hidden="true">
+        <img id="heroImageA" alt="">
+        <img id="heroImageB" alt="">
+      </div>
+
+      <div class="hero-layout">
+        <div class="hero-content">
+          <p class="eyebrow">Tu Mentor Psicolog&iacute;a</p>
+          <h1 id="platformTitle">Cartograf&iacute;a la psicoterapia. Piensa mejor la cl&iacute;nica.</h1>
+          <p class="lead">Explora modelos, procesos, influencias y metateor&iacute;as cl&iacute;nicas desde un espacio privado dise&ntilde;ado para ordenar y comprender la psicoterapia.</p>
+          <div class="hero-chips" aria-label="Contenido de la plataforma">
+            <span class="hero-chip">Modelos</span>
+            <span class="hero-chip">Procesos</span>
+            <span class="hero-chip">Influencias</span>
+            <span class="hero-chip">Metateor&iacute;as</span>
+          </div>
+          <div class="hero-actions">
+            <a class="primary-link" href="/modelos/">Abrir Modelos</a>
+            <div class="hero-login-cta">
+              <button id="heroLoginButton" type="button">suscr&iacute;bete por 9.90&euro;/mes</button>
+              <span class="hero-login-note">versi&oacute;n beta</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-rail" aria-label="Resumen de plataforma">
+          <p class="rail-kicker">Biblioteca cl&iacute;nica</p>
+          <p class="rail-title">Una cartograf&iacute;a privada para navegar teor&iacute;as, escuelas y autores.</p>
+          <p class="rail-copy">Dise&ntilde;ada para leer, comparar y volver a conectar ideas sin perder el hilo cl&iacute;nico.</p>
+          <div class="rail-meta" aria-hidden="true">
+            <span>+200<small>Modelos</small></span>
+            <span>+5000<small>T&eacute;cnicas</small></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Apps disponibles">
+      <div class="apps-grid">
+        <a class="app-card" href="/modelos/">
+          <span>
+            <h2>Modelos</h2>
+            <p>Biblioteca editorial de escuelas, modelos y autores.</p>
+          </span>
+          <span class="tag">Activo</span>
+        </a>
+
+        <a class="app-card disabled" href="/influencias/" aria-disabled="true" tabindex="-1">
+          <span>
+            <h2>Influencias</h2>
+            <p>Mapa relacional de influencias te&oacute;ricas.</p>
+          </span>
+          <span class="tag">Pr&oacute;ximamente</span>
+        </a>
+
+        <a class="app-card disabled" href="/mapamundi/" aria-disabled="true" tabindex="-1">
+          <span>
+            <h2>Mapamundi</h2>
+            <p>Exploraci&oacute;n geogr&aacute;fica y cultural.</p>
+          </span>
+          <span class="tag">Pr&oacute;ximamente</span>
+        </a>
+
+        <a class="app-card disabled" href="/procesos/" aria-disabled="true" tabindex="-1">
+          <span>
+            <h2>Procesos</h2>
+            <p>Diagramas y recorridos de trabajo cl&iacute;nico.</p>
+          </span>
+          <span class="tag">Pr&oacute;ximamente</span>
+        </a>
+
+        <a class="app-card disabled" href="/metamodelos/" aria-disabled="true" tabindex="-1">
+          <span>
+            <h2>Metamodelos</h2>
+            <p>Estructuras transversales de comparaci&oacute;n.</p>
+          </span>
+          <span class="tag">Pr&oacute;ximamente</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="model-info" aria-labelledby="modelInfoTitle">
+      <div class="model-info-inner">
+        <div class="model-info-copy">
+          <p class="model-info-kicker">App de modelos</p>
+          <h2 class="model-info-title" id="modelInfoTitle">Explora cada modelo de forma <strong>clara</strong> y completa</h2>
+          <p class="model-info-lead">Cada ficha re&uacute;ne fundamento te&oacute;rico, contexto hist&oacute;rico, dimensiones clave, procesos de cambio y una biblioteca pr&aacute;ctica de intervenciones explicadas en su contexto, con referencias para ampliar.</p>
+
+          <div class="model-info-stats" aria-label="Resumen de contenidos de modelos">
+            <div class="model-info-stat">
+              <strong>+200</strong>
+              <span>modelos y autores organizados</span>
+            </div>
+            <div class="model-info-stat">
+              <strong>+5000</strong>
+              <span>intervenciones explicadas</span>
+            </div>
+            <div class="model-info-stat">
+              <strong>Graphs</strong>
+              <span>dimensiones y procesos de cambio</span>
+            </div>
+          </div>
+
+          <div class="model-info-list" aria-label="Partes de una ficha de modelo">
+            <article class="model-info-item">
+              <span class="model-info-number">1</span>
+              <div>
+                <h3>Encabezado y cita central</h3>
+                <p>Nombre, autor, a&ntilde;o, corriente y una idea destacada para captar el n&uacute;cleo del modelo en segundos.</p>
+              </div>
+            </article>
+
+            <article class="model-info-item">
+              <span class="model-info-number">2</span>
+              <div>
+                <h3>Contexto, vida y problema</h3>
+                <p>La historia del autor, el clima intelectual de la &eacute;poca y el problema cl&iacute;nico que intentaba resolver.</p>
+              </div>
+            </article>
+
+            <article class="model-info-item">
+              <span class="model-info-number">3</span>
+              <div>
+                <h3>Dimensiones y procesos de cambio</h3>
+                <p>Mapas visuales para ver qu&eacute; componentes pesa cada modelo y c&oacute;mo entiende que se produce el cambio.</p>
+              </div>
+            </article>
+
+            <article class="model-info-item">
+              <span class="model-info-number">4</span>
+              <div>
+                <h3>T&eacute;cnicas y procedimientos</h3>
+                <p>Entradas pr&aacute;cticas con nombre, procesos vinculados, explicaci&oacute;n cl&iacute;nica, referencias y, cuando toca, secuencias paso a paso.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <div class="model-preview" aria-hidden="true">
+          <div>
+            <div class="model-real-shell">
+              <div class="model-real-head">
+                <p class="model-real-tag">Psicoan&aacute;lisis &middot; Modelo</p>
+                <h3 class="model-real-title">Psicoan&aacute;lisis</h3>
+                <p class="model-real-author">Sigmund Freud</p>
+                <div class="model-real-pills">
+                  <span>1900</span>
+                  <span>Viena</span>
+                  <span>Inconsciente</span>
+                </div>
+                <p class="model-real-quote">Los s&iacute;ntomas expresan conflictos inconscientes que pueden elaborarse al hacerlos pensables dentro de la relaci&oacute;n terap&eacute;utica.</p>
+              </div>
+
+              <div class="model-real-graphs">
+                <div class="model-real-card">
+                  <h4>Graph de dimensiones</h4>
+                  <div class="model-real-dim-layout">
+                    <svg class="model-real-pie" viewBox="0 0 120 120">
+                      <path d="M60 60 L60 4 A56 56 0 0 1 113.3 42.7 Z" fill="#9be6d3"></path>
+                      <path d="M60 60 L113.3 42.7 A56 56 0 0 1 84.7 110.3 Z" fill="#d8b67b"></path>
+                      <path d="M60 60 L84.7 110.3 A56 56 0 0 1 19.8 99.0 Z" fill="#c89bd6"></path>
+                      <path d="M60 60 L19.8 99.0 A56 56 0 0 1 15.1 26.5 Z" fill="#e8b08b"></path>
+                      <path d="M60 60 L15.1 26.5 A56 56 0 0 1 60 4 Z" fill="#9fb0c3"></path>
+                      <circle cx="60" cy="60" r="18" fill="#091010"></circle>
+                    </svg>
+                    <div class="model-real-dim-list">
+                      <div class="model-real-dim-row" style="--dot:#9be6d3"><span class="model-real-dot"></span><span>Afecto</span><b>35%</b></div>
+                      <div class="model-real-dim-row" style="--dot:#d8b67b"><span class="model-real-dot"></span><span>Relaci&oacute;n</span><b>25%</b></div>
+                      <div class="model-real-dim-row" style="--dot:#c89bd6"><span class="model-real-dot"></span><span>Self</span><b>20%</b></div>
+                      <div class="model-real-dim-row" style="--dot:#e8b08b"><span class="model-real-dot"></span><span>Cognici&oacute;n</span><b>15%</b></div>
+                      <div class="model-real-dim-row" style="--dot:#9fb0c3"><span class="model-real-dot"></span><span>Biol&oacute;gico</span><b>5%</b></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="model-real-card">
+                  <h4>Graph de procesos de cambio</h4>
+                  <div class="model-real-processes">
+                    <div class="model-real-bar-row"><span><span class="model-real-code">N</span>Construir significado</span><span class="model-real-bar-track"><i class="model-real-bar-fill" style="--w:100%"></i></span><b>100%</b></div>
+                    <div class="model-real-bar-row"><span><span class="model-real-code">I</span>Configurar identidad</span><span class="model-real-bar-track"><i class="model-real-bar-fill" style="--w:75%"></i></span><b>75%</b></div>
+                    <div class="model-real-bar-row"><span><span class="model-real-code">R</span>Transformar relaciones</span><span class="model-real-bar-track"><i class="model-real-bar-fill" style="--w:75%"></i></span><b>75%</b></div>
+                    <div class="model-real-bar-row"><span><span class="model-real-code">RE</span>Regular emociones</span><span class="model-real-bar-track"><i class="model-real-bar-fill" style="--w:50%"></i></span><b>50%</b></div>
+                    <div class="model-real-bar-row"><span><span class="model-real-code">AP</span>Procesar experiencia</span><span class="model-real-bar-track"><i class="model-real-bar-fill" style="--w:50%"></i></span><b>50%</b></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="model-real-card model-real-acc">
+                <div class="model-real-acc-row">
+                  <div class="model-real-acc-head">
+                    <span>T&eacute;cnicas</span>
+                    <span class="model-real-count">+5000</span>
+                  </div>
+                  <div class="model-real-steps">
+                    <div class="model-real-step"><b>1</b><span>Cada entrada sit&uacute;a la intervenci&oacute;n dentro del modelo: qu&eacute; trabaja, qu&eacute; proceso activa y qu&eacute; sentido tiene en la ficha.</span></div>
+                    <div class="model-real-step"><b>2</b><span>El texto explica c&oacute;mo llevarla a sesi&oacute;n con lenguaje cl&iacute;nico claro, sin convertirla en un protocolo cerrado.</span></div>
+                    <div class="model-real-step"><b>3</b><span>Muchas incluyen frases de presentaci&oacute;n o formulaciones literales para ver c&oacute;mo podr&iacute;a introducirse la intervenci&oacute;n.</span></div>
+                    <div class="model-real-step"><b>4</b><span>Las referencias quedan integradas para ampliar, contrastar y volver a las fuentes originales del modelo.</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="model-info-footer">
+              <span><strong>Para estudiar</strong>Comprende a fondo los modelos y mejora tu aprendizaje.</span>
+              <span><strong>Para intervenir</strong>Conecta teor&iacute;a, t&eacute;cnica y criterio cl&iacute;nico.</span>
+              <span><strong>Para comparar</strong>Detecta diferencias, afinidades y puntos de encuentro.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <section class="auth-panel">
+      <div class="auth-head">
+        <div>
+          <h2 class="auth-title" id="authTitle">Acceso</h2>
+          <p class="auth-copy" id="authCopy">El acceso se comparte entre las apps de Tu Mentor Psicolog&iacute;a.</p>
+        </div>
+        <button class="close-button" id="closeLoginButton" type="button" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <form id="loginForm">
+        <label id="emailLabel">
+          Email
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </label>
+        <label id="passwordLabel">
+          <span id="passwordLabelText">Password</span>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <label id="passwordRepeatLabel" class="hidden">
+          <span>Repetir nueva contrase&ntilde;a</span>
+          <input id="passwordRepeat" name="password_repeat" type="password" autocomplete="new-password">
+        </label>
+        <button class="submit-button" id="loginButton" type="submit">Entrar</button>
+        <div class="auth-links">
+          <button class="auth-link" id="forgotPasswordButton" type="button">&iquest;Has olvidado tu contrase&ntilde;a?</button>
+          <button class="auth-link hidden" id="backToLoginButton" type="button">Volver al inicio de sesi&oacute;n</button>
+        </div>
+      </form>
+
+      <div class="error" id="authError" role="alert"></div>
+    </section>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://yritadgaurvplltgubii.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'tmp-shared-auth-v1'
+      }
+    });
+
+    const HOST = location.hostname.toLowerCase();
+    const IS_LOCAL_DEV = ['localhost', '127.0.0.1', '::1', ''].includes(HOST);
+    const API_BASE = IS_LOCAL_DEV ? '' : location.origin;
+    const authModal = document.getElementById('authModal');
+    const openLoginButton = document.getElementById('openLoginButton');
+    const heroLoginButton = document.getElementById('heroLoginButton');
+    const closeLoginButton = document.getElementById('closeLoginButton');
+    const signOutButton = document.getElementById('signOutButton');
+    const openModelosTop = document.getElementById('openModelosTop');
+    const subscribeButton = document.getElementById('subscribeButton');
+    const billingPortalButton = document.getElementById('billingPortalButton');
+    const sessionEmail = document.getElementById('sessionEmail');
+    const loginForm = document.getElementById('loginForm');
+    const authTitle = document.getElementById('authTitle');
+    const authCopy = document.getElementById('authCopy');
+    const emailInput = document.getElementById('email');
+    const emailLabel = document.getElementById('emailLabel');
+    const passwordInput = document.getElementById('password');
+    const passwordLabel = document.getElementById('passwordLabel');
+    const passwordLabelText = document.getElementById('passwordLabelText');
+    const passwordRepeatInput = document.getElementById('passwordRepeat');
+    const passwordRepeatLabel = document.getElementById('passwordRepeatLabel');
+    const loginButton = document.getElementById('loginButton');
+    const forgotPasswordButton = document.getElementById('forgotPasswordButton');
+    const backToLoginButton = document.getElementById('backToLoginButton');
+    const authError = document.getElementById('authError');
+    const heroImageA = document.getElementById('heroImageA');
+    const heroImageB = document.getElementById('heroImageB');
+
+    let currentSession = null;
+    let authRenderVersion = 0;
+    let heroImages = [];
+    let heroImageIndex = 0;
+    let visibleHeroLayer = 0;
+    let heroTimer = null;
+    let heroImagesSource = '';
+    let authMode = 'login';
+    let recoveryLinkInvalid = false;
+    const LOGIN_TITLE = 'Acceso';
+    const LOGIN_COPY = 'El acceso se comparte entre las apps de Tu Mentor Psicolog\u00eda.';
+    const PUBLIC_LANDING_REPO_CONTENTS_URL = 'https://api.github.com/repos/josepmunta-design/modelos-app/contents/assets/fotos?ref=main';
+    const PUBLIC_LANDING_IMAGE_BASE_URL = 'https://raw.githubusercontent.com/josepmunta-design/modelos-app/main/assets/fotos';
+    const FALLBACK_PUBLIC_LANDING_IMAGES = [
+      'Sigmund_Freud.jpg',
+      'Skinner.jpg',
+      'Viktor_Frankl.jpg',
+      'Virginia_Satir.jpg'
+    ].map((file) => `${PUBLIC_LANDING_IMAGE_BASE_URL}/${encodeURIComponent(file)}`);
+    const VIDA_LANDING_IMAGE_BASE_PATH = 'Core/imagenes/vida/landing';
+    let vidaImageIndex = null;
+    const objectUrls = new Set();
+
+    function proxyDataUrl(path){
+      const clean = String(path || '').replace(/^\/+/, '').replace(/^data\//, '');
+      return `${API_BASE}/api/data?path=${encodeURIComponent(clean)}`;
+    }
+
+    function dataUrlCandidates(path){
+      const clean = String(path || '').replace(/^\/+/, '').replace(/^data\//, '');
+      return [proxyDataUrl(clean)];
+    }
+
+    function isProxyUrl(url){
+      const raw = String(url || '').trim();
+      if (!raw) return false;
+
+      try{
+        const parsed = new URL(raw, location.href);
+        if (parsed.pathname !== '/api/data') return false;
+        return API_BASE
+          ? parsed.origin === new URL(API_BASE, location.href).origin
+          : parsed.origin === location.origin;
+      }catch(error){
+        return raw.startsWith(`${API_BASE}/api/data`);
+      }
+    }
+
+    async function getSupabaseAccessToken(){
+      const { data } = await supabaseClient.auth.getSession();
+      return data?.session?.access_token || "";
+    }
+
+    async function privateProxyFetch(url, options = {}){
+      const headers = new Headers(options?.headers || {});
+      const token = currentSession?.access_token || await getSupabaseAccessToken();
+
+      if (token){
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+
+      const response = await fetch(url, { ...options, headers });
+      if (response.status !== 401) return response;
+
+      const { data } = await supabaseClient.auth.refreshSession();
+      const refreshedToken = data?.session?.access_token || "";
+      if (!refreshedToken) return response;
+
+      currentSession = data.session;
+      const retryHeaders = new Headers(options?.headers || {});
+      retryHeaders.set('Authorization', `Bearer ${refreshedToken}`);
+      return fetch(url, { ...options, headers: retryHeaders });
+    }
+
+    function setError(message, ok = false){
+      authError.textContent = message || '';
+      authError.style.display = message ? 'block' : 'none';
+      authError.classList.toggle('is-ok', !!ok);
+    }
+
+    function hasResetPasswordParam(){
+      try{
+        return new URLSearchParams(location.search).get('reset_password') === '1';
+      }catch(error){
+        return false;
+      }
+    }
+
+    function clearResetPasswordParam(){
+      if (!hasResetPasswordParam()) return;
+      try{
+        const url = new URL(location.href);
+        url.searchParams.delete('reset_password');
+        history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+      }catch(error){}
+    }
+
+    function passwordResetRedirectUrl(){
+      const url = new URL(location.href);
+      url.search = '';
+      url.hash = '';
+      url.searchParams.set('reset_password', '1');
+      return url.href;
+    }
+
+    function setAuthMode(mode){
+      authMode = mode;
+      if (authTitle) authTitle.textContent = LOGIN_TITLE;
+      if (authCopy) authCopy.textContent = LOGIN_COPY;
+      if (emailLabel) emailLabel.classList.remove('hidden');
+      if (emailInput){
+        emailInput.required = true;
+        emailInput.autocomplete = 'email';
+      }
+      if (passwordLabel) passwordLabel.classList.remove('hidden');
+      if (passwordLabelText) passwordLabelText.textContent = 'Password';
+      if (passwordInput){
+        passwordInput.required = true;
+        passwordInput.autocomplete = 'current-password';
+        passwordInput.value = '';
+      }
+      if (passwordRepeatLabel) passwordRepeatLabel.classList.add('hidden');
+      if (passwordRepeatInput){
+        passwordRepeatInput.required = false;
+        passwordRepeatInput.value = '';
+      }
+      if (loginButton) loginButton.textContent = 'Entrar';
+      if (forgotPasswordButton) forgotPasswordButton.classList.remove('hidden');
+      if (backToLoginButton){
+        backToLoginButton.classList.add('hidden');
+        backToLoginButton.textContent = 'Volver al inicio de sesi\u00f3n';
+      }
+
+      if (mode === 'recover'){
+        if (authTitle) authTitle.textContent = 'Recuperar contrase\u00f1a';
+        if (authCopy) authCopy.textContent = 'Introduce tu email y te enviaremos un enlace para crear una nueva contrase\u00f1a.';
+        if (passwordLabel) passwordLabel.classList.add('hidden');
+        if (passwordInput){
+          passwordInput.required = false;
+          passwordInput.value = '';
+        }
+        if (loginButton) loginButton.textContent = 'Enviar enlace';
+        if (forgotPasswordButton) forgotPasswordButton.classList.add('hidden');
+        if (backToLoginButton) backToLoginButton.classList.remove('hidden');
+      }
+
+      if (mode === 'reset'){
+        if (authTitle) authTitle.textContent = 'Crear nueva contrase\u00f1a';
+        if (authCopy) authCopy.textContent = recoveryLinkInvalid
+          ? 'El enlace de recuperaci\u00f3n ha caducado o no es v\u00e1lido. Solicita un nuevo enlace.'
+          : '';
+        if (emailLabel) emailLabel.classList.add('hidden');
+        if (emailInput) emailInput.required = false;
+        if (passwordLabel) passwordLabel.classList.toggle('hidden', recoveryLinkInvalid);
+        if (passwordLabelText) passwordLabelText.textContent = 'Nueva contrase\u00f1a';
+        if (passwordInput){
+          passwordInput.required = !recoveryLinkInvalid;
+          passwordInput.autocomplete = 'new-password';
+          passwordInput.value = '';
+        }
+        if (passwordRepeatLabel) passwordRepeatLabel.classList.toggle('hidden', recoveryLinkInvalid);
+        if (passwordRepeatInput){
+          passwordRepeatInput.required = !recoveryLinkInvalid;
+          passwordRepeatInput.value = '';
+        }
+        if (loginButton){
+          loginButton.classList.toggle('hidden', recoveryLinkInvalid);
+          loginButton.textContent = 'Guardar nueva contrase\u00f1a';
+        }
+        if (forgotPasswordButton) forgotPasswordButton.classList.add('hidden');
+        if (backToLoginButton){
+          backToLoginButton.classList.remove('hidden');
+          backToLoginButton.textContent = recoveryLinkInvalid ? 'Solicitar nuevo enlace' : 'Volver al inicio de sesi\u00f3n';
+        }
+      }else if (loginButton){
+        loginButton.classList.remove('hidden');
+      }
+    }
+
+    function openLogin(mode = 'login', message = '', ok = false){
+      if (mode === 'login') recoveryLinkInvalid = false;
+      setAuthMode(mode);
+      setError('');
+      if (message) setError(message, ok);
+      authModal.classList.add('is-open');
+      const focusTarget = mode === 'reset' ? passwordInput : emailInput;
+      setTimeout(() => focusTarget?.focus(), 30);
+    }
+
+    function closeLogin(){
+      authModal.classList.remove('is-open');
+    }
+
+    async function getBillingStatus(session){
+      if (!session?.access_token) return { active: false, status: 'inactive' };
+
+      const response = await fetch(`${API_BASE}/api/billing-status`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) return { active: false, status: 'inactive' };
+      return response.json();
+    }
+
+    async function startBillingFlow(endpoint, button){
+      const { data } = await supabaseClient.auth.getSession();
+      const token = data?.session?.access_token || currentSession?.access_token || '';
+      if (!token){
+        openLogin();
+        return;
+      }
+
+      const previousText = button?.textContent || '';
+      if (button){
+        button.disabled = true;
+        button.textContent = 'Abriendo...';
+      }
+
+      try{
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload.url){
+          throw new Error(payload.error || 'No se ha podido abrir Stripe.');
+        }
+        location.href = payload.url;
+      }catch(error){
+        setError(error?.message || 'No se ha podido abrir Stripe.');
+        openLogin();
+      }finally{
+        if (button){
+          button.disabled = false;
+          button.textContent = previousText;
+        }
+      }
+    }
+
+    async function renderAuthState(session){
+      const renderVersion = ++authRenderVersion;
+      currentSession = session || null;
+      const email = session?.user?.email || '';
+
+      sessionEmail.textContent = email;
+      sessionEmail.classList.toggle('hidden', !session);
+      signOutButton.classList.toggle('hidden', !session);
+      openLoginButton.classList.toggle('hidden', !!session);
+      heroLoginButton.classList.toggle('hidden', !!session);
+      openModelosTop.classList.add('hidden');
+      subscribeButton.classList.add('hidden');
+      billingPortalButton.classList.add('hidden');
+
+      if (!session){
+        sessionEmail.textContent = '';
+        loadHeroImages();
+        return;
+      }
+
+      if (authMode !== 'reset' && !hasResetPasswordParam()){
+        closeLogin();
+      }
+
+      let billing = { active: false };
+      try{
+        billing = await getBillingStatus(session);
+      }catch(error){
+        console.warn(error);
+      }
+
+      if (renderVersion !== authRenderVersion) return;
+
+      if (billing?.active){
+        openModelosTop.classList.remove('hidden');
+        billingPortalButton.classList.remove('hidden');
+      }else{
+        subscribeButton.classList.remove('hidden');
+      }
+
+      loadHeroImages();
+    }
+
+    function normalizeVidaEntry(value){
+      if (!value) return [];
+      if (typeof value === 'string'){
+        return value
+          .split('|')
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+      if (Array.isArray(value)) return value.flatMap(normalizeVidaEntry);
+      if (typeof value === 'object'){
+        return [
+          value.file,
+          value.path,
+          value.image,
+          value.imagen,
+          value.src,
+          value.url,
+          ...normalizeVidaEntry(value.images || value.imagenes || value.files)
+        ].flatMap(normalizeVidaEntry);
+      }
+      return [];
+    }
+
+    function normLookupKey(value){
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9 ]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function normalizeVidaImageMap(source){
+      const direct = {};
+      const normalized = {};
+      if (!source || typeof source !== 'object') return { direct, normalized };
+
+      for (const [rawKey, rawValue] of Object.entries(source)){
+        const key = String(rawKey || '').trim();
+        const value = normalizeVidaEntry(rawValue);
+        if (!key || !value.length) continue;
+
+        direct[key] = value;
+        const norm = normLookupKey(key);
+        if (norm) normalized[norm] = value;
+      }
+
+      return { direct, normalized };
+    }
+
+    function toVidaLandingImagePath(path){
+      const clean = String(path || '').trim().replace(/^\/+/, '').replace(/^data\//i, '');
+      if (!clean || /^https?:\/\//i.test(clean)) return clean;
+      if (clean.toLowerCase().startsWith(`${VIDA_LANDING_IMAGE_BASE_PATH.toLowerCase()}/`)) return clean;
+      return clean.replace(/^Core\/imagenes\/vida\/?/i, `${VIDA_LANDING_IMAGE_BASE_PATH}/`);
+    }
+
+    async function loadVidaImageIndex(){
+      const root = await fetchJsonFromCandidates('Core/imagenes/vida/index.json', { cache: 'no-store' });
+      const basePath = String(VIDA_LANDING_IMAGE_BASE_PATH)
+        .trim()
+        .replace(/^\/+|\/+$/g, '') || VIDA_LANDING_IMAGE_BASE_PATH;
+      const modelMaps = normalizeVidaImageMap(root?.models);
+      const authorMaps = normalizeVidaImageMap(root?.authors);
+
+      vidaImageIndex = {
+        basePath,
+        models: modelMaps.direct,
+        modelsNorm: modelMaps.normalized,
+        authors: authorMaps.direct,
+        authorsNorm: authorMaps.normalized
+      };
+
+      return vidaImageIndex;
+    }
+
+    function slugify(value){
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    async function fetchJsonFromCandidates(paths, options = {}){
+      const urls = Array.isArray(paths)
+        ? paths.flatMap(dataUrlCandidates)
+        : dataUrlCandidates(paths);
+      const uniqueUrls = [...new Set(urls)];
+
+      for (const url of uniqueUrls){
+        try{
+          const response = url.includes('/api/data')
+            ? await privateProxyFetch(url, options)
+            : await fetch(url, options);
+          if (!response.ok) continue;
+          return await response.json();
+        }catch(error){
+          console.warn(error);
+        }
+      }
+
+      return null;
+    }
+
+    function shuffle(items){
+      const list = [...items];
+      for (let i = list.length - 1; i > 0; i -= 1){
+        const j = Math.floor(Math.random() * (i + 1));
+        [list[i], list[j]] = [list[j], list[i]];
+      }
+      return list;
+    }
+
+    async function loadPublicLandingImages(){
+      try{
+        const response = await fetch(PUBLIC_LANDING_REPO_CONTENTS_URL, {
+          cache: 'no-store',
+          headers: {
+            Accept: 'application/vnd.github+json'
+          }
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        const entries = await response.json();
+        const images = (Array.isArray(entries) ? entries : [])
+          .filter((entry) => entry?.type === 'file')
+          .filter((entry) => /\.(jpe?g|png|webp|gif|svg)$/i.test(String(entry.name || '')))
+          .map((entry) => entry.download_url || `${PUBLIC_LANDING_IMAGE_BASE_URL}/${encodeURIComponent(entry.name)}`)
+          .filter(Boolean);
+
+        return images.length ? images : FALLBACK_PUBLIC_LANDING_IMAGES;
+      }catch(error){
+        console.warn(error);
+        return FALLBACK_PUBLIC_LANDING_IMAGES;
+      }
+    }
+
+    function collectVidaImages(indexRoot){
+      const basePath = String(VIDA_LANDING_IMAGE_BASE_PATH).replace(/^\/+|\/+$/g, '') || VIDA_LANDING_IMAGE_BASE_PATH;
+      const buckets = [indexRoot?.models, indexRoot?.authors, indexRoot?.images, indexRoot?.imagenes, indexRoot?.files];
+      const files = buckets.flatMap((bucket) => {
+        if (!bucket) return [];
+        if (Array.isArray(bucket)) return normalizeVidaEntry(bucket);
+        if (typeof bucket === 'object') return Object.values(bucket).flatMap(normalizeVidaEntry);
+        return normalizeVidaEntry(bucket);
+      });
+
+      return [...new Set(files)]
+        .map((file) => String(file || '').trim())
+        .filter(Boolean)
+        .map((file) => {
+          const clean = toVidaLandingImagePath(file);
+          return /^Core\//i.test(clean) ? clean : `${basePath}/${clean}`;
+        });
+    }
+
+    async function loadVidaLandingDirectoryImages(){
+      const entries = await fetchJsonFromCandidates(VIDA_LANDING_IMAGE_BASE_PATH, { cache: 'no-store' });
+      const images = (Array.isArray(entries) ? entries : [])
+        .filter((entry) => entry?.type === 'file')
+        .map((entry) => {
+          const path = String(entry.path || '').trim().replace(/^\/+/, '').replace(/^data\//i, '');
+          const name = String(entry.name || '').trim();
+          return path || (name ? `${VIDA_LANDING_IMAGE_BASE_PATH}/${name}` : '');
+        })
+        .filter((path) => /\.(jpe?g|png|webp|gif|svg)$/i.test(path));
+
+      return [...new Set(images)];
+    }
+
+    function buildVidaIndexedImagePaths(file, basePath){
+      const clean = String(file || '').trim();
+      if (!clean) return [];
+      return normalizeVidaEntry(clean)
+        .map((item) => String(item || '').trim())
+        .filter(Boolean)
+        .map((item) => {
+          const normalizedPath = toVidaLandingImagePath(item);
+          if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath;
+          if (/^Core\//i.test(normalizedPath)) return normalizedPath;
+          const cleanBase = String(basePath || VIDA_LANDING_IMAGE_BASE_PATH).trim().replace(/^\/+|\/+$/g, '') || VIDA_LANDING_IMAGE_BASE_PATH;
+          return `${cleanBase}/${normalizedPath}`;
+        });
+    }
+
+    function getVidaModelImageEntry(model){
+      const idx = vidaImageIndex;
+      if (!idx || !model || typeof model !== 'object') return [];
+
+      const rawFile = String(model.file || model.archivo || '').trim();
+      const fileBase = rawFile
+        ? rawFile.split('/').pop().replace(/\.[^.]+$/, '').trim()
+        : '';
+      const candidates = [
+        String(model.id ?? '').trim(),
+        String(model.modeloId ?? '').trim(),
+        fileBase
+      ].filter(Boolean);
+
+      for (const key of candidates){
+        if (idx.models?.[key]) return idx.models[key];
+      }
+
+      for (const key of candidates){
+        const norm = normLookupKey(key);
+        if (norm && idx.modelsNorm?.[norm]) return idx.modelsNorm[norm];
+      }
+
+      const primaryAuthor = String(model.autores ?? '')
+        .split(';')
+        .map((item) => item.trim())
+        .filter(Boolean)[0] || '';
+      const authorCandidates = [
+        primaryAuthor,
+        primaryAuthor.split(',')[0]?.trim()
+      ].filter(Boolean);
+
+      for (const key of authorCandidates){
+        if (idx.authors?.[key]) return idx.authors[key];
+        const norm = normLookupKey(key);
+        if (norm && idx.authorsNorm?.[norm]) return idx.authorsNorm[norm];
+      }
+
+      return [];
+    }
+
+    function getVidaIndexedImagePaths(model){
+      const entry = getVidaModelImageEntry(model);
+      return normalizeVidaEntry(entry)
+        .flatMap((file) => buildVidaIndexedImagePaths(file, vidaImageIndex?.basePath))
+        .filter(Boolean);
+    }
+
+    function collectAllVidaIndexImagePaths(){
+      const idx = vidaImageIndex;
+      if (!idx) return [];
+      return [
+        ...Object.values(idx.models || {}),
+        ...Object.values(idx.authors || {})
+      ]
+        .flatMap(normalizeVidaEntry)
+        .flatMap((file) => buildVidaIndexedImagePaths(file, idx.basePath))
+        .filter(Boolean);
+    }
+
+    function collectModelLifeImagePaths(model){
+      const indexedPaths = getVidaIndexedImagePaths(model);
+      const explicitValues = [
+        model?.imagenVida,
+        model?.vidaImage,
+        model?.lifeImage,
+        model?.headerLifeImage,
+        model?.heroImage,
+        model?.imagen,
+        model?.image
+      ];
+
+      const explicitPaths = explicitValues
+        .flatMap(normalizeVidaEntry)
+        .map((file) => String(file || '').trim())
+        .filter(Boolean)
+        .map((file) => {
+          const clean = toVidaLandingImagePath(file);
+          if (/^https?:\/\//i.test(clean)) return clean;
+          if (/^Core\//i.test(clean)) return clean;
+          return `${VIDA_LANDING_IMAGE_BASE_PATH}/${clean}`;
+        });
+
+      return [...new Set([...indexedPaths, ...explicitPaths])];
+    }
+
+    function collectSchoolModels(school){
+      const raw =
+        (Array.isArray(school?.modelos) ? school.modelos : null) ||
+        (Array.isArray(school?.models) ? school.models : null) ||
+        (school?.modelos && typeof school.modelos === 'object' ? Object.values(school.modelos) : null) ||
+        (school?.models && typeof school.models === 'object' ? Object.values(school.models) : null) ||
+        (Array.isArray(school) ? school : []);
+
+      return raw.filter((item) => item && typeof item === 'object');
+    }
+
+    async function collectVidaImagesFromModelData(){
+      const schoolIndex = await fetchJsonFromCandidates('Core/escuelas/index.json', { cache: 'no-store' });
+      const schools = Array.isArray(schoolIndex)
+        ? schoolIndex
+        : (Array.isArray(schoolIndex?.escuelas) ? schoolIndex.escuelas : []);
+      const imagePaths = [];
+      const modelFilePaths = [];
+
+      for (const entry of schools.slice(0, 18)){
+        const rawFile = String(entry?.file || '').trim().replace(/^\/+/, '');
+        const schoolPaths = rawFile
+          ? [
+              rawFile.startsWith('Core/') ? rawFile : `Core/${rawFile}`,
+              rawFile.replace(/^Core\//, '')
+            ]
+          : [`Core/escuelas/${slugify(entry?.label || entry?.id)}.json`];
+
+        const school = await fetchJsonFromCandidates(schoolPaths, { cache: 'no-store' });
+        if (!school) continue;
+
+        const summaries = collectSchoolModels(school);
+        for (const model of summaries){
+          imagePaths.push(...collectModelLifeImagePaths(model));
+          const modelFile = String(model?.file || model?.archivo || '').trim().replace(/^\/+/, '');
+          if (!modelFile) continue;
+          modelFilePaths.push(modelFile.startsWith('Core/') ? modelFile : `Core/${modelFile}`);
+        }
+      }
+
+      for (const modelPath of shuffle([...new Set(modelFilePaths)]).slice(0, 40)){
+        const fullModel = await fetchJsonFromCandidates(modelPath, { cache: 'no-store' });
+        if (fullModel) imagePaths.push(...collectModelLifeImagePaths(fullModel));
+      }
+
+      return [...new Set(imagePaths)].filter(Boolean);
+    }
+
+    async function imageBlobUrl(path){
+      const raw = String(path || '').trim();
+      if (!raw) throw new Error('Empty image path');
+
+      if (/^https?:\/\//i.test(raw) && !isProxyUrl(raw)){
+        return raw;
+      }
+
+      const url = isProxyUrl(raw) ? raw : proxyDataUrl(raw);
+      let response = await privateProxyFetch(url, {
+        cache: 'force-cache',
+        headers: {
+          Accept: 'image/*,*/*'
+        }
+      });
+
+      if (response.status === 404 && new RegExp(`^${VIDA_LANDING_IMAGE_BASE_PATH}/`, 'i').test(raw)){
+        const fallbackPath = raw.replace(new RegExp(`^${VIDA_LANDING_IMAGE_BASE_PATH}/`, 'i'), 'Core/imagenes/vida/');
+        response = await privateProxyFetch(proxyDataUrl(fallbackPath), {
+          cache: 'force-cache',
+          headers: {
+            Accept: 'image/*,*/*'
+          }
+        });
+      }
+
+      if (!response.ok){
+        throw new Error(`HTTP ${response.status} ${raw}`);
+      }
+
+      const objectUrl = URL.createObjectURL(await response.blob());
+      objectUrls.add(objectUrl);
+      return objectUrl;
+    }
+
+    async function showHeroImage(path){
+      const nextLayer = visibleHeroLayer ? heroImageA : heroImageB;
+      const currentLayer = visibleHeroLayer ? heroImageB : heroImageA;
+      const objectUrl = await imageBlobUrl(path);
+
+      nextLayer.src = objectUrl;
+      nextLayer.classList.add('is-visible');
+      currentLayer.classList.remove('is-visible');
+      visibleHeroLayer = visibleHeroLayer ? 0 : 1;
+      document.body.classList.add('has-hero-image');
+    }
+
+    async function showAvailableHeroImage(startIndex = 0){
+      if (!heroImages.length) return false;
+
+      for (let offset = 0; offset < heroImages.length; offset += 1){
+        const index = (startIndex + offset) % heroImages.length;
+        try{
+          await showHeroImage(heroImages[index]);
+          heroImageIndex = index;
+          return true;
+        }catch(error){
+          console.warn(error);
+        }
+      }
+
+      return false;
+    }
+
+    function scheduleHeroRotation(){
+      window.clearInterval(heroTimer);
+      heroTimer = window.setInterval(() => {
+        if (!heroImages.length) return;
+        showAvailableHeroImage((heroImageIndex + 1) % heroImages.length);
+      }, 10000);
+    }
+
+    async function loadHeroImages(){
+      if (
+        heroImages.length
+        && document.body.classList.contains('has-hero-image')
+        && heroImagesSource === 'vida-landing'
+      ) return;
+
+      try{
+        const vidaLandingImages = await loadVidaLandingDirectoryImages();
+        heroImages = shuffle(vidaLandingImages.length ? vidaLandingImages : await loadPublicLandingImages());
+        heroImagesSource = vidaLandingImages.length ? 'vida-landing' : 'public';
+        if (heroImages.length && await showAvailableHeroImage(0)){
+          scheduleHeroRotation();
+        }
+      }catch(error){
+        console.warn(error);
+      }
+    }
+
+    async function checkInitialSession(){
+      const { data } = await supabaseClient.auth.getSession();
+      renderAuthState(data?.session || null);
+      if (hasResetPasswordParam()){
+        if (data?.session){
+          recoveryLinkInvalid = false;
+          openLogin('reset');
+        }else{
+          recoveryLinkInvalid = true;
+          openLogin('reset', 'El enlace de recuperaci\u00f3n ha caducado o no es v\u00e1lido. Solicita un nuevo enlace.');
+        }
+      }
+      loadHeroImages();
+    }
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      renderAuthState(session);
+      if (event === 'PASSWORD_RECOVERY' || hasResetPasswordParam()){
+        if (session){
+          recoveryLinkInvalid = false;
+          openLogin('reset');
+        }else if (hasResetPasswordParam()){
+          recoveryLinkInvalid = true;
+          openLogin('reset', 'El enlace de recuperaci\u00f3n ha caducado o no es v\u00e1lido. Solicita un nuevo enlace.');
+        }
+      }
+    });
+
+    openLoginButton.addEventListener('click', () => openLogin());
+    heroLoginButton.addEventListener('click', () => openLogin());
+    subscribeButton.addEventListener('click', () => {
+      startBillingFlow('/api/create-checkout-session', subscribeButton);
+    });
+    billingPortalButton.addEventListener('click', () => {
+      startBillingFlow('/api/create-portal-session', billingPortalButton);
+    });
+    closeLoginButton.addEventListener('click', closeLogin);
+
+    authModal.addEventListener('click', (event) => {
+      if (event.target === authModal) closeLogin();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeLogin();
+    });
+
+    forgotPasswordButton.addEventListener('click', () => {
+      recoveryLinkInvalid = false;
+      openLogin('recover');
+    });
+
+    backToLoginButton.addEventListener('click', () => {
+      if (recoveryLinkInvalid){
+        recoveryLinkInvalid = false;
+        openLogin('recover');
+        return;
+      }
+      recoveryLinkInvalid = false;
+      openLogin('login');
+    });
+
+    async function sendPasswordRecovery(email){
+      if (!email){
+        setError('Introduce tu email.');
+        emailInput?.focus();
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = 'Enviando enlace...';
+
+      try{
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: passwordResetRedirectUrl()
+        });
+        if (error) throw error;
+        setError('Si existe una cuenta asociada a ese email, recibir\u00e1s un enlace para restablecer la contrase\u00f1a.', true);
+      }catch(error){
+        console.warn('Password recovery error', error);
+        setError('Si existe una cuenta asociada a ese email, recibir\u00e1s un enlace para restablecer la contrase\u00f1a.', true);
+      }finally{
+        loginButton.disabled = false;
+        loginButton.textContent = 'Enviar enlace';
+      }
+    }
+
+    async function saveNewPassword(password, repeatedPassword){
+      if (!password || !repeatedPassword){
+        setError('Completa los dos campos de contrase\u00f1a.');
+        return;
+      }
+      if (password.length < 8){
+        setError('La contrase\u00f1a debe tener al menos 8 caracteres.');
+        return;
+      }
+      if (password !== repeatedPassword){
+        setError('Las contrase\u00f1as no coinciden.');
+        return;
+      }
+
+      const { data } = await supabaseClient.auth.getSession();
+      if (!data?.session){
+        recoveryLinkInvalid = true;
+        openLogin('reset', 'El enlace de recuperaci\u00f3n ha caducado o no es v\u00e1lido. Solicita un nuevo enlace.');
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = 'Guardando...';
+
+      try{
+        const { error } = await supabaseClient.auth.updateUser({ password });
+        if (error) throw error;
+        clearResetPasswordParam();
+        recoveryLinkInvalid = false;
+        openLogin('login', 'Contrase\u00f1a actualizada correctamente.', true);
+        setTimeout(checkInitialSession, 900);
+      }catch(error){
+        setError(error?.message || 'No se pudo actualizar la contrase\u00f1a.');
+      }finally{
+        loginButton.disabled = false;
+        loginButton.textContent = authMode === 'reset' ? 'Guardar nueva contrase\u00f1a' : 'Entrar';
+      }
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      setError('');
+
+      const formData = new FormData(loginForm);
+      const email = String(formData.get('email') || '').trim();
+      const password = String(formData.get('password') || '');
+      const repeatedPassword = String(formData.get('password_repeat') || '');
+
+      if (authMode === 'recover'){
+        await sendPasswordRecovery(email);
+        return;
+      }
+
+      if (authMode === 'reset'){
+        await saveNewPassword(password, repeatedPassword);
+        return;
+      }
+
+      loginButton.disabled = true;
+      loginButton.textContent = 'Entrando...';
+
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      loginButton.disabled = false;
+      loginButton.textContent = 'Entrar';
+
+      if (error){
+        setError(error.message || 'No se ha podido iniciar sesi\u00f3n.');
+        return;
+      }
+
+      renderAuthState(data?.session || null);
+      loginForm.reset();
+    });
+
+    signOutButton.addEventListener('click', async () => {
+      signOutButton.disabled = true;
+      await supabaseClient.auth.signOut();
+      signOutButton.disabled = false;
+    });
+
+    window.addEventListener('pagehide', () => {
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+      objectUrls.clear();
+    });
+
+    checkInitialSession().catch((error) => {
+      setError(error?.message || 'No se ha podido comprobar la sesi\u00f3n.');
+      renderAuthState(null);
+    });
+  </script>
+</body>
+</html>
