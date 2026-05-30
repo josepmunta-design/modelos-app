@@ -38,6 +38,8 @@ export default async function handler(req, res) {
 
       billing_address_collection: 'required',
 
+      'automatic_tax[enabled]': true,
+
       'tax_id_collection[enabled]': true,
       'tax_id_collection[required]': 'if_supported',
 
