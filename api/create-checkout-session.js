@@ -7,6 +7,8 @@ import {
   validateSupabaseUser
 } from './_billing.js';
 
+const BLOCKED_CHECKOUT_STATUSES = new Set(['active', 'trialing', 'past_due', 'unpaid']);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendMethodNotAllowed(res, 'POST');
 
@@ -22,6 +24,12 @@ export default async function handler(req, res) {
     }
 
     const existingSubscription = await getSubscriptionByUserId(user.id);
+    if (BLOCKED_CHECKOUT_STATUSES.has(existingSubscription?.status)) {
+      return res.status(409).json({
+        error: 'Ya tienes una suscripción. Gestiona tu plan desde el portal de cliente.'
+      });
+    }
+
     const appUrl = getPublicAppUrl();
 
     const form = {
@@ -40,6 +48,8 @@ export default async function handler(req, res) {
 
       'tax_id_collection[enabled]': 'true',
       'tax_id_collection[required]': 'if_supported',
+
+      allow_promotion_codes: 'true',
 
       'custom_text[submit][message]': 'Si eres autónomo/a o particular en España, abre el desplegable de identificación fiscal y selecciona “ES NIF”. Si tienes IVA intracomunitario, selecciona “IVA de ES”.',
 
