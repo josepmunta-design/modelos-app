@@ -7,6 +7,8 @@ import {
   upsertSubscription
 } from './_billing.js';
 
+const WEBHOOK_TOLERANCE_SECONDS = 300;
+
 export const config = {
   api: {
     bodyParser: false
@@ -40,6 +42,15 @@ function verifyStripeSignature(rawBody, signatureHeader) {
   const timestamp = parts.t?.[0];
   const signatures = parts.v1 || [];
   if (!timestamp || !signatures.length) throw new Error('Invalid Stripe-Signature header');
+
+  const timestampSeconds = Number(timestamp);
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  if (
+    !Number.isFinite(timestampSeconds)
+    || Math.abs(nowSeconds - timestampSeconds) > WEBHOOK_TOLERANCE_SECONDS
+  ) {
+    throw new Error('Expired Stripe webhook signature');
+  }
 
   const payload = `${timestamp}.${rawBody.toString('utf8')}`;
   const expected = crypto
