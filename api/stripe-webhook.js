@@ -4,7 +4,8 @@ import {
   sendMethodNotAllowed,
   stripeRequest,
   subscriptionToRow,
-  upsertSubscription
+  upsertSubscription,
+  recordTrialUsage
 } from './_billing.js';
 
 const WEBHOOK_TOLERANCE_SECONDS = 300;
@@ -87,6 +88,24 @@ async function upsertFromSubscription(subscription, fallbackUserId) {
   return upsertSubscription(subscriptionToRow(subscription, userId));
 }
 
+// Registra que este email ya consumió su periodo de prueba.
+// Se dispara cuando la suscripción nace (o existe) en estado 'trialing'.
+// Es idempotente: recordTrialUsage usa ignore-duplicates, así que repetir no daña.
+async function registerTrialIfApplicable(subscription) {
+  if (subscription?.status !== 'trialing') return;
+  const emailNormalized = subscription?.metadata?.email_normalized;
+  if (!emailNormalized) {
+    console.warn('[stripe-webhook] trialing subscription without email_normalized:', subscription?.id);
+    return;
+  }
+  try {
+    await recordTrialUsage(emailNormalized);
+  } catch (err) {
+    // No tumbamos el webhook por esto: registramos y seguimos.
+    console.error('[stripe-webhook] recordTrialUsage failed:', err);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return sendMethodNotAllowed(res, 'POST');
 
@@ -112,6 +131,8 @@ export default async function handler(req, res) {
       if (userId && subscriptionId) {
         const subscription = await stripeRequest(`/subscriptions/${encodeURIComponent(subscriptionId)}`);
         await upsertFromSubscription(subscription, userId);
+        // Si el checkout creó un trial, deja constancia del email:
+        await registerTrialIfApplicable(subscription);
       }
     }
 
@@ -120,7 +141,10 @@ export default async function handler(req, res) {
       || event.type === 'customer.subscription.updated'
       || event.type === 'customer.subscription.deleted'
     ) {
-      await upsertFromSubscription(event.data.object);
+      const subscription = event.data.object;
+      await upsertFromSubscription(subscription);
+      // Cubre el caso de trials creados fuera del checkout.session.completed:
+      await registerTrialIfApplicable(subscription);
     }
 
     return res.status(200).json({ received: true });
