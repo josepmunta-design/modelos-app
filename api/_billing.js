@@ -174,3 +174,37 @@ export function sendMethodNotAllowed(res, allowed) {
   res.setHeader('Allow', allowed);
   return res.status(405).json({ error: 'Method not allowed' });
 }
+
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com','10minutemail.com','guerrillamail.com','tempmail.com',
+  'temp-mail.org','throwawaymail.com','yopmail.com','trashmail.com',
+  'getnada.com','sharklasers.com','maildrop.cc','mintemail.com'
+]);
+
+export function normalizeEmail(raw){
+  const email = String(raw || '').trim().toLowerCase();
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return { ok:false, reason:'invalid' };
+  if (DISPOSABLE_DOMAINS.has(domain)) return { ok:false, reason:'disposable' };
+  let cleanLocal = local.split('+')[0];
+  if (domain === 'gmail.com' || domain === 'googlemail.com'){
+    cleanLocal = cleanLocal.replace(/\./g, '');
+  }
+  return { ok:true, value:`${cleanLocal}@${domain}` };
+}
+
+export async function hasUsedTrial(emailNormalized){
+  const rows = await supabaseRest(
+    `trial_history?email_normalized=eq.${encodeURIComponent(emailNormalized)}&select=email_normalized`,
+    { headers: { Accept: 'application/json' } }
+  );
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+export async function recordTrialUsage(emailNormalized){
+  await supabaseRest('trial_history?on_conflict=email_normalized', {
+    method: 'POST',
+    headers: { Accept:'application/json', Prefer:'resolution=ignore-duplicates' },
+    body: JSON.stringify({ email_normalized: emailNormalized })
+  });
+}
