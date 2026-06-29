@@ -47,6 +47,15 @@
     overflow-x:auto;scrollbar-width:none;font-size:.64rem}
   .compact-header .meta-row::-webkit-scrollbar{display:none}
   .shared-auth{display:flex;align-items:center;gap:8px;flex:none;font-family:'Archivo',sans-serif}
+  .appsHomeLink{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;
+    padding:7px 10px;border:1px solid rgba(255,255,255,.10);border-radius:999px;
+    background:rgba(7,11,16,.52);color:rgba(231,237,245,.78);text-decoration:none;
+    font:750 12px/1 'Archivo',sans-serif;box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 10px 24px rgba(0,0,0,.18);
+    backdrop-filter:blur(12px) saturate(112%);transition:background .16s,border-color .16s,color .16s,transform .16s}
+  .appsHomeLink:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.18);color:rgba(255,255,255,.90)}
+  .appsHomeLink:active{transform:translateY(1px)}
+  .appsHomeLink:focus-visible{outline:none;border-color:rgba(217,170,63,.50);box-shadow:0 0 0 3px rgba(217,170,63,.14)}
+  .appsHomeLink svg{width:14px;height:14px;flex:none}
   .shared-auth-email{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
     color:var(--ink-soft);font-size:.66rem}
   .shared-auth-btn{border:1px solid var(--line);border-radius:18px;background:transparent;color:var(--ink-soft);
@@ -256,6 +265,12 @@
     <span><b>1890</b>–2022</span><span>Mentor · Psicología</span>
   </div>
   <div class="shared-auth" aria-label="Cuenta">
+    <a class="appsHomeLink" href="https://apps.tumentorpsicologia.com/" aria-label="Ir a Home">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M15 6l-6 6 6 6M10 12h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Home</span>
+    </a>
     <span class="shared-auth-email" id="sharedAuthEmail" hidden></span>
     <button class="shared-auth-btn" id="sharedLoginButton" type="button">Acceso</button>
     <button class="shared-auth-btn" id="sharedLogoutButton" type="button" hidden>Salir</button>
