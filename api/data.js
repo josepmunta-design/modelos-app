@@ -1,4 +1,6 @@
-import { hasActiveSubscription } from './_billing.js';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { hasPrivateDataAccess } from './_billing.js';
 
 // =============================================================
 // api/data.js  —  Vercel Serverless Function
@@ -15,14 +17,45 @@ import { hasActiveSubscription } from './_billing.js';
 // - Do NOT expose server-side tokens in modelos.html.
 // =============================================================
 
-const GITHUB_OWNER = process.env.GITHUB_OWNER;
-const GITHUB_REPO = process.env.GITHUB_REPO;
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://yritadgaurvplltgubii.supabase.co';
-const SUPABASE_SECRET_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+function readLocalEnvValue(name) {
+  if (process.env[name]) return process.env[name];
+
+  const files = ['.env.development.local', '.env.local'];
+  for (const file of files) {
+    const fullPath = join(process.cwd(), file);
+    if (!existsSync(fullPath)) continue;
+
+    const lines = readFileSync(fullPath, 'utf8').split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+      if (!match || match[1] !== name) continue;
+      return match[2].trim().replace(/^['"]|['"]$/g, '');
+    }
+  }
+
+  return '';
+}
+
+const GITHUB_OWNER = readLocalEnvValue('GITHUB_OWNER');
+const GITHUB_REPO = readLocalEnvValue('GITHUB_REPO');
+const GITHUB_TOKEN = readLocalEnvValue('GITHUB_TOKEN');
+const SUPABASE_URL = readLocalEnvValue('SUPABASE_URL') || 'https://yritadgaurvplltgubii.supabase.co';
+const SUPABASE_SECRET_KEY = readLocalEnvValue('SUPABASE_SERVICE_ROLE_KEY') || readLocalEnvValue('SUPABASE_SECRET_KEY');
 const SUPABASE_API_KEY = SUPABASE_SECRET_KEY
-  || process.env.SUPABASE_ANON_KEY
+  || readLocalEnvValue('SUPABASE_ANON_KEY')
   || 'sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm';
+const LOCAL_DEV_FULL_ACCESS = readLocalEnvValue('LOCAL_DEV_FULL_ACCESS') === '1'
+  && process.env.VERCEL_ENV !== 'production'
+  && process.env.NODE_ENV !== 'production';
+
+console.log('[data proxy] env check', {
+  LOCAL_DEV_FULL_ACCESS,
+  NODE_ENV: process.env.NODE_ENV || '',
+  VERCEL_ENV: process.env.VERCEL_ENV || '',
+  LOCAL_DEV_FULL_ACCESS_READ: readLocalEnvValue('LOCAL_DEV_FULL_ACCESS') === '1'
+});
 
 // Allowed frontend origins.
 // CORS uses only protocol + domain, not the full path.
@@ -31,6 +64,17 @@ const ALLOWED_ORIGINS = [
   'https://modelos.tumentorpsicologia.com',
   'https://modelos-app.vercel.app'
 ];
+
+function isLocalDevOrigin(origin) {
+  if (!LOCAL_DEV_FULL_ACCESS) return false;
+
+  try {
+    const url = new URL(origin);
+    return ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
 
 const ALLOWED_EXTENSIONS = [
   '.json',
@@ -96,50 +140,14 @@ function isPublicLandingAssetPath(path) {
     );
 }
 
-const PUBLIC_IMAGE_EXTENSIONS = [
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.webp',
-  '.gif',
-  '.svg'
-];
-
-function isPublicImagePath(path) {
-  const lowerPath = String(path || '').toLowerCase();
-
-  return (
-    lowerPath.startsWith('core/fotos/')
-    || lowerPath.startsWith('core/imagenes/vida/')
-  ) && PUBLIC_IMAGE_EXTENSIONS.some((ext) => lowerPath.endsWith(ext));
-}
-
 function isPublicModelDataPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();
 
-  // Bloqueo explícito: los JSON completos nunca son públicos.
-  if (lowerPath.startsWith('core/modelos/')) {
-    return false;
-  }
-
   return isPublicLandingAssetPath(value)
-
-    // Índices de escuelas.
     || lowerPath === 'core/escuelas/index.json'
     || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
-
-    // Solo JSON públicos generados.
-    || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value)
-
-    // Índices concretos de fotos.
-    || lowerPath === 'core/fotos/foto.json'
-    || lowerPath === 'core/fotos.json'
-    || lowerPath === 'core/foto.json'
-    || lowerPath === 'core/imagenes/vida/index.json'
-
-    // Imágenes, pero NO JSON arbitrarios.
-    || isPublicImagePath(value);
+    || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
 }
 
 function cleanRequestedPath(rawPath) {
@@ -166,21 +174,18 @@ async function validateSupabaseUser(token) {
   return authRes.json();
 }
 
-async function hasActiveSubscriptionAccess(user) {
-  if (!user?.id) return false;
-  return hasActiveSubscription(user.id);
-}
-
 export default async function handler(req, res) {
   // 1. CORS
   // ── CORS / Origin restriction ──────────────────────────────
   const origin = req.headers.origin;
 
-  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+  const allowedOrigin = origin && (ALLOWED_ORIGINS.includes(origin) || isLocalDevOrigin(origin));
+
+  if (origin && !allowedOrigin) {
     return res.status(403).json({ error: 'Forbidden origin' });
   }
 
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+  if (allowedOrigin) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
 
@@ -203,6 +208,13 @@ export default async function handler(req, res) {
   const filePath = cleanRequestedPath(rawPath);
   const publicRequest = isPublicModelDataPath(filePath);
 
+  if (LOCAL_DEV_FULL_ACCESS) {
+    console.log('[data proxy] local bypass active', {
+      path: filePath,
+      publicRequest
+    });
+  }
+
   // ── Environment checks ────────────────────────────────────
   // 2. Validación Supabase Auth
   const authHeader = req.headers.authorization || "";
@@ -210,7 +222,7 @@ export default async function handler(req, res) {
     ? authHeader.slice("Bearer ".length)
     : "";
 
-  if (!publicRequest && !token) {
+  if (!LOCAL_DEV_FULL_ACCESS && !publicRequest && !token) {
     return res.status(401).json({ error: 'No autorizado' });
   }
 
@@ -221,23 +233,23 @@ export default async function handler(req, res) {
     });
   }
 
-  if (!publicRequest && (!SUPABASE_URL || !SUPABASE_API_KEY)) {
+  if (!LOCAL_DEV_FULL_ACCESS && !publicRequest && (!SUPABASE_URL || !SUPABASE_API_KEY)) {
     return res.status(500).json({
       error: 'Server configuration error: missing Supabase environment variables'
     });
   }
 
-  if (!publicRequest) try {
+  if (!LOCAL_DEV_FULL_ACCESS && !publicRequest) try {
     const user = await validateSupabaseUser(token);
 
     if (!user || !user.id) {
       return res.status(401).json({ error: 'Sesión inválida' });
     }
 
-    const hasSubscriptionAccess = await hasActiveSubscriptionAccess(user);
+    const hasSubscriptionAccess = await hasPrivateDataAccess(user);
 
     if (!hasSubscriptionAccess) {
-      return res.status(403).json({ error: 'Suscripcion requerida' });
+      return res.status(403).json({ error: 'Suscripcion o prueba gratuita activa requerida' });
     }
   } catch (err) {
     console.error('[data proxy] Supabase auth error:', err);
