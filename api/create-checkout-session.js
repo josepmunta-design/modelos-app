@@ -12,7 +12,8 @@ const BLOCKED_CHECKOUT_STATUSES = new Set([
   'active',
   'trialing',
   'past_due',
-  'unpaid'
+  'unpaid',
+  'paused'
 ]);
 
 export default async function handler(req, res) {
@@ -30,7 +31,7 @@ export default async function handler(req, res) {
     const user = await validateSupabaseUser(token);
 
     if (!user?.id) {
-      return res.status(401).json({ error: 'Sesion invalida' });
+      return res.status(401).json({ error: 'Sesión inválida' });
     }
 
     if (!process.env.STRIPE_PRICE_ID) {
@@ -43,11 +44,10 @@ export default async function handler(req, res) {
 
     if (BLOCKED_CHECKOUT_STATUSES.has(existingSubscription?.status)) {
       return res.status(409).json({
-        error: 'Ya tienes una suscripción. Gestiona tu plan desde el portal de cliente.'
+        error: 'Ya tienes una suscripción o una prueba activa. Gestiona tu plan desde el portal de cliente.'
       });
     }
 
-    // Normalización de email + bloqueo de desechables
     const emailNorm = normalizeEmail(user.email);
 
     if (!emailNorm.ok && emailNorm.reason === 'disposable') {
@@ -66,6 +66,15 @@ export default async function handler(req, res) {
       'line_items[0][price]': process.env.STRIPE_PRICE_ID,
       'line_items[0][quantity]': 1,
 
+      // Prueba gratuita de 10 días.
+      'subscription_data[trial_period_days]': '10',
+
+      // No solicita tarjeta ni otro método de pago durante el alta.
+      payment_method_collection: 'if_required',
+
+      // Al terminar el trial sin método de pago, Stripe cancela la suscripción.
+      'subscription_data[trial_settings][end_behavior][missing_payment_method]': 'cancel',
+
       'metadata[supabase_user_id]': user.id,
       'subscription_data[metadata][supabase_user_id]': user.id,
       'subscription_data[metadata][email_normalized]': emailNorm.ok
@@ -79,7 +88,7 @@ export default async function handler(req, res) {
       allow_promotion_codes: 'true',
 
       'custom_text[submit][message]':
-        'Si eres autónomo/a o particular en España, abre el desplegable de identificación fiscal y selecciona “ES NIF”. Si tienes IVA intracomunitario, selecciona “IVA de ES”.',
+        'Empieza tu prueba gratuita de 10 días. No se solicita tarjeta. Al finalizar el periodo, el acceso terminará salvo que actives una suscripción.',
 
       success_url: `${appUrl}/?checkout=success`,
       cancel_url: `${appUrl}/?checkout=cancel`
@@ -107,11 +116,10 @@ export default async function handler(req, res) {
     console.error('[create-checkout-session] error:', err);
 
     return res.status(500).json({
-      error: 'No se pudo crear la sesion de pago',
+      error: 'No se pudo crear la sesión de pago',
       detail: process.env.NODE_ENV !== 'production'
         ? err.message
         : undefined
     });
   }
 }
-
