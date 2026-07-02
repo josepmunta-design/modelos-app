@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root{
@@ -3093,122 +3092,11 @@ body.theme-light .goFailedActions{
   }
 }
 
-/* Cabecera compartida con la landing */
-.site-header{
-  position: sticky;
-  top: 0;
-  z-index: 1200;
-  min-height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 10px clamp(16px, 4vw, 54px);
-  border-bottom: 1px solid rgba(243,236,226,.10);
-  background: rgba(11,10,12,.88);
-  box-shadow: 0 12px 34px rgba(0,0,0,.18);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-.site-brand{
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 11px;
-  color: #f3ece2;
-  text-decoration: none;
-}
-.site-brand-mark{
-  width: 8px;
-  height: 8px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  background: #d9aa3f;
-  box-shadow: 0 0 18px rgba(217,170,63,.45);
-}
-.site-brand-name{
-  overflow: hidden;
-  font-size: .74rem;
-  font-weight: 700;
-  letter-spacing: .16em;
-  text-transform: uppercase;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.site-nav{
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.site-user-email{
-  max-width: 220px;
-  overflow: hidden;
-  color: rgba(243,236,226,.54);
-  font-size: .72rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.site-nav-action{
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(243,236,226,.14);
-  border-radius: 999px;
-  padding: 8px 16px;
-  color: rgba(243,236,226,.84);
-  background: rgba(255,255,255,.045);
-  font: inherit;
-  font-size: .78rem;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: transform .18s ease, border-color .18s ease, background .18s ease;
-}
-.site-nav-action:hover,
-.site-nav-action:focus-visible{
-  border-color: rgba(217,170,63,.62);
-  background: rgba(217,170,63,.10);
-  outline: none;
-  transform: translateY(-1px);
-}
-.site-nav-action.is-primary{
-  border-color: #d9aa3f;
-  color: #180f0a;
-  background: #d9aa3f;
-  box-shadow: 0 12px 28px rgba(217,170,63,.18);
-}
-.site-nav-action[hidden],
-.site-user-email[hidden]{ display: none !important; }
-@media (max-width: 700px){
-  .site-header{ gap: 8px; padding-inline: 12px; }
-  .site-brand-name{ max-width: 110px; font-size: .66rem; }
-  .site-user-email,
-  .site-library-link{ display: none; }
-  .site-nav{ gap: 6px; }
-  .site-nav-action{ min-height: 34px; padding: 7px 11px; font-size: .72rem; }
-}
-
 </style>
 </head>
 
 
 <body>
-  <header class="site-header">
-    <a class="site-brand" href="/" aria-label="Volver a Tu Mentor Psicolog&iacute;a">
-      <span class="site-brand-mark" aria-hidden="true"></span>
-      <span class="site-brand-name">Tu Mentor Psicolog&iacute;a</span>
-    </a>
-    <nav class="site-nav" aria-label="Cuenta y suscripci&oacute;n">
-      <span class="site-user-email" id="siteUserEmail" hidden></span>
-      <a class="site-nav-action site-library-link" href="/modelos/">Biblioteca</a>
-      <button class="site-nav-action" id="siteLoginButton" type="button">Entrar</button>
-      <button class="site-nav-action is-primary" id="siteSubscribeButton" type="button" hidden>Suscribirse</button>
-      <button class="site-nav-action" id="siteManageButton" type="button" hidden>Gestionar suscripci&oacute;n</button>
-      <button class="site-nav-action" id="siteLogoutButton" type="button" hidden>Salir</button>
-    </nav>
-  </header>
   <div class="bg-blobs"></div>
 
   <div class="app">
@@ -3384,139 +3272,23 @@ body.theme-light .goFailedActions{
      CONFIG — AJUSTA ESTO
      ========================= */
 
-// El repositorio es privado: todas las lecturas pasan por el proxy de Vercel.
-// El token de GitHub permanece exclusivamente en el servidor.
-const API_BASE = location.origin;
-const SUPABASE_URL = "https://yritadgaurvplltgubii.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storageKey: 'tmp-shared-auth-v1'
-  }
-});
-
-const siteUserEmail = document.getElementById('siteUserEmail');
-const siteLoginButton = document.getElementById('siteLoginButton');
-const siteSubscribeButton = document.getElementById('siteSubscribeButton');
-const siteManageButton = document.getElementById('siteManageButton');
-const siteLogoutButton = document.getElementById('siteLogoutButton');
-
-async function getQuizBillingStatus(session){
-  if(!session?.access_token) return { active: false };
-  const response = await fetch(`${API_BASE}/api/billing-status`, {
-    headers: { Authorization: `Bearer ${session.access_token}` }
-  });
-  return response.ok ? response.json() : { active: false };
-}
-
-async function renderQuizSiteHeader(session){
-  const loggedIn = !!session;
-  siteUserEmail.textContent = session?.user?.email || '';
-  siteUserEmail.hidden = !loggedIn;
-  siteLoginButton.hidden = loggedIn;
-  siteLogoutButton.hidden = !loggedIn;
-  siteSubscribeButton.hidden = true;
-  siteManageButton.hidden = true;
-
-  if(!loggedIn) return;
-
-  const billing = await getQuizBillingStatus(session).catch(() => ({ active: false }));
-  siteManageButton.hidden = !billing?.active;
-  siteSubscribeButton.hidden = !!billing?.active;
-}
-
-async function openQuizBilling(endpoint, button){
-  const { data } = await supabaseClient.auth.getSession();
-  const token = data?.session?.access_token || '';
-  if(!token){
-    location.href = '/?auth=login';
-    return;
-  }
-
-  const originalText = button.textContent;
-  button.disabled = true;
-  button.textContent = 'Abriendo…';
-  try{
-    const response = await fetch(`${API_BASE}${endpoint}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const payload = await response.json().catch(() => ({}));
-    if(!response.ok || !payload.url) throw new Error(payload.error || 'No se pudo abrir la suscripción.');
-    location.href = payload.url;
-  }catch(error){
-    alert(error?.message || 'No se pudo abrir la suscripción.');
-  }finally{
-    button.disabled = false;
-    button.textContent = originalText;
-  }
-}
-
-siteLoginButton.addEventListener('click', () => { location.href = '/?auth=login'; });
-siteSubscribeButton.addEventListener('click', () => openQuizBilling('/api/create-checkout-session', siteSubscribeButton));
-siteManageButton.addEventListener('click', () => openQuizBilling('/api/create-portal-session', siteManageButton));
-siteLogoutButton.addEventListener('click', async () => {
-  await supabaseClient.auth.signOut();
-  location.href = '/';
-});
-
-supabaseClient.auth.getSession().then(({ data }) => renderQuizSiteHeader(data?.session || null));
-supabaseClient.auth.onAuthStateChange((_event, session) => renderQuizSiteHeader(session));
-
-async function getSupabaseAccessToken(){
-  const { data } = await supabaseClient.auth.getSession();
-  return data?.session?.access_token || '';
-}
-
-function proxyDataUrl(path){
-  const clean = String(path || '').trim().replace(/^\/+/, '').replace(/^data\//i, '');
-  return `${API_BASE}/api/data?path=${encodeURIComponent(clean)}`;
-}
-
-function isProxyUrl(url){
-  try{
-    const parsed = new URL(String(url || ''), location.href);
-    return parsed.origin === location.origin && parsed.pathname === '/api/data';
-  }catch(e){
-    return false;
-  }
-}
-
-async function privateProxyFetch(url, options = {}){
-  const finalUrl = String(url || '').trim();
-  if(!isProxyUrl(finalUrl)) return fetch(finalUrl, options);
-
-  const headers = new Headers(options.headers || {});
-  const token = await getSupabaseAccessToken();
-  if(token) headers.set('Authorization', `Bearer ${token}`);
-
-  let response = await fetch(finalUrl, { ...options, headers });
-  if(response.status !== 401) return response;
-
-  const { data } = await supabaseClient.auth.refreshSession();
-  const refreshedToken = data?.session?.access_token || '';
-  if(!refreshedToken) return response;
-
-  const retryHeaders = new Headers(options.headers || {});
-  retryHeaders.set('Authorization', `Bearer ${refreshedToken}`);
-  return fetch(finalUrl, { ...options, headers: retryHeaders });
-}
+// Datos SIEMPRE desde tmps-data vía jsDelivr (estable en cualquier dominio)
+const GH_BASE = 'https://cdn.jsdelivr.net/gh/josepmunta-design/tmps-data@main/data';
+const GH_TREE_URL = 'https://api.github.com/repos/josepmunta-design/tmps-data/git/trees/main?recursive=1';
+const JSDELIVR_FLAT_URL = 'https://data.jsdelivr.com/v1/package/gh/josepmunta-design/tmps-data@main/flat';
 
 function gh(path){
-  return proxyDataUrl(path);
+  return `${GH_BASE}/${String(path).replace(/^\/+/,'')}`;
 }
 
-// URLs de datos servidas por la función serverless /api/data.
+// ✅ URLs de datos (SIEMPRE desde tmps-data vía jsDelivr)
 const ESCUELAS_INDEX  = gh('Core/escuelas/index.json');
 const FOTOS_JSON_URL  = gh('Core/fotos/foto.json');
-const PHOTOS_BASE_URL = 'Core/fotos/';
+const PHOTOS_BASE_URL = gh('Core/fotos/');
 
 // ✅ URL BASE de la app de MODELOS (para iframe)
 const REMOTE_MODELOS_APP_BASE = "https://modelos.tumentorpsicologia.com/apps/modelos/index.html";
-const LOCAL_MODELOS_APP_BASE  = new URL("../modelos/index.html", location.href).href;
+const LOCAL_MODELOS_APP_BASE  = new URL("../Modelos/index.html", location.href).href;
 const MODELOS_APP_BASE = (new URLSearchParams(location.search).get("modelosBase") ||
   (location.protocol === "file:" ? LOCAL_MODELOS_APP_BASE : REMOTE_MODELOS_APP_BASE));
 
@@ -3885,7 +3657,7 @@ async function fetchJson(url, opts = {}){
   const to = setTimeout(() => ctrl.abort(), Number(opts.timeoutMs || 20000));
 
   try{
-    const r = await privateProxyFetch(u, {
+    const r = await fetch(u, {
       cache: bust ? "no-store" : "force-cache",
       signal: ctrl.signal,
       headers: { "Accept": "application/json" }
@@ -3917,8 +3689,51 @@ function normalizeFileKey(s){
 }
 
 async function loadRepoModelIndex(){
-  // Un repo privado no expone su árbol al navegador. Las rutas declaradas
-  // en los índices de escuelas se resuelven directamente mediante el proxy.
+  const lowerMap = new Map();
+  const keyMap = new Map();
+
+  const ingestPath = (rawPath)=>{
+    const p = String(rawPath || '').replace(/^\/+/, '');
+    if(!/^data\/Core\/modelos\//i.test(p)) return;
+    if(!/\.json$/i.test(p)) return;
+
+    const corePath = p.replace(/^data\//i, ''); // Core/...
+    const low = corePath.toLowerCase();
+    if(!lowerMap.has(low)) lowerMap.set(low, corePath);
+
+    const base = corePath.split('/').pop() || '';
+    const key = normalizeFileKey(base);
+    if(key && !keyMap.has(key)) keyMap.set(key, corePath);
+  };
+
+  let loaded = false;
+
+  try{
+    const tree = await fetchJson(GH_TREE_URL, { bust: true, timeoutMs: 20000 });
+    const nodes = Array.isArray(tree?.tree) ? tree.tree : [];
+    for(const n of nodes){
+      if(n?.type === 'blob' && typeof n.path === 'string') ingestPath(n.path);
+    }
+    loaded = lowerMap.size > 0;
+  }catch(e){}
+
+  if(!loaded){
+    try{
+      const flat = await fetchJson(JSDELIVR_FLAT_URL, { bust: true, timeoutMs: 20000 });
+      const files = Array.isArray(flat?.files) ? flat.files : [];
+      for(const f of files){
+        if(typeof f?.name === 'string') ingestPath(f.name);
+      }
+      loaded = lowerMap.size > 0;
+    }catch(e){}
+  }
+
+  if(loaded){
+    REPO_MODEL_PATHS_LOWER = lowerMap;
+    REPO_MODEL_BASENAME_KEY_MAP = keyMap;
+    return true;
+  }
+
   REPO_MODEL_PATHS_LOWER = null;
   REPO_MODEL_BASENAME_KEY_MAP = null;
   return false;
@@ -4728,10 +4543,6 @@ function resetGame(){
       elIdea.textContent = "Cargando modelos…";
 setStatus(`Origen: <b>${escapeHtml(location.origin)}</b> · Href: <b>${escapeHtml(location.href)}</b>`, true);
 
-     const accessToken = await getSupabaseAccessToken();
-     if(!accessToken){
-       throw new Error('Inicia sesión para acceder al quiz y a los datos de la biblioteca.');
-     }
 
      const [escuelasIndex, fotosJson] = await Promise.all([
   fetchJson(ESCUELAS_INDEX),
