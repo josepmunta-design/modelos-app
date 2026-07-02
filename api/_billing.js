@@ -7,6 +7,20 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 
 export const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
+export const FREE_TRIAL_DAYS = 10;
+export const FREE_TRIAL_LAUNCH_AT = '2026-07-02T00:00:00.000Z';
+
+export function hasFreeAccountTrial(user, now = Date.now()) {
+  const createdAt = Date.parse(user?.created_at || '');
+  if (!Number.isFinite(createdAt)) return false;
+
+  const launchAt = Date.parse(process.env.FREE_TRIAL_LAUNCH_AT || FREE_TRIAL_LAUNCH_AT);
+  const trialStartedAt = Number.isFinite(launchAt)
+    ? Math.max(createdAt, launchAt)
+    : createdAt;
+  const trialDuration = FREE_TRIAL_DAYS * 24 * 60 * 60 * 1000;
+  return now >= trialStartedAt && now < trialStartedAt + trialDuration;
+}
 
 export function getBearerToken(req) {
   const authHeader = req.headers.authorization || "";
@@ -108,6 +122,12 @@ export async function hasActiveSubscription(userId) {
   return !!row && ACTIVE_SUBSCRIPTION_STATUSES.has(row.status);
 }
 
+export async function hasPrivateDataAccess(user) {
+  if (!user?.id) return false;
+  if (hasFreeAccountTrial(user)) return true;
+  return hasActiveSubscription(user.id);
+}
+
 export async function stripeRequest(path, {
   method = 'GET',
   form,
@@ -173,38 +193,4 @@ export function subscriptionToRow(subscription, userId) {
 export function sendMethodNotAllowed(res, allowed) {
   res.setHeader('Allow', allowed);
   return res.status(405).json({ error: 'Method not allowed' });
-}
-
-const DISPOSABLE_DOMAINS = new Set([
-  'mailinator.com','10minutemail.com','guerrillamail.com','tempmail.com',
-  'temp-mail.org','throwawaymail.com','yopmail.com','trashmail.com',
-  'getnada.com','sharklasers.com','maildrop.cc','mintemail.com'
-]);
-
-export function normalizeEmail(raw){
-  const email = String(raw || '').trim().toLowerCase();
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return { ok:false, reason:'invalid' };
-  if (DISPOSABLE_DOMAINS.has(domain)) return { ok:false, reason:'disposable' };
-  let cleanLocal = local.split('+')[0];
-  if (domain === 'gmail.com' || domain === 'googlemail.com'){
-    cleanLocal = cleanLocal.replace(/\./g, '');
-  }
-  return { ok:true, value:`${cleanLocal}@${domain}` };
-}
-
-export async function hasUsedTrial(emailNormalized){
-  const rows = await supabaseRest(
-    `trial_history?email_normalized=eq.${encodeURIComponent(emailNormalized)}&select=email_normalized`,
-    { headers: { Accept: 'application/json' } }
-  );
-  return Array.isArray(rows) && rows.length > 0;
-}
-
-export async function recordTrialUsage(emailNormalized){
-  await supabaseRest('trial_history?on_conflict=email_normalized', {
-    method: 'POST',
-    headers: { Accept:'application/json', Prefer:'resolution=ignore-duplicates' },
-    body: JSON.stringify({ email_normalized: emailNormalized })
-  });
 }
