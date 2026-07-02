@@ -1,0 +1,4991 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Juego · Adivina el modelo</title>
+
+  <!-- Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panelA: rgba(19,26,34,0.82);
+      --panelB: rgba(19,26,34,0.62);
+      --text:#e7edf5;
+      --muted:#c7d2e1;
+      --muted2:#9fb0c3;
+      --accent:#D9AA3F;
+
+      --edgePad: 14px;
+      --cardW: 1980px;
+
+      --panelGlow: rgba(255,255,255,0.06);
+     --schoolColor: rgba(217,170,63,.85);
+--dotColor: #D9AA3F;
+
+    }
+
+    *{ box-sizing:border-box; }
+  html,body{
+  height:100%;
+  margin:0;
+  color: var(--text);
+  overflow-x:hidden;
+  overflow-y:auto;
+
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.45;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+
+  background:
+    radial-gradient(1400px 900px at 15% 15%, rgba(217,170,63,.12), transparent 55%),
+    radial-gradient(1200px 800px at 85% 35%, rgba(78,121,167,.14), transparent 60%),
+    radial-gradient(900px 600px at 50% 80%, rgba(255,255,255,.04), transparent 65%),
+    linear-gradient(180deg, #0b0f14 0%, #0a0e13 100%);
+}
+
+
+    /* blobs (ligeros) */
+    .bg-blobs{
+      position: fixed; inset:0; pointer-events:none; z-index:0;
+      overflow:hidden; filter: blur(70px); opacity:.55;
+      background:
+        radial-gradient(circle at 22% 78%, rgba(118,183,178,.18), rgba(118,183,178,0) 52%),
+        radial-gradient(circle at 72% 86%, rgba(176,122,161,.16), rgba(176,122,161,0) 55%);
+      animation: blobBg 40s ease-in-out infinite;
+    }
+    .bg-blobs::before, .bg-blobs::after{
+      content:""; position:absolute; width:520px; height:520px; border-radius:999px;
+      will-change: transform; mix-blend-mode: screen; opacity:.22;
+    }
+    .bg-blobs::before{
+      left:-120px; top:-140px;
+      background: radial-gradient(circle at 30% 30%, rgba(217,170,63,.95), rgba(217,170,63,0) 62%);
+      animation: blobA 28s ease-in-out infinite;
+    }
+    .bg-blobs::after{
+      right:-160px; top:120px;
+      background: radial-gradient(circle at 35% 35%, rgba(78,121,167,.95), rgba(78,121,167,0) 62%);
+      animation: blobB 34s ease-in-out infinite;
+    }
+    @keyframes blobA{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      35%{transform:translate3d(260px,220px,0) scale(1.08);}
+      70%{transform:translate3d(520px,-40px,0) scale(0.96);}
+      100%{transform:translate3d(0,0,0) scale(1);}
+    }
+    @keyframes blobB{
+      0%{transform:translate3d(0,0,0) scale(1);}
+      30%{transform:translate3d(-260px,260px,0) scale(1.06);}
+      65%{transform:translate3d(-520px,-80px,0) scale(0.94);}
+      100%{transform:translate3d(0,0,0) scale(1);}
+    }
+    @keyframes blobBg{
+      0%{background-position:0% 0%, 0% 0%;}
+      50%{background-position:14% -10%, -10% 12%;}
+      100%{background-position:0% 0%, 0% 0%;}
+    }
+    @media (prefers-reduced-motion: reduce){
+      .bg-blobs, .bg-blobs::before, .bg-blobs::after{ animation:none !important; }
+    }
+
+.app{
+  position: relative; z-index: 2;
+  min-height: 100vh;
+  display:flex;
+
+  /* ✅ clave: en vez de centrar verticalmente, ancla arriba */
+  align-items: flex-start;
+
+  justify-content:center;
+
+  /* un pelín más “seguro” arriba en móvil */
+  padding: max(16px, env(safe-area-inset-top)) 18px 26px;
+}
+@media (min-width: 901px){
+  .goOverlay{ padding: 22px; }
+
+  .goShell{
+    width: min(920px, 100%);
+    border-radius: 22px;
+    border-color: rgba(255,255,255,0.15);
+    box-shadow:
+      0 22px 64px rgba(0,0,0,0.52),
+      inset 0 1px 0 rgba(255,255,255,0.11);
+  }
+
+  .goHead{
+    padding: 14px 16px 10px;
+    gap: 10px;
+  }
+
+  .goBody{
+    padding: 12px 16px 16px;
+  }
+
+  .goTitle{
+    font-size: clamp(30px, 4vw, 50px);
+    letter-spacing: -0.03em;
+  }
+
+  .goSubtitle{
+    margin-top: 8px;
+    line-height: 1.46;
+    max-width: 68ch;
+  }
+
+  .goStats{
+    margin-top: 12px;
+    max-width: 188px;
+  }
+
+  .goStat{
+    border-radius: 13px;
+    padding: 10px 11px;
+  }
+
+  .goStat .v{
+    font-size: 24px;
+    margin-top: 2px;
+  }
+
+  .goActions{
+    margin-top: 12px;
+    gap: 8px;
+  }
+
+  .btn.btnSmall{
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  .goReviewTitle{
+    margin-top: 10px;
+  }
+
+  .goFailedGrid{
+    margin-top: 8px;
+    gap: 8px;
+  }
+
+  .goFailedCard{
+    border-radius: 12px;
+    padding: 9px 10px;
+  }
+
+  .goFailedActions{ margin-top: 7px; }
+
+  .goFine{ margin-top: 10px; }
+}
+
+@media (max-width: 900px){
+  .app{
+    padding: max(12px, env(safe-area-inset-top)) 12px 18px;
+    align-items: stretch; /* hace que el panel use todo el ancho */
+  }
+}
+
+    .panel{
+      position: relative;
+      overflow: hidden;
+      width: min(var(--cardW), 100%);
+      border-radius: 18px;
+      background: linear-gradient(180deg, var(--panelA), var(--panelB));
+      border:1px solid rgba(255,255,255,0.10);
+      box-shadow:
+        0 18px 50px rgba(0,0,0,0.45),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+     backdrop-filter: blur(14px) saturate(125%);
+  -webkit-backdrop-filter: blur(14px) saturate(125%);
+    }
+    /* =========================
+   SCROLLBAR GLASS (premium)
+   ========================= */
+.panel, .modelDesc, .fsBody{
+  scrollbar-width: thin;
+  scrollbar-color: rgba(231,237,245,0.28) rgba(255,255,255,0.06);
+}
+
+.panel::-webkit-scrollbar,
+.modelDesc::-webkit-scrollbar,
+.fsBody::-webkit-scrollbar{
+  width: 10px;
+}
+
+.panel::-webkit-scrollbar-track,
+.modelDesc::-webkit-scrollbar-track,
+.fsBody::-webkit-scrollbar-track{
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.panel::-webkit-scrollbar-thumb,
+.modelDesc::-webkit-scrollbar-thumb,
+.fsBody::-webkit-scrollbar-thumb{
+  background: linear-gradient(180deg, rgba(231,237,245,0.28), rgba(231,237,245,0.14));
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+.panel::-webkit-scrollbar-thumb:hover,
+.modelDesc::-webkit-scrollbar-thumb:hover,
+.fsBody::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(180deg, rgba(231,237,245,0.36), rgba(231,237,245,0.18));
+}
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      background:
+        radial-gradient(520px 320px at 88% 12%, var(--panelGlow), transparent 62%),
+        radial-gradient(700px 420px at 18% 85%, rgba(255,255,255,0.05), transparent 65%);
+      opacity:.95;
+      mix-blend-mode: screen;
+      animation: panelBreath 5s ease-in-out infinite;
+    }
+    @keyframes panelBreath{
+      0%,100%{ background-position: 0% 0%; opacity:.85; }
+      50%{ background-position: 100% 100%; opacity:1; }
+    }
+
+    .wrap{ position: relative; z-index: 1; padding: 18px 18px 16px; }
+
+ .hero{
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    radial-gradient(900px 420px at 15% 10%, rgba(255,255,255,0.10), transparent 60%),
+    radial-gradient(700px 340px at 70% 30%, var(--panelGlow), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.10));
+  box-shadow: 0 18px 70px rgba(0,0,0,.45);
+  padding: 18px 18px;
+  overflow:hidden;
+  margin-bottom: 12px;
+}
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:-40px;
+  pointer-events:none;
+  opacity:.22;
+  background:
+    radial-gradient(circle at 12px 12px, rgba(255,255,255,0.10) 1px, transparent 1.6px);
+  background-size: 24px 24px;
+  transform: rotate(6deg);
+}
+
+/* variante sobria */
+.hero--mini{
+  padding: 16px 16px;
+}
+
+/* eyebrow mejorado */
+.eyebrow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size: 10.5px;
+  font-weight: 900;
+  letter-spacing: .9px;
+  text-transform: uppercase;
+  color: rgba(231,237,245,0.62);
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.heroBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.18);
+}
+
+.heroBadgeDot{
+  width:8px; height:8px; border-radius:999px;
+  background: color-mix(in srgb, var(--schoolColor) 70%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--schoolColor) 14%, transparent);
+}
+
+.heroSep{
+  opacity:.35;
+}
+
+.heroMeta{
+  opacity:.75;
+}
+
+/* título más “pro” */
+.title{
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -0.7px;
+  line-height: 1.05;
+  margin: 0 0 6px 0;
+  position: relative;
+  z-index: 1;
+}
+.title::before{ content:""; display:none; }
+
+.sub{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(227,235,246,0.88);
+  max-width: 72ch;
+  position: relative;
+  z-index: 1;
+}
+
+
+.heroRules{
+  margin-top: 10px;
+  display:flex;
+  flex-wrap: wrap;
+  gap:8px;
+}
+.ruleChip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.06);
+  color: rgba(231,237,245,0.92);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.ruleChip b{ color:#fff; font-weight: 950; }
+
+/* panel derecho (mini stats) */
+.heroSide{
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.05);
+  padding: 12px 12px;
+  box-shadow: 0 16px 50px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.heroSideTitle{
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  color: rgba(231,237,245,0.65);
+  margin-bottom: 10px;
+}
+.heroStats{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.hStat{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.14);
+  padding: 10px 10px;
+}
+.hStat .k{
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  color: rgba(231,237,245,0.60);
+}
+.hStat .v{
+  margin-top: 4px;
+  font-size: 14px;
+  font-weight: 950;
+  color:#fff;
+}
+.heroHint{
+  margin-top: 10px;
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: rgba(231,237,245,0.70);
+}
+.heroHint kbd{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.18);
+  color: rgba(231,237,245,0.92);
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin: 0 0 10px 0;
+  flex-wrap: wrap;
+}
+
+/* ✅ fila derecha con botones + selector */
+.controlsRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap: wrap;
+}
+
+/* wrapper botones */
+.actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap: wrap;
+}
+
+
+
+    .score{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 10px 12px;
+    }
+    .score .k{ font-size:11px; font-weight:900; letter-spacing:.5px; text-transform:uppercase; color: rgba(231,237,245,.70); }
+    .score .v{ font-size:14px; font-weight:900; color:#fff; }
+.score .dot{
+  width:10px; height:10px; border-radius:999px;
+  background: color-mix(in srgb, var(--dotColor) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dotColor) 90%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--dotColor) 14%, transparent);
+}
+
+
+    .btn{
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(15,22,32,0.38);
+      color: rgba(231,237,245,0.95);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      cursor:pointer;
+      user-select:none;
+      box-shadow: 0 14px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,0.08);
+      transition: transform .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(15,22,32,0.62);
+      border-color: rgba(217,170,63,0.35);
+      box-shadow: 0 18px 60px rgba(0,0,0,.55), 0 0 0 6px rgba(217,170,63,.06);
+    }
+    .btn:active{ transform: translateY(0) scale(.98); }
+    .btn:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(217,170,63,.22), 0 18px 60px rgba(0,0,0,.55); }
+    /* ✅ Textos botones: desktop = largo, móvil estrecho = corto */
+.tShort{ display:none !important; }
+.tLong{ display:inline !important; }
+
+@media (max-width: 360px){
+  .tLong{ display:none !important; }
+  .tShort{ display:inline !important; }
+}
+
+    /* ✅ Selector escuela (glassy) */
+  /* ✅ Selector escuela — glassy premium */
+.filterBox{
+  position: relative;
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    radial-gradient(600px 120px at 20% 0%, rgba(255,255,255,0.08), transparent 62%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.14));
+
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.filterBox:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.14);
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.45),
+    0 0 0 6px color-mix(in srgb, var(--schoolColor) 10%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+.filterLabel{
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .2px;
+  text-transform: none;
+  color: rgba(231,237,245,0.55);
+  white-space: nowrap;
+}
+
+
+/* El select cerrado: esto es lo que queda perfecto */
+select.select{
+  appearance:none;
+  -webkit-appearance:none;
+  -moz-appearance:none;
+
+  min-width: 220px;
+  height: 38px;
+
+  padding: 0 42px 0 12px;
+  border-radius: 12px;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--schoolColor) 9%, rgba(0,0,0,0.18)),
+      rgba(0,0,0,0.22)
+    );
+
+  color: rgba(231,237,245,0.96);
+  font-weight: 950;
+  letter-spacing: .2px;
+
+  cursor: pointer;
+  outline: none;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 10px 30px rgba(0,0,0,.22);
+
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+/* Hover “sobrio” */
+select.select:hover{
+  border-color: rgba(255,255,255,0.18);
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--schoolColor) 12%, rgba(0,0,0,0.18)),
+      rgba(0,0,0,0.24)
+    );
+}
+
+/* Focus premium */
+select.select:focus-visible{
+  border-color: color-mix(in srgb, var(--schoolColor) 45%, rgba(255,255,255,0.12));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--schoolColor) 20%, transparent),
+    0 14px 40px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+/* Flecha minimal (SVG) en lugar de ▾ */
+.filterBox::after{
+  content:"";
+  position:absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events:none;
+  opacity:.85;
+  background: no-repeat center / 14px 14px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath fill='rgba(231,237,245,0.92)' d='M7 10l5 5l5-5z'/%3E%3C/svg%3E");
+}
+
+/* Intento de mejorar el menú abierto (limitado por navegador) */
+select.select option{
+  background: #0f1620;
+  color: rgba(231,237,245,0.96);
+}
+
+/* En navegadores que respetan, empuja a esquema oscuro */
+select.select{
+  color-scheme: dark;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 1.25fr; /* ✅ derecha más ancha */
+  gap: 12px;
+  align-items: stretch;
+}
+
+/* ✅ solo en pantallas grandes, aún más lectura */
+@media (min-width: 1200px){
+  .grid{
+    grid-template-columns: 1fr 2.45fr;
+  }
+}
+
+ @media (max-width: 900px){
+  .grid{ grid-template-columns: 1fr; }
+
+  /* ✅ En móvil: no mostramos la tarjeta derecha (evita el hueco vacío) */
+ .card.rightCard{
+  display:flex;
+  flex-direction: column;
+  height: 70vh;       /* fija la referencia */
+  min-height: 520px;
+}
+}
+
+
+.card{
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    radial-gradient(700px 220px at 15% 0%, rgba(255,255,255,0.06), transparent 55%),
+    rgba(255,255,255,0.04);
+  border-radius: 18px;
+  padding: 16px 16px;
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+/* ✅ RightCard: fondo casi igual al borde para que el “marco” no cante */
+.card.rightCard{
+    padding: 10px !important;                 /* crea marco */
+  background: rgba(255,255,255,0.10) !important; /* mismo alpha que el borde */
+}
+
+/* =========================
+   REVEAL CARD (modelo-style)
+   ========================= */
+
+/* Acento de escuela: esquina superior derecha */
+.card.rightCard{
+  position: relative;
+}
+/* =========================
+   IFRAME: tarjeta de MODELOS embebida
+   ========================= */
+.modelFrame{
+  width: 100%;
+  height: 70vh;     /* altura explícita */
+  min-height: 520px;
+  border: 0;
+    border-radius: 14px; 
+  display: block;
+  background: transparent;
+    transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+
+}
+
+
+/* En móvil no se ve rightCard igual, pero por si acaso */
+@media (max-width: 900px){
+  .modelFrame{ min-height: 60vh; }
+}
+
+/* Iframe dentro del fullscreen */
+.fsBody{
+  flex: 1 1 auto;     /* ✅ ocupa TODO el alto disponible */
+  padding: 0 !important;
+  overflow: hidden;   /* ✅ el scroll que lo haga el iframe */
+  min-height: 0;
+}
+.fsIframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: transparent;
+    transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  will-change: transform;
+
+}
+
+
+/* ❌ Desactivar glow por escuela en panel derecho */
+.card.rightCard::after{
+  display: none !important;
+}
+
+/* Badge de escuela (como en Modelos) */
+.schoolTag{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+
+  color: color-mix(in srgb, var(--schoolColor) 85%, white 15%);
+  border: 1px solid color-mix(in srgb, var(--schoolColor) 40%, rgba(255,255,255,0.12));
+  background: color-mix(in srgb, var(--schoolColor) 12%, rgba(0,0,0,0.18));
+
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.18),
+    0 0 0 6px color-mix(in srgb, var(--schoolColor) 10%, transparent),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+
+  white-space: nowrap;
+}
+
+.schoolTagDot{
+  width:8px; height:8px; border-radius:999px;
+  background: color-mix(in srgb, var(--schoolColor) 75%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--schoolColor) 16%, transparent);
+}
+
+/* ✅ SOLO la tarjeta derecha: que distribuya verticalmente y deje crecer la descripción */
+.card.rightCard{
+  display:flex;
+  flex-direction: column;
+  min-height: 0; /* clave para que el scroll interno funcione bien */
+}
+
+
+    .ideaText{
+      font-size: 16px;
+      line-height: 1.55;
+      color: rgba(231,237,245,0.95);
+      white-space: pre-wrap;
+    }
+    .metaRow{
+      margin-top: 10px;
+      display:flex;
+      gap:8px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .pill{
+      display:inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      color:#dfe6f1;
+    }
+
+    .answers{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+.opt{
+  position: relative;
+
+  text-align:left;
+
+  /* ✅ igual que landingSchool */
+  border-radius: 16px;
+  padding: 12px 16px 10px 18px;
+
+  background: rgba(255,255,255,0.055);
+  border: 1px solid rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+
+  box-shadow:
+    0 14px 36px rgba(0,0,0,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+
+  transition:
+    transform .16s ease,
+    box-shadow .16s ease,
+    border-color .16s ease,
+    background .16s ease;
+
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+
+/* texto blanco limpio (sin tinte de escuela) */
+font-weight: 900;
+letter-spacing: -0.2px;
+color: #ffffff;
+text-shadow: 0 0 12px rgba(0,0,0,0.35);
+}
+
+
+/* micro-noise ultra sutil (como landing) */
+.opt::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius: inherit;
+  pointer-events:none;
+  opacity:.10;
+  background-image:
+    radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,.35) 0, rgba(255,255,255,0) 55%),
+    radial-gradient(1px 1px at 70% 35%, rgba(255,255,255,.25) 0, rgba(255,255,255,0) 55%),
+    radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,.22) 0, rgba(255,255,255,0) 55%);
+}
+
+
+.opt:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.065);
+  box-shadow:
+    0 20px 48px rgba(0,0,0,0.48),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+
+    .opt[disabled]{ opacity: .62; cursor: default; transform:none; }
+    .opt.correct{
+      border-color: color-mix(in srgb, #7CFFB2 45%, rgba(255,255,255,0.20));
+      box-shadow: 0 0 0 3px rgba(124,255,178,.10), inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+    .opt.wrong{
+      border-color: color-mix(in srgb, #ff6b6b 45%, rgba(255,255,255,0.20));
+      box-shadow: 0 0 0 3px rgba(255,107,107,.08), inset 0 1px 0 rgba(255,255,255,0.10);
+    }
+
+    .rightTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom: 8px;
+    }
+
+    .author{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .photo{
+      width:56px; height:56px; border-radius:999px;
+      object-fit:cover;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+      flex: 0 0 auto;
+    }
+    .authorText{ min-width:0; }
+    .authorName{
+      font-size: 13px;
+      font-weight: 900;
+      line-height:1.2;
+      color:#fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 42ch;
+    }
+    .authorMeta{
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(231,237,245,0.75);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 42ch;
+    }
+
+    .status{
+      margin-top: 16px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      color: rgba(231,237,245,.90);
+      font-weight: 800;
+      line-height: 1.35;
+      display:none;
+    }
+    .status.is-on{ display:block; }
+    /* ===== Status arriba (solo desktop) ===== */
+#topStatus{
+  margin: 0 0 10px 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  color: rgba(231,237,245,.90);
+  font-weight: 800;
+  line-height: 1.35;
+  display: none;              /* por defecto oculto */
+}
+
+/* en desktop, cuando esté "is-on" se verá */
+#topStatus.is-on{ display:block; }
+
+/* en móvil: NO queremos status arriba */
+@media (max-width: 900px){
+  #topStatus{ display:none !important; }
+}
+
+    .status .small{ display:block; margin-top: 4px; font-weight:700; opacity:.75; }
+    /* =========================
+   GAME OVER (fullscreen Apple)
+   ========================= */
+body.gameover-on{
+  overflow: hidden !important;
+}
+
+.goOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(10,14,20,0.70);
+  backdrop-filter: blur(12px) saturate(122%);
+  -webkit-backdrop-filter: blur(12px) saturate(122%);
+}
+.goOverlay.is-on{ display:flex; }
+
+.goShell{
+  position: relative;
+  width: min(980px, 100%);
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background:
+    radial-gradient(1100px 420px at 18% -20%, rgba(255,255,255,0.10), transparent 58%),
+    linear-gradient(180deg, rgba(20,28,39,0.96), rgba(12,17,25,0.95));
+  box-shadow:
+    0 26px 80px rgba(0,0,0,0.56),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+  overflow: hidden;
+}
+.goShell::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(460px 220px at 88% 12%, rgba(255,255,255,0.06), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,0.04), transparent 28%);
+  opacity:.9;
+}
+
+.goHead{
+  position: relative;
+  z-index: 1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.goBadge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.22);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: rgba(238,244,252,0.92);
+}
+.goBadgeDot{
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background: rgba(255,150,150,0.95);
+  box-shadow: 0 0 0 4px rgba(255,150,150,0.18);
+}
+.goClose{
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  padding: 0;
+  font-size: 17px;
+  line-height: 1;
+}
+
+.goBody{
+  position: relative;
+  z-index: 1;
+  padding: 14px 18px 18px;
+}
+.goTitle{
+  margin: 0;
+  font-size: clamp(32px, 5vw, 54px);
+  line-height: 1.01;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+  color: rgba(247,250,255,0.98);
+}
+.goSubtitle{
+  margin: 10px 0 0;
+  max-width: 72ch;
+  font-size: 14px;
+  line-height: 1.52;
+  color: rgba(228,236,247,0.78);
+}
+
+.goStats{
+  margin-top: 14px;
+  display:grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  max-width: 210px;
+}
+.goStat{
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03));
+  box-shadow:
+    0 10px 26px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.10);
+  padding: 11px 12px;
+}
+.goStat .k{
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(231,237,245,0.62);
+}
+.goStat .v{
+  margin-top: 4px;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color:#fff;
+}
+
+.goActions{
+  margin-top: 14px;
+  display:flex;
+  gap:9px;
+  flex-wrap: wrap;
+}
+.btn.btnSmall{
+  min-height: 38px;
+  padding: 9px 13px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.goCopyHint{
+  margin-top: 10px;
+  min-height: 18px;
+  font-size: 12px;
+  color: rgba(231,237,245,0.80);
+}
+.goReviewTitle{
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(236,242,251,0.90);
+}
+.goFailedGrid{
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 10px;
+}
+.goFailedCard{
+  border-radius: 13px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  box-shadow: 0 8px 20px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.10);
+  padding: 10px 11px;
+}
+.goFailedCard.is-open{
+  border-color: rgba(130,224,170,.42);
+  background: linear-gradient(180deg, rgba(130,224,170,.14), rgba(255,255,255,.03));
+}
+.goFailedLabel{
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.28;
+  color: rgba(245,249,255,0.96);
+}
+.goFailedMeta{
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(231,237,245,0.70);
+}
+.goFailedEmpty{
+  border-radius: 12px;
+  border: 1px dashed rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.03);
+  padding: 11px 12px;
+  font-size: 12px;
+  color: rgba(231,237,245,0.74);
+}
+.goFailedActions{ margin-top: 8px; }
+.goOpenModelBtn{
+  min-height: 30px !important;
+  padding: 6px 10px !important;
+  border-radius: 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+}
+.goOpenModelBtn.is-open{
+  border-color: rgba(130,224,170,.42) !important;
+  background: rgba(130,224,170,.14) !important;
+  color: rgba(222,248,235,0.98) !important;
+}
+
+.goFine{
+  margin-top: 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(231,237,245,0.70);
+}
+
+.goModelOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483648;
+  display: none;
+  background: rgba(7,10,15,0.86);
+  backdrop-filter: blur(8px) saturate(110%);
+  -webkit-backdrop-filter: blur(8px) saturate(110%);
+}
+.goModelOverlay.is-on{ display:block; }
+.goModelSheet{
+  position: absolute;
+  inset: 0;
+  background: #0b111a;
+}
+.goModelClose{
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 2147483649;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  padding: 0;
+  font-size: 19px;
+  line-height: 1;
+  background: #0f1722 !important;
+  border: 1px solid rgba(255,255,255,0.32) !important;
+  color: #f3f7fd !important;
+  opacity: 1 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.55) !important;
+}
+.goModelFrame{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display:block;
+  background: transparent;
+}
+
+@media (max-width: 900px){
+  .goOverlay{
+    padding: max(0px, env(safe-area-inset-top)) 10px 10px;
+    align-items: flex-start;
+  }
+  .goShell{
+    width: 100%;
+    border-radius: 20px;
+    margin-top: 0;
+    max-height: calc(100dvh - max(0px, env(safe-area-inset-top)) - 10px);
+    overflow: auto;
+  }
+  .goHead{ padding: 13px 14px 10px; }
+  .goBody{ padding: 10px 14px 14px; }
+  .goStats{ max-width: none; }
+  .goFailedGrid{ grid-template-columns: minmax(0,1fr); }
+  .goStat .v{ font-size: 24px; }
+}
+
+.modelDesc{
+  margin-top: 10px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: rgba(231,237,245,0.92);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+
+  /* ✅ ocupa todo el espacio sobrante de la tarjeta derecha */
+  flex: 1 1 auto;
+  min-height: 0;
+
+  /* ✅ si aún así es muy larga, scroll interno */
+  overflow: auto;
+}
+
+
+    .fine{
+      margin-top: 12px;
+      opacity: .70;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    /* =========================
+   TARJETA MODELO (look "Modelos")
+   ========================= */
+.modelCard{
+  position: relative;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background:
+    radial-gradient(900px 420px at 15% 10%, rgba(255,255,255,0.10), transparent 60%),
+    radial-gradient(700px 340px at 70% 30%, color-mix(in srgb, var(--schoolColor) 14%, transparent), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.10));
+  box-shadow:
+    0 18px 60px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+
+/* ✅ toque de color esquina superior derecha (como en Modelos) */
+.modelCard::after{
+  content:"";
+  position:absolute;
+  right:-120px;
+  top:-120px;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+background: radial-gradient(circle at 35% 35%,
+  rgba(255,255,255,0.35),
+  transparent 68%
+);
+
+  opacity: .55;
+  pointer-events:none;
+  mix-blend-mode: screen;
+}
+
+/* capa de brillo fino */
+.modelCard::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:
+    radial-gradient(520px 260px at 88% 12%, rgba(255,255,255,0.07), transparent 62%),
+    radial-gradient(620px 320px at 18% 85%, rgba(255,255,255,0.05), transparent 65%);
+  opacity:.9;
+}
+
+/* contenido encima de las capas */
+.modelCard > *{ position: relative; z-index: 1; }
+
+.modelCardTop{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.schoolPill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--schoolColor) 42%, rgba(255,255,255,0.10));
+  background: color-mix(in srgb, var(--schoolColor) 14%, rgba(0,0,0,0.22));
+  color: color-mix(in srgb, var(--schoolColor) 86%, #ffffff 14%);
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: .7px;
+  text-transform: uppercase;
+  box-shadow:
+    0 12px 34px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.schoolPillDot{
+  width:8px; height:8px; border-radius:999px;
+  background: color-mix(in srgb, var(--schoolColor) 75%, transparent);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--schoolColor) 16%, transparent);
+}
+
+.modelTitle{
+  margin: 6px 0 12px;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.05;
+  color:#fff;
+
+  letter-spacing: -0.02em;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,0.35),
+    0 10px 28px rgba(0,0,0,0.35);
+}
+
+
+.modelMetaLine{
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 750;
+  color: rgba(231,237,245,0.78);
+}
+
+    /* =========================
+   FULLSCREEN móvil (panel derecho)
+   ========================= */
+.fsOverlay{
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+
+  display: none;
+  align-items: stretch;
+  justify-content: stretch;
+
+  padding: 0;
+  margin: 0;
+
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  overscroll-behavior: contain;
+}
+.fsOverlay.is-on{ display:flex !important; }
+.fsSheet{
+  width: 100%;
+  height: 100dvh;      /* ✅ iOS moderno */
+  min-height: 100vh;   /* ✅ fallback */
+  max-width: none;
+  max-height: none;
+
+  border-radius: 0;
+  overflow: hidden;
+  border: 0;
+
+  background: linear-gradient(180deg, var(--panelA), var(--panelB));
+  box-shadow: none;
+
+  display:flex;
+  flex-direction: column;
+}
+
+.fsTop{
+  padding: 10px 12px;
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap:10px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+}
+
+/* ✅ el resultado ahora vive en la barra superior */
+#fsResult{
+  flex: 1 1 auto;
+  margin: 0 !important;
+  padding: 10px 10px;
+  border-radius: 14px;
+}
+
+.fsTitle{
+  font-weight: 900;
+  font-size: 13px;
+  color: rgba(231,237,245,0.9);
+}
+.fsClose{
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 14px;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  font-size: 18px;
+}
+
+
+.fsBody{
+  flex: 1 1 auto;       /* ✅ ocupa todo el alto disponible */
+  padding: 0 !important; /* ✅ sin padding que recorte */
+  overflow: hidden;      /* ✅ el scroll lo hace el iframe */
+  min-height: 0;
+  position: relative;    /* ✅ para posicionar el iframe dentro */
+}
+
+/* Card interior dentro del overlay móvil (mismo look que rightCard) */
+.fsCard{
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 18px;
+  background:
+    radial-gradient(700px 220px at 15% 0%, rgba(255,255,255,0.06), transparent 55%),
+    rgba(255,255,255,0.04);
+  box-shadow: 0 18px 60px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,0.06);
+  overflow: hidden;
+  padding: 14px 14px;
+}
+
+.fsCard::after{
+  content:"";
+  position:absolute;
+  top:-48px;
+  right:-48px;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  pointer-events:none;
+  background: radial-gradient(
+    circle at 35% 35%,
+    color-mix(in srgb, var(--schoolColor) 55%, transparent),
+    transparent 62%
+  );
+  opacity: .95;
+  mix-blend-mode: screen;
+}
+
+/* Barra inferior (solo móvil): fuera */
+.fsBottom{
+  padding: 12px 12px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.04);
+  display:flex;
+  justify-content:flex-end;
+}
+
+@media (max-width: 900px){
+  .fsBottom{ display:none !important; }
+}
+
+
+/* Solo tiene sentido en móvil */
+@media (min-width: 901px){
+  .fsOverlay{ display:none; }
+}
+/* =========================
+   RESULTADO (móvil) — Apple / glassy / sobrio
+   ========================= */
+.fsResult{
+  margin: 0 !important;
+  padding: 10px 12px !important;
+  border-radius: 16px;
+
+  border: 1px solid rgba(255,255,255,0.12);
+  background:
+    radial-gradient(700px 160px at 12% 0%, rgba(255,255,255,0.08), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.16));
+
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+
+  box-shadow:
+    0 18px 55px rgba(0,0,0,0.46),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+
+  color: rgba(231,237,245,.96);
+  line-height: 1.25;
+
+  overflow: hidden;
+  position: relative;
+}
+/* banda lateral (acento) */
+.fsResult{
+  position: relative;
+}
+
+.fsResult::marker{ content:""; } /* no hace nada, solo evita bugs raros en algunos parsers */
+
+/* banda */
+.fsResult .fsAccent{
+  position:absolute;
+  left: 6px;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.18);
+  opacity: .9;
+  pointer-events:none;
+}
+
+/* halo */
+.fsResult .fsHalo{
+  position:absolute;
+  inset:-60px;
+  border-radius: 999px;
+  pointer-events:none;
+  opacity: .0;
+  filter: blur(2px);
+}
+
+/* micro-noise sutil */
+.fsResult::after{
+  content:"";
+  position:absolute;
+  inset:-40px;
+  pointer-events:none;
+  opacity:.12;
+  background:
+    radial-gradient(circle at 12px 12px, rgba(255,255,255,0.10) 1px, transparent 1.6px);
+  background-size: 24px 24px;
+  transform: rotate(7deg);
+}
+
+/* brillo ultra fino */
+.fsResult::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius: inherit;
+  background:
+    radial-gradient(520px 220px at 85% 15%, rgba(255,255,255,0.08), transparent 62%);
+  opacity:.9;
+}
+
+.fsResult > *{ position: relative; z-index: 1; }
+
+/* layout interno */
+.fsResultRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.fsResultLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.fsResultIcon{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  flex: 0 0 auto;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 10px 26px rgba(0,0,0,0.18);
+
+  font-weight: 950;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.fsResultTitle{
+  font-weight: 980;
+  letter-spacing: -0.4px;
+  font-size: 14.5px;
+  color:#fff;
+  white-space: nowrap;
+  overflow:hidden;
+  text-overflow: ellipsis;
+}
+
+
+.fsResult .small{
+  display:block;
+  margin-top: 6px;
+  font-weight: 750;
+  opacity: .80;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+/* “pill” derecha más premium */
+.fsResultPill{
+  padding: 6px 10px;
+  border-radius: 999px;
+
+  font-weight: 950;
+  font-size: 12px;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.22);
+  color: rgba(231,237,245,0.95);
+
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* OK — acento verde sobrio */
+.fsResult.ok{
+  border-color: rgba(124,255,178,0.28);
+}
+.fsResult.ok .fsAccent{
+  background: rgba(124,255,178,0.85);
+}
+.fsResult.ok .fsHalo{
+  opacity: .20;
+  background: radial-gradient(circle at 20% 30%,
+    rgba(124,255,178,0.22),
+    rgba(124,255,178,0.00) 55%
+  );
+}
+.fsResult.ok .fsResultIcon{
+  border-color: rgba(124,255,178,0.32);
+  background: rgba(124,255,178,0.10);
+}
+
+/* BAD — acento rojo sobrio */
+.fsResult.bad{
+  border-color: rgba(255,107,107,0.28);
+}
+.fsResult.bad .fsAccent{
+  background: rgba(255,107,107,0.85);
+}
+.fsResult.bad .fsHalo{
+  opacity: .20;
+  background: radial-gradient(circle at 20% 30%,
+    rgba(255,107,107,0.20),
+    rgba(255,107,107,0.00) 55%
+  );
+}
+.fsResult.bad .fsResultIcon{
+  border-color: rgba(255,107,107,0.32);
+  background: rgba(255,107,107,0.09);
+}
+
+
+
+/* Ocultar Rondas (texto + número) */
+#roundsLabel,
+#rounds{
+  display: none !important;
+}
+/* =========================
+   MÓVIL — ocultar tarjeta derecha SIEMPRE
+   (evita el recuadro vacío)
+   ========================= */
+@media (max-width: 900px){
+  .grid > .card.rightCard{
+    display: none !important;
+  }
+}
+    
+
+/* =========================
+   Apple Controls (Topbar)
+   ========================= */
+.topbar{
+  gap: 12px;
+}
+
+.score{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+.score .dot{
+  width: 9px;
+  height: 9px;
+  margin-right: 2px;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--dotColor) 18%, transparent),
+    0 0 10px color-mix(in srgb, var(--dotColor) 32%, transparent);
+}
+
+.score .k{
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(231,237,245,.66);
+}
+
+.score .v{
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: rgba(255,255,255,.97);
+  margin-right: 4px;
+}
+
+.controlsRow{
+  gap: 8px;
+}
+
+.actions{
+  gap: 8px;
+}
+
+.btn{
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.16);
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035));
+  color: rgba(236,242,249,0.96);
+
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+
+  box-shadow:
+    0 8px 22px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+
+  transition: transform .12s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+}
+
+.btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.24);
+  background: linear-gradient(180deg, rgba(255,255,255,0.11), rgba(255,255,255,0.045));
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.30),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+.btn:focus-visible{
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(122,162,255,0.28),
+    0 10px 26px rgba(0,0,0,0.30),
+    inset 0 1px 0 rgba(255,255,255,0.14);
+}
+
+.filterBox{
+  border-radius: 12px;
+  padding: 7px 9px;
+  gap: 8px;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+  box-shadow:
+    0 8px 22px rgba(0,0,0,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+.filterBox:hover{
+  transform: none;
+  border-color: rgba(255,255,255,0.18);
+  box-shadow:
+    0 10px 26px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+}
+
+.filterLabel{
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  color: rgba(231,237,245,0.62);
+}
+
+select.select{
+  min-width: 210px;
+  height: 36px;
+  padding: 0 38px 0 11px;
+  border-radius: 10px;
+
+  border: 1px solid rgba(255,255,255,0.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035));
+
+  color: rgba(236,242,249,0.96);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.10),
+    0 8px 20px rgba(0,0,0,.18);
+}
+
+select.select:hover{
+  border-color: rgba(255,255,255,0.22);
+}
+
+select.select:focus-visible{
+  border-color: rgba(122,162,255,0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 0 0 3px rgba(122,162,255,0.22),
+    0 8px 20px rgba(0,0,0,.22);
+}
+
+@media (max-width: 900px){
+  .score{
+    border-radius: 14px;
+    padding: 8px 10px;
+  }
+
+  .score .k{ font-size: 10px; }
+  .score .v{ font-size: 16px; }
+
+  .btn.btnTight{
+    padding: 8px 11px;
+    border-radius: 11px;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  .filterBox{
+    padding: 6px 8px;
+    border-radius: 11px;
+  }
+
+  select.select{
+    height: 34px;
+    width: clamp(112px, 31vw, 166px);
+    font-size: 12.5px;
+    font-weight: 650;
+  }
+}
+
+/* ✅ MÓVIL: score arriba y debajo una sola fila: Siguiente + Reset + Selector */
+@media (max-width: 900px){
+
+  /* score arriba */
+  .topbar{ align-items: stretch; }
+  .score{
+    flex: 0 0 100%;
+    width: 100%;
+  }
+
+  /* ✅ controles: UNA SOLA LÍNEA */
+  .controlsRow{
+    flex: 0 0 100%;
+    width: 100%;
+    justify-content: flex-end;
+    flex-wrap: nowrap;          /* clave */
+    gap: 8px;
+  }
+  .actions{
+    display:flex;
+    align-items:center;
+    gap: 8px;
+    flex-wrap: nowrap;          /* clave */
+  }
+
+  /* ocultar label */
+  .filterLabel{ display:none !important; }
+
+  /* ✅ botones compactos */
+  .btn.btnTight{
+    padding: 8px 10px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    letter-spacing: 0;
+    box-shadow: 0 10px 26px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+
+
+
+  /* selector compacto */
+  .filterBox{
+    padding: 7px 9px;
+    border-radius: 12px;
+    gap: 0;
+    flex: 0 1 auto;
+  }
+  select.select{
+    height: 34px;
+    min-width: 0;               /* clave */
+    width: clamp(110px, 30vw, 160px);
+    padding: 0 34px 0 10px;
+    font-size: 12.5px;
+    font-weight: 950;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+}
+
+
+
+
+/* ✅ ultra-ultra: aún más apretado */
+@media (max-width: 320px){
+  .btn.btnTight{
+    padding: 7px 9px;
+    font-size: 12px;
+  }
+  select.select{
+    width: clamp(95px, 28vw, 140px);
+    padding: 0 32px 0 9px;
+  }
+  .controlsRow, .actions{ gap: 6px; }
+}
+/* =========================
+   MICRO-RITUAL DE ENTRADA (pro)
+   ========================= */
+body:not(.loaded) .panel{
+  opacity: 0;
+  transform: translateY(8px);
+}
+body.loaded .panel{
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity .38s ease, transform .38s ease;
+}
+
+@media (max-width: 900px){
+  .fsTop{
+    background: transparent !important;
+    border-bottom: none !important;
+  }
+}
+@media (max-width: 900px){
+  #fsResult{
+    border-radius: 18px !important;
+  }
+}
+/* ✅ Unifica indicador (desktop + móvil) y quita la “línea izquierda” */
+.status.fsResult,
+#status.fsResult,
+#result.fsResult{
+  border-left: none !important;
+}
+
+.status.fsResult::before,
+#status.fsResult::before,
+#result.fsResult::before{
+  content: none !important;
+}
+/* ✅ aire extra cuando el status es el indicador glassy */
+.status.fsResult{
+  margin-top: 16px !important;
+}
+/* =========================
+   TARJETA IZQUIERDA "AL AIRE"
+   ========================= */
+
+.card.cardAir{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  padding: 6px 4px 4px !important;
+}
+/* =========================
+   iOS/Safari: evitar flicker del iframe
+   ========================= */
+@media (max-width: 900px){
+
+  /* 1) Lo más conflictivo: blobs animados */
+  .bg-blobs{
+    display: none !important;
+  }
+
+  /* 2) La “respiración” del panel repinta todo */
+  .panel::before{
+    animation: none !important;
+  }
+
+  /* 3) Backdrop-filter en contenedores grandes + iframe = flicker en iOS */
+  .panel{
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+@media (max-width: 900px){
+  .fsOverlay{
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+/* =========================
+   IFRAME FADE-IN (desktop + móvil)
+   Nunca deja el iframe invisible “para siempre”
+   ========================= */
+
+/* Desktop: #modelFrame vive dentro de .card.rightCard */
+.card.rightCard .modelFrame{
+  opacity: 1;
+  transform: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+.card.rightCard.isLoadingFrame .modelFrame{
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+/* Móvil: iframe vive dentro de #fsBody como .fsIframe */
+#fsBody .fsIframe{
+  opacity: 1;
+  transform: none;
+  transition: opacity .22s ease, transform .22s ease;
+}
+
+#fsBody.isLoadingFrame .fsIframe{
+  opacity: 0;
+  transform: translateY(6px);
+}
+/* =========================================
+   BLOBS “idle” en panel derecho (SOLO PC)
+   antes de seleccionar opción (iframe vacío)
+   ========================================= */
+@media (min-width: 901px){
+
+  /* asegúrate de que el card puede contener pseudo-elementos */
+  .card.rightCard{
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card.rightCard.isEmpty::before,
+  .card.rightCard.isEmpty::after{
+    content:"";
+    position:absolute;
+    inset:-22%;
+    pointer-events:none;
+    z-index:0; /* por debajo del iframe */
+    filter: blur(60px);
+    opacity:.55;
+    transform: translate3d(0,0,0);
+  }
+
+  /* blob A */
+  .card.rightCard.isEmpty::before{
+    background:
+      radial-gradient(circle at 30% 35%,
+        rgba(255,255,255,0.18) 0%,
+        rgba(255,255,255,0.00) 58%);
+    animation: rightBlobA 10s ease-in-out infinite;
+  }
+
+  /* blob B */
+  .card.rightCard.isEmpty::after{
+    background:
+      radial-gradient(circle at 70% 55%,
+        rgba(255,255,255,0.14) 0%,
+        rgba(255,255,255,0.00) 62%);
+    animation: rightBlobB 10s ease-in-out infinite;
+  }
+
+  /* el iframe por encima */
+  .card.rightCard iframe{
+    position: relative;
+    z-index: 1;
+  }
+
+@keyframes rightBlobA{
+  0%   { transform: translate3d(-10%, -8%, 0) scale(1.02); }
+  35%  { transform: translate3d( 12%,  9%, 0) scale(1.10); }
+  70%  { transform: translate3d(  6%, -12%, 0) scale(0.98); }
+  100% { transform: translate3d(-10%, -8%, 0) scale(1.02); }
+}
+
+
+@keyframes rightBlobB{
+  0%   { transform: translate3d( 10%,  8%, 0) scale(1.00); }
+  30%  { transform: translate3d(-12%,  12%, 0) scale(1.08); }
+  65%  { transform: translate3d( -6%, -12%, 0) scale(0.95); }
+  100% { transform: translate3d( 10%,  8%, 0) scale(1.00); }
+}
+
+
+  @media (prefers-reduced-motion: reduce){
+    .card.rightCard.isEmpty::before,
+    .card.rightCard.isEmpty::after{
+      animation: none !important;
+    }
+  }
+}
+
+
+
+/* =========================
+   Apple Feedback (Correcto / Incorrecto)
+   ========================= */
+.status.fsResult,
+#status.fsResult,
+#result.fsResult,
+#topStatus.fsResult,
+#fsResult.fsResult,
+.fsResult{
+  position: relative;
+  overflow: hidden;
+
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.035));
+
+  box-shadow:
+    0 10px 28px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+}
+
+.fsResultRow{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.fsResultLeft{
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fsResultIcon{
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 13px;
+  font-weight: 800;
+
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+  color: rgba(236,242,249,0.96);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    0 6px 14px rgba(0,0,0,.22);
+}
+
+.fsResultTitle{
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: rgba(243,247,252,0.96);
+}
+
+.fsResultPill{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.06);
+  color: rgba(236,242,249,0.95);
+}
+
+.fsResult .fsHalo,
+.fsResult::before,
+.fsResult::after,
+.fsResult .fsAccent{
+  opacity: .26 !important;
+}
+
+.fsResult.ok{
+  border-color: rgba(130,224,170,0.34);
+  background: linear-gradient(180deg, rgba(130,224,170,0.14), rgba(255,255,255,0.03));
+}
+.fsResult.ok .fsResultIcon{
+  border-color: rgba(130,224,170,0.45);
+  background: rgba(130,224,170,0.16);
+  color: #dff8ea;
+}
+.fsResult.ok .fsResultPill{
+  border-color: rgba(130,224,170,0.38);
+  background: rgba(130,224,170,0.14);
+  color: #dff8ea;
+}
+
+.fsResult.bad{
+  border-color: rgba(255,148,148,0.34);
+  background: linear-gradient(180deg, rgba(255,148,148,0.13), rgba(255,255,255,0.03));
+}
+.fsResult.bad .fsResultIcon{
+  border-color: rgba(255,148,148,0.45);
+  background: rgba(255,148,148,0.15);
+  color: #ffe6e6;
+}
+.fsResult.bad .fsResultPill{
+  border-color: rgba(255,148,148,0.38);
+  background: rgba(255,148,148,0.13);
+  color: #ffe6e6;
+}
+
+@media (max-width: 900px){
+  .status.fsResult,
+  #status.fsResult,
+  #topStatus.fsResult,
+  #fsResult.fsResult,
+  .fsResult{
+    border-radius: 12px;
+    padding: 10px 11px;
+  }
+
+  .fsResultIcon{
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .fsResultTitle{ font-size: 13px; }
+  .fsResultPill{ min-height: 24px; font-size: 11.5px; }
+}
+
+
+
+/* =========================
+   Apple Polish (Topbar Alignment + School Select)
+   ========================= */
+@media (min-width: 901px){
+  .topbar{
+    align-items: center;
+    flex-wrap: nowrap;
+  }
+
+  .topbar > .score{ order: 1; }
+  .topbar > #topStatus{ order: 2; }
+  .topbar > .controlsRow{ order: 3; margin-left: auto; }
+
+  #topStatus{
+    display: none;
+  }
+
+  #topStatus.is-on{
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    margin: 0 !important;
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  #topStatus.fsResult,
+  #topStatus.fsResult.is-on{
+    min-height: 38px;
+    padding: 7px 11px;
+  }
+
+  .controlsRow,
+  .actions{
+    align-items: center;
+  }
+}
+
+/* selector: evitar “caja dentro de caja” */
+.filterBox{
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  gap: 8px;
+}
+
+.filterBox:hover{
+  transform: none !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.filterLabel{
+  font-weight: 600;
+  color: rgba(231,237,245,0.58);
+}
+
+select.select{
+  border-radius: 999px;
+  min-width: 186px;
+  height: 36px;
+  padding: 0 36px 0 12px;
+
+  border: 1px solid rgba(255,255,255,0.18);
+  background: linear-gradient(180deg, rgba(255,255,255,0.085), rgba(255,255,255,0.035));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.11),
+    0 7px 20px rgba(0,0,0,.20);
+
+  font-weight: 600;
+}
+
+@media (max-width: 900px){
+  #topStatus{ display:none !important; }
+
+  .filterBox{
+    gap: 0;
+  }
+
+  select.select{
+    border-radius: 999px;
+    width: clamp(112px, 31vw, 166px);
+  }
+}
+
+
+
+/* =========================
+   Apple Fine Tuning (HUD + Options + School Label)
+   ========================= */
+.filterLabel{
+  display: none !important;
+}
+
+/* Evita sensación de caja dentro de caja */
+.filterBox{
+  gap: 0 !important;
+}
+
+/* HUD number pulse */
+.score .v{
+  transform-origin: center;
+  will-change: transform, opacity, text-shadow;
+}
+
+@keyframes hudPulseUp{
+  0%   { transform: scale(1); opacity: .96; text-shadow: none; }
+  45%  { transform: scale(1.18); opacity: 1; text-shadow: 0 0 16px rgba(130,224,170,.34); }
+  100% { transform: scale(1); opacity: .98; text-shadow: none; }
+}
+
+@keyframes hudPulseDown{
+  0%   { transform: scale(1); opacity: .96; text-shadow: none; }
+  45%  { transform: scale(1.16); opacity: 1; text-shadow: 0 0 16px rgba(255,148,148,.30); }
+  100% { transform: scale(1); opacity: .98; text-shadow: none; }
+}
+
+.score .v.hudPulseUp{ animation: hudPulseUp .36s cubic-bezier(.22,.9,.22,1); }
+.score .v.hudPulseDown{ animation: hudPulseDown .36s cubic-bezier(.22,.9,.22,1); }
+
+@keyframes lifePendingDown{
+  0%   { color: rgba(255,255,255,.97); text-shadow: none; }
+  100% { color: #ff8f98; text-shadow: 0 0 14px rgba(255,120,120,.40); }
+}
+
+@keyframes lifePendingUp{
+  0%   { color: rgba(255,255,255,.97); text-shadow: none; }
+  100% { color: #9cf2c0; text-shadow: 0 0 14px rgba(130,224,170,.42); }
+}
+
+#lives.hudLifePendingDown{
+  animation: lifePendingDown .22s ease forwards;
+}
+
+#lives.hudLifePendingUp{
+  animation: lifePendingUp .22s ease forwards;
+}
+
+/* Opciones: look Apple más sobrio */
+.opt{
+  border-radius: 14px !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03)) !important;
+  box-shadow:
+    0 8px 22px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,0.10) !important;
+
+  font-size: 13px;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  text-shadow: none !important;
+}
+
+.opt::after{
+  opacity: .05 !important;
+}
+
+.opt:hover{
+  border-color: rgba(255,255,255,0.22) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,0.095), rgba(255,255,255,0.04)) !important;
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,0.12) !important;
+}
+
+.opt > span{
+  display: block !important;
+  margin-top: 5px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+  opacity: .72 !important;
+}
+
+.opt.correct{
+  border-color: rgba(130,224,170,.42) !important;
+  background: linear-gradient(180deg, rgba(130,224,170,.14), rgba(255,255,255,.03)) !important;
+  box-shadow:
+    0 0 0 2px rgba(130,224,170,.12),
+    0 10px 24px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+.opt.wrong{
+  border-color: rgba(255,148,148,.42) !important;
+  background: linear-gradient(180deg, rgba(255,148,148,.13), rgba(255,255,255,.03)) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,148,148,.10),
+    0 10px 24px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+@media (max-width: 900px){
+  .opt{
+    font-size: 13px;
+    border-radius: 13px !important;
+  }
+}
+
+
+/* =========================
+   Game Over Final Polish
+   ========================= */
+.goShell{
+  border-radius: 20px;
+  border-color: rgba(255,255,255,0.16);
+  background:
+    radial-gradient(900px 340px at 14% -10%, rgba(255,255,255,0.13), transparent 58%),
+    radial-gradient(760px 320px at 85% 18%, color-mix(in srgb, var(--schoolColor) 18%, transparent), transparent 68%),
+    linear-gradient(180deg, rgba(21,29,40,0.96), rgba(11,16,24,0.97));
+  box-shadow:
+    0 20px 56px rgba(0,0,0,0.52),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.goHead{ padding: 14px 16px 10px; }
+.goBody{ padding: 12px 16px 16px; }
+.goTitle{ font-size: clamp(34px, 5vw, 56px); letter-spacing: -0.034em; }
+.goSubtitle{ margin-top: 8px; line-height: 1.44; color: rgba(228,236,247,0.80); }
+.goStats{ margin-top: 12px; }
+.goActions{ margin-top: 12px; }
+
+.goTipCard{
+  margin-top: 12px;
+  padding: 12px 13px;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--schoolColor) 34%, rgba(255,255,255,0.14));
+  background:
+    radial-gradient(420px 180px at 88% 10%, color-mix(in srgb, var(--schoolColor) 20%, transparent), transparent 66%),
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  box-shadow:
+    0 10px 28px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(255,255,255,0.03) inset;
+}
+.goTipKicker{
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(231,237,245,0.74);
+  margin-bottom: 6px;
+}
+.goTipCard .goFine{
+  margin-top: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(242,247,253,0.94);
+}
+
+.goReviewTitle{ margin-top: 12px; font-size: 13.5px; color: rgba(236,242,251,0.92); }
+.goFailedGrid{ margin-top: 8px; gap: 8px; }
+.goFailedCard{ border-radius: 12px; }
+
+.goModelClose{
+  background: #0c1520 !important;
+  border: 1px solid rgba(255,255,255,0.42) !important;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.62) !important;
+}
+
+@media (max-width: 900px){
+  .goTipCard .goFine{ font-size: 13px; }
+}
+
+
+/* =========================
+   Game Over Layout Tweak
+   ========================= */
+.goTopRow{
+  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.goTopRow .goStats{
+  margin-top: 0;
+  max-width: 104px;
+  display: block;
+  flex: 0 0 auto;
+}
+.goTopRow .goStat{
+  width: 104px;
+  min-height: 98px;
+  border-radius: 14px;
+  padding: 10px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.goTopRow .goStat .k,
+.goTopRow .goStat .v{
+  text-align: center;
+}
+.goTopRow .goStat .v{
+  font-size: 28px;
+  margin-top: 2px;
+}
+.goTopAside{
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.goTopAside .goActions{
+  margin-top: 0;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+.goTopAside .goActions .btnSmall{
+  min-height: 42px;
+  padding: 10px 14px;
+}
+.goTopAside .goTipCard{
+  margin-top: 0;
+  padding: 10px 12px;
+  min-height: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1 1 auto;
+}
+.goTopAside .goTipKicker{
+  margin-bottom: 3px;
+}
+.goTopAside .goTipCard .goFine{
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px){
+  .goTopRow{
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .goTopRow .goStat{
+    width: 92px;
+    min-height: 86px;
+  }
+  .goTopRow .goStat .v{
+    font-size: 24px;
+  }
+  .goTopAside{
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    align-items: stretch;
+  }
+  .goTopAside .goActions{
+    align-items: stretch;
+  }
+  .goTopAside .goActions .btnSmall{
+    min-height: 40px;
+    white-space: nowrap;
+  }
+  .goTopAside .goTipCard{
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+  .goTopAside .goTipKicker{
+    font-size: 9.5px;
+    margin-bottom: 2px;
+  }
+  .goTopAside .goTipCard .goFine{
+    font-size: 12px;
+    line-height: 1.3;
+  }
+}
+
+
+/* =========================
+   Game Over Redesign v3
+   ========================= */
+.goBody{
+  display: grid;
+  gap: 12px;
+}
+
+.goTopRow{
+  margin-top: 0 !important;
+  display: grid !important;
+  grid-template-columns: 118px minmax(170px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.goTopRow .goStats{
+  margin-top: 0 !important;
+  max-width: none !important;
+}
+
+.goTopRow .goStat{
+  width: 100% !important;
+  min-height: 96px !important;
+  padding: 10px !important;
+  border-radius: 14px !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.goTopRow .goStat .k,
+.goTopRow .goStat .v{
+  text-align: center;
+}
+
+.goTopRow .goStat .v{
+  font-size: 30px !important;
+  margin-top: 3px !important;
+}
+
+.goTopAside{
+  grid-column: 2 / -1;
+  min-width: 0;
+  display: grid !important;
+  grid-template-columns: minmax(170px, 220px) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.goTopAside .goActions{
+  margin-top: 0 !important;
+  display: flex;
+}
+
+.goTopAside .goActions .btnSmall{
+  width: 100%;
+  min-height: 96px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.goTopAside .goTipCard{
+  margin-top: 0 !important;
+  min-height: 96px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.goTopAside .goTipKicker{
+  margin-bottom: 5px !important;
+}
+
+.goTopAside .goTipCard .goFine{
+  margin-top: 0;
+  font-size: 14px;
+  line-height: 1.42;
+}
+
+.goReviewTitle{
+  margin-top: 0 !important;
+}
+
+.goFailedGrid{
+  margin-top: 0 !important;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.goFailedCard{
+  min-height: 124px;
+  display: flex;
+  flex-direction: column;
+}
+
+.goFailedActions{
+  margin-top: auto !important;
+}
+
+.goCopyHint{
+  display: none !important;
+}
+
+ @media (max-width: 900px){
+  .goBody{
+    gap: 10px;
+  }
+
+  .goTopRow{
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .goTopRow .goStat{
+    min-height: 86px !important;
+  }
+
+  .goTopRow .goStat .v{
+    font-size: 24px !important;
+  }
+
+  .goTopAside{
+    grid-column: 2;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .goTopAside .goActions .btnSmall{
+    min-height: 42px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+
+  .goTopAside .goTipCard{
+    min-height: 58px;
+    padding: 9px 10px;
+    border-radius: 12px;
+  }
+
+  .goTopAside .goTipKicker{
+    font-size: 9.5px;
+    margin-bottom: 2px !important;
+  }
+
+  .goTopAside .goTipCard .goFine{
+    font-size: 12px;
+    line-height: 1.34;
+  }
+
+  .goFailedGrid{
+    grid-template-columns: minmax(0,1fr);
+    gap: 8px;
+  }
+
+  .goFailedCard{
+    min-height: 104px;
+  }
+}
+
+/* =========================
+   Theme Toggle FAB
+   ========================= */
+.theme-fab{
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 2147483000;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  display: grid;
+  place-items: center;
+  background: rgba(15,22,32,0.72);
+  color: rgba(231,237,245,0.95);
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.theme-fab:hover{ transform: translateY(-1px); }
+.theme-fab svg{ width: 20px; height: 20px; }
+
+/* =========================
+   Scoped Light Theme
+   ========================= */
+body.theme-light{
+  --bg: #f3f6fb !important;
+  --panelA: rgba(255,255,255,0.86) !important;
+  --panelB: rgba(255,255,255,0.72) !important;
+  --text: #1d1d1f !important;
+  --muted: #5b6472 !important;
+  --muted2: #7a8494 !important;
+  --accent: #0a84ff !important;
+  --panelGlow: rgba(95, 146, 255, 0.12) !important;
+  color: #1d1d1f !important;
+  background:
+    radial-gradient(1200px 700px at 12% 12%, rgba(112,164,255,.20), transparent 56%),
+    radial-gradient(1000px 660px at 88% 20%, rgba(124,214,255,.18), transparent 58%),
+    radial-gradient(920px 640px at 50% 88%, rgba(182,166,255,.14), transparent 62%),
+    linear-gradient(180deg, #f7f9fd 0%, #eef3fa 100%) !important;
+}
+
+body.theme-light .bg-blobs{ filter: blur(72px) !important; opacity: .34 !important; }
+body.theme-light .panel{
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.70)) !important;
+  border: 1px solid rgba(118,129,153,.20) !important;
+  box-shadow:
+    0 28px 70px rgba(27,45,79,0.14),
+    0 8px 24px rgba(27,45,79,0.10),
+    inset 0 1px 0 rgba(255,255,255,0.92) !important;
+}
+body.theme-light .panel::before{
+  background:
+    radial-gradient(560px 320px at 88% 12%, rgba(93,145,255,.18), transparent 64%),
+    radial-gradient(700px 420px at 18% 88%, rgba(125,186,255,.12), transparent 68%) !important;
+  mix-blend-mode: normal !important;
+  opacity: .68 !important;
+}
+
+body.theme-light .card,
+body.theme-light .card.rightCard,
+body.theme-light .status,
+body.theme-light .fsResult,
+body.theme-light .goFailedCard,
+body.theme-light .goTipCard,
+body.theme-light .goStat{
+  background: linear-gradient(180deg, rgba(255,255,255,.90), rgba(247,250,255,.78)) !important;
+  border: 1px solid rgba(118,129,153,.20) !important;
+  color: #1d1d1f !important;
+  box-shadow:
+    0 14px 34px rgba(24,44,74,.10),
+    inset 0 1px 0 rgba(255,255,255,.95) !important;
+}
+
+body.theme-light .title,
+body.theme-light .modelTitle,
+body.theme-light .goTitle,
+body.theme-light .ideaText,
+body.theme-light .authorName,
+body.theme-light .goFailedLabel{ color:#17181c !important; text-shadow:none !important; }
+body.theme-light .sub,
+body.theme-light .subtitle,
+body.theme-light .authorMeta,
+body.theme-light .goSubtitle,
+body.theme-light .goFailedMeta,
+body.theme-light .goFine,
+body.theme-light .fine,
+body.theme-light .modelMetaLine{ color:#5f6a7c !important; }
+body.theme-light .k, body.theme-light .score .k, body.theme-light .goStat .k, body.theme-light .goTipKicker, body.theme-light .eyebrow{ color:#6c778a !important; }
+body.theme-light .v, body.theme-light .score .v, body.theme-light .goStat .v{ color:#111217 !important; }
+
+body.theme-light .btn,
+body.theme-light .btn.btnSmall,
+body.theme-light .btn.btnTight,
+body.theme-light .goOpenModelBtn,
+body.theme-light .fsClose{
+  border: 1px solid rgba(118,129,153,.24) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(241,246,255,.84)) !important;
+  color: #1a1d24 !important;
+}
+body.theme-light .score{
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(245,249,255,.82)) !important;
+  border: 1px solid rgba(118,129,153,.22) !important;
+}
+body.theme-light .score .dot{
+  background: #0a84ff !important;
+  border-color: rgba(10,132,255,.65) !important;
+  box-shadow: 0 0 0 5px rgba(10,132,255,.16) !important;
+}
+body.theme-light .pill,
+body.theme-light #pillYear,
+body.theme-light #pillCode{
+  color: #1a1f29 !important;
+  border: 1px solid rgba(96,112,138,.30) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(240,246,255,.92)) !important;
+}
+body.theme-light select.select{
+  border: 1px solid rgba(118,129,153,.24) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,247,255,.85)) !important;
+  color: #1a1d24 !important;
+}
+body.theme-light .opt{
+  border: 1px solid rgba(118,129,153,.20) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.93), rgba(244,248,255,.84)) !important;
+  color: #171a22 !important;
+  text-shadow: none !important;
+}
+body.theme-light .opt > span{ color:#657186 !important; opacity:1 !important; }
+body.theme-light .goOverlay{
+  background: rgba(240,245,252,0.82) !important;
+  backdrop-filter: blur(12px) saturate(130%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(130%) !important;
+}
+body.theme-light .goShell{
+  border: 1px solid rgba(118,129,153,.24) !important;
+  background:
+    radial-gradient(940px 360px at 88% 12%, rgba(91,148,255,.14), transparent 65%),
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(246,250,255,.88)) !important;
+  box-shadow:
+    0 30px 80px rgba(20,42,78,.18),
+    inset 0 1px 0 rgba(255,255,255,.98) !important;
+}
+body.theme-light .goBadge{
+  border-color: rgba(118,129,153,.22) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.94), rgba(244,249,255,.84)) !important;
+  color: #2a3242 !important;
+}
+body.theme-light .goModelOverlay{
+  background: rgba(240,245,252,.90) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+body.theme-light .goModelClose{
+  background: #ffffff !important;
+  border: 1px solid rgba(118,129,153,.30) !important;
+  color: #11151d !important;
+}
+body.theme-light .theme-fab{
+  border: 1px solid rgba(118,129,153,.26);
+  background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(241,246,255,.84));
+  color: #1a1d24;
+  box-shadow:
+    0 10px 24px rgba(26,43,72,0.16),
+    inset 0 1px 0 rgba(255,255,255,.98);
+}
+
+/* Light fixes: question area, feedback readability, options, game-over cards, empty-state life */
+body.theme-light .card.cardAir{
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+body.theme-light .status.fsResult,
+body.theme-light #topStatus.fsResult,
+body.theme-light #fsResult.fsResult,
+body.theme-light .fsResult{
+  color: #1d2a3f !important;
+  border-color: rgba(88,107,136,.26) !important;
+  background: linear-gradient(180deg, rgba(255,255,255,.97), rgba(242,247,255,.92)) !important;
+}
+body.theme-light .fsResultTitle{
+  color: #1a2740 !important;
+  font-weight: 780 !important;
+}
+body.theme-light .fsResultPill{
+  color: #243755 !important;
+  border-color: rgba(88,107,136,.30) !important;
+  background: rgba(255,255,255,.92) !important;
+}
+body.theme-light .fsResultIcon{
+  color: #213455 !important;
+  border-color: rgba(88,107,136,.30) !important;
+  background: rgba(255,255,255,.95) !important;
+}
+body.theme-light .fsResult.ok .fsResultTitle,
+body.theme-light .fsResult.ok .fsResultPill,
+body.theme-light .fsResult.ok .fsResultIcon{
+  color: #166a41 !important;
+}
+body.theme-light .fsResult.bad .fsResultTitle,
+body.theme-light .fsResult.bad .fsResultPill,
+body.theme-light .fsResult.bad .fsResultIcon{
+  color: #8e2724 !important;
+}
+
+body.theme-light .opt.correct{
+  border-color: rgba(34,168,95,.62) !important;
+  background: linear-gradient(180deg, rgba(52,199,89,.28), rgba(255,255,255,.95)) !important;
+  box-shadow:
+    0 0 0 2px rgba(52,199,89,.24),
+    0 10px 24px rgba(24,44,74,.14),
+    inset 0 1px 0 rgba(255,255,255,.98) !important;
+}
+body.theme-light .opt.wrong{
+  border-color: rgba(220,66,59,.62) !important;
+  background: linear-gradient(180deg, rgba(255,59,48,.26), rgba(255,255,255,.95)) !important;
+  box-shadow:
+    0 0 0 2px rgba(255,59,48,.22),
+    0 10px 24px rgba(24,44,74,.14),
+    inset 0 1px 0 rgba(255,255,255,.98) !important;
+}
+body.theme-light .opt.correct > span{ color: #1e5a3c !important; }
+body.theme-light .opt.wrong > span{ color: #7e2d2a !important; }
+body.theme-light .opt{
+  box-shadow:
+    0 3px 8px rgba(26,46,78,.08),
+    inset 0 1px 0 rgba(255,255,255,.98) !important;
+}
+body.theme-light .opt:hover{
+  box-shadow:
+    0 5px 12px rgba(26,46,78,.11),
+    inset 0 1px 0 rgba(255,255,255,.99) !important;
+}
+
+body.theme-light .goFailedCard{
+  min-height: 102px !important;
+  padding: 9px 10px !important;
+}
+body.theme-light .goFailedActions{
+  margin-top: 6px !important;
+}
+@media (max-width: 900px){
+  body.theme-light .goFailedCard{
+    min-height: 96px !important;
+  }
+}
+
+@media (min-width: 901px){
+  body.theme-light .card.rightCard.isEmpty::before{
+    opacity: .58 !important;
+    background: radial-gradient(circle at 28% 34%, rgba(86,144,255,.30) 0%, rgba(86,144,255,0) 62%) !important;
+  }
+  body.theme-light .card.rightCard.isEmpty::after{
+    opacity: .52 !important;
+    background: radial-gradient(circle at 72% 58%, rgba(88,193,188,.26) 0%, rgba(88,193,188,0) 62%) !important;
+  }
+}
+
+/* Cabecera compartida con la landing */
+.site-header{
+  position: sticky;
+  top: 0;
+  z-index: 1200;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px clamp(16px, 4vw, 54px);
+  border-bottom: 1px solid rgba(243,236,226,.10);
+  background: rgba(11,10,12,.88);
+  box-shadow: 0 12px 34px rgba(0,0,0,.18);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.site-brand{
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: #f3ece2;
+  text-decoration: none;
+}
+.site-brand-mark{
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #d9aa3f;
+  box-shadow: 0 0 18px rgba(217,170,63,.45);
+}
+.site-brand-name{
+  overflow: hidden;
+  font-size: .74rem;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-nav{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.site-user-email{
+  max-width: 220px;
+  overflow: hidden;
+  color: rgba(243,236,226,.54);
+  font-size: .72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.site-nav-action{
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(243,236,226,.14);
+  border-radius: 999px;
+  padding: 8px 16px;
+  color: rgba(243,236,226,.84);
+  background: rgba(255,255,255,.045);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+.site-nav-action:hover,
+.site-nav-action:focus-visible{
+  border-color: rgba(217,170,63,.62);
+  background: rgba(217,170,63,.10);
+  outline: none;
+  transform: translateY(-1px);
+}
+.site-nav-action.is-primary{
+  border-color: #d9aa3f;
+  color: #180f0a;
+  background: #d9aa3f;
+  box-shadow: 0 12px 28px rgba(217,170,63,.18);
+}
+.site-nav-action[hidden],
+.site-user-email[hidden]{ display: none !important; }
+@media (max-width: 700px){
+  .site-header{ gap: 8px; padding-inline: 12px; }
+  .site-brand-name{ max-width: 110px; font-size: .66rem; }
+  .site-user-email,
+  .site-library-link{ display: none; }
+  .site-nav{ gap: 6px; }
+  .site-nav-action{ min-height: 34px; padding: 7px 11px; font-size: .72rem; }
+}
+
+</style>
+</head>
+
+
+<body>
+  <header class="site-header">
+    <a class="site-brand" href="/" aria-label="Volver a Tu Mentor Psicolog&iacute;a">
+      <span class="site-brand-mark" aria-hidden="true"></span>
+      <span class="site-brand-name">Tu Mentor Psicolog&iacute;a</span>
+    </a>
+    <nav class="site-nav" aria-label="Cuenta y suscripci&oacute;n">
+      <span class="site-user-email" id="siteUserEmail" hidden></span>
+      <a class="site-nav-action site-library-link" href="/modelos/">Biblioteca</a>
+      <button class="site-nav-action" id="siteLoginButton" type="button">Entrar</button>
+      <button class="site-nav-action is-primary" id="siteSubscribeButton" type="button" hidden>Suscribirse</button>
+      <button class="site-nav-action" id="siteManageButton" type="button" hidden>Gestionar suscripci&oacute;n</button>
+      <button class="site-nav-action" id="siteLogoutButton" type="button" hidden>Salir</button>
+    </nav>
+  </header>
+  <div class="bg-blobs"></div>
+
+  <div class="app">
+    <section class="panel">
+      <div class="wrap">
+     <!-- (Landing pendiente) Hero eliminado -->
+
+
+
+        <div class="topbar">
+  <div class="score" id="scoreBox">
+  <span class="dot" aria-hidden="true"></span>
+
+  <span class="k">Puntos</span>
+  <span class="v" id="score">0</span>
+
+  <span class="k">Vidas</span>
+  <span class="v" id="lives">3</span>
+
+  <span class="k">Racha</span>
+  <span class="v" id="streak">0</span>
+
+  <span class="k" id="roundsLabel">Rondas</span>
+  <span class="v" id="rounds">0</span>
+
+</div>
+<div class="status topStatus" id="topStatus"></div>
+   <div class="controlsRow">
+    <div class="actions">
+    <button class="btn btnTight" id="btnNext">
+  <span class="tLong">Siguiente</span>
+  <span class="tShort">Sig.</span>
+</button>
+
+<button class="btn btnTight" id="btnReset">
+  <span class="tLong">Reset</span>
+  <span class="tShort">Res.</span>
+</button>
+
+    </div>
+
+    <!-- ✅ Filtro por escuela -->
+    <div class="filterBox">
+      <span class="filterLabel">Escuela</span>
+      <select id="schoolFilter" class="select">
+        <option value="todas">Todas</option>
+        <!-- opciones dinámicas por JS -->
+      </select>
+    </div>
+  </div>
+
+
+        </div>
+
+        <div class="grid">
+          <!-- IZQUIERDA: IDEA -->
+         <div class="card cardAir">
+
+        
+            <div class="ideaText" id="ideaText">Cargando…</div>
+
+            <div class="metaRow">
+              <span class="pill" id="pillYear">—</span>
+            <span class="pill" id="pillCode">—</span>
+
+            </div>
+
+            <div class="answers" id="answers"></div>
+
+            <div class="status" id="status"></div>
+          </div>
+
+          <!-- DERECHA: “revelado” / foto / referencia -->
+<div class="card rightCard">
+
+<iframe
+  id="modelFrame"
+  class="modelFrame"
+  title="Detalle del modelo"
+  loading="eager"
+  referrerpolicy="no-referrer"
+  tabindex="0"
+></iframe>
+
+
+</div>
+
+
+</div>
+
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <button class="theme-fab" id="btnThemeMode" type="button" aria-label="Cambiar tema" title="Cambiar tema">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 4.5v2.2M12 17.3v2.2M4.5 12h2.2M17.3 12h2.2M6.9 6.9l1.6 1.6M15.5 15.5l1.6 1.6M17.1 6.9l-1.6 1.6M8.5 15.5l-1.6 1.6M12 15.8a3.8 3.8 0 1 0 0-7.6a3.8 3.8 0 0 0 0 7.6Z"
+        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+<!-- FULLSCREEN (móvil) -->
+<div class="fsOverlay" id="fsOverlay" aria-hidden="true">
+  <div class="fsSheet" role="dialog" aria-modal="true" aria-label="Detalle del modelo">
+<div class="fsTop">
+  <div class="fsResult" id="fsResult"></div>
+<button class="btn fsClose fsNextArrow" id="btnCloseFs" aria-label="Seguir">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M8 5l8 7-8 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</button>
+
+</div>
+
+
+<!-- aquí clonamos el contenido del panel derecho -->
+<div class="fsBody" id="fsBody"></div>
+
+    <div class="fsBottom">
+      <button class="btn" id="btnNextFs">Siguiente</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER (fullscreen) -->
+<div class="goOverlay" id="goOverlay" aria-hidden="true">
+  <section class="goShell" role="dialog" aria-modal="true" aria-label="Game Over">
+    <div class="goHead">
+      <div class="goBadge"><span class="goBadgeDot" aria-hidden="true"></span>Fin de partida</div>
+      <button class="btn goClose" id="btnGoClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="goBody">
+      <h2 class="goTitle">Game Over</h2>
+      <p class="goSubtitle">Partida finalizada. Enfoca la revisión en los modelos que has fallado y vuelve a intentarlo.</p>
+
+      <div class="goTopRow">
+        <div class="goStats">
+          <div class="goStat"><div class="k">Puntos</div><div class="v" id="goScore">0</div></div>
+        </div>
+
+        <div class="goTopAside">
+          <div class="goActions">
+            <button class="btn btnSmall" id="btnPlayAgain">Jugar otra vez</button>
+          </div>
+          <div class="goTipCard">
+            <div class="goTipKicker">Tip clínico para discriminar modelos</div>
+            <div class="goFine" id="goFineText">Lee las fichas de los modelos para mejorar tus puntuaciones.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="goReviewTitle">Revisa estos modelos para mejorar la próxima vez.</div>
+      <div class="goFailedGrid" id="goFailedGrid"></div>
+
+      <div class="goCopyHint" id="goCopyHint"></div>
+    </div>
+  </section>
+</div>
+
+<!-- MODELO FALLADO (fullscreen desde Game Over) -->
+<div class="goModelOverlay" id="goModelOverlay" aria-hidden="true">
+  <div class="goModelSheet" role="dialog" aria-modal="true" aria-label="Ficha del modelo">
+    <button class="btn goModelClose" id="btnGoModelClose" aria-label="Cerrar">×</button>
+    <iframe id="goModelFrame" class="goModelFrame" title="Ficha modelo fallado" loading="eager" referrerpolicy="no-referrer"></iframe>
+  </div>
+</div>
+
+  <script>
+      
+  /* =========================
+     CONFIG — AJUSTA ESTO
+     ========================= */
+
+// El repositorio es privado: todas las lecturas pasan por el proxy de Vercel.
+// El token de GitHub permanece exclusivamente en el servidor.
+const API_BASE = location.origin;
+const SUPABASE_URL = "https://yritadgaurvplltgubii.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storageKey: 'tmp-shared-auth-v1'
+  }
+});
+
+const siteUserEmail = document.getElementById('siteUserEmail');
+const siteLoginButton = document.getElementById('siteLoginButton');
+const siteSubscribeButton = document.getElementById('siteSubscribeButton');
+const siteManageButton = document.getElementById('siteManageButton');
+const siteLogoutButton = document.getElementById('siteLogoutButton');
+
+async function getQuizBillingStatus(session){
+  if(!session?.access_token) return { active: false };
+  const response = await fetch(`${API_BASE}/api/billing-status`, {
+    headers: { Authorization: `Bearer ${session.access_token}` }
+  });
+  return response.ok ? response.json() : { active: false };
+}
+
+async function renderQuizSiteHeader(session){
+  const loggedIn = !!session;
+  siteUserEmail.textContent = session?.user?.email || '';
+  siteUserEmail.hidden = !loggedIn;
+  siteLoginButton.hidden = loggedIn;
+  siteLogoutButton.hidden = !loggedIn;
+  siteSubscribeButton.hidden = true;
+  siteManageButton.hidden = true;
+
+  if(!loggedIn) return;
+
+  const billing = await getQuizBillingStatus(session).catch(() => ({ active: false }));
+  siteManageButton.hidden = !billing?.active;
+  siteSubscribeButton.hidden = !!billing?.active;
+}
+
+async function openQuizBilling(endpoint, button){
+  const { data } = await supabaseClient.auth.getSession();
+  const token = data?.session?.access_token || '';
+  if(!token){
+    location.href = '/?auth=login';
+    return;
+  }
+
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = 'Abriendo…';
+  try{
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const payload = await response.json().catch(() => ({}));
+    if(!response.ok || !payload.url) throw new Error(payload.error || 'No se pudo abrir la suscripción.');
+    location.href = payload.url;
+  }catch(error){
+    alert(error?.message || 'No se pudo abrir la suscripción.');
+  }finally{
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+siteLoginButton.addEventListener('click', () => { location.href = '/?auth=login'; });
+siteSubscribeButton.addEventListener('click', () => openQuizBilling('/api/create-checkout-session', siteSubscribeButton));
+siteManageButton.addEventListener('click', () => openQuizBilling('/api/create-portal-session', siteManageButton));
+siteLogoutButton.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  location.href = '/';
+});
+
+supabaseClient.auth.getSession().then(({ data }) => renderQuizSiteHeader(data?.session || null));
+supabaseClient.auth.onAuthStateChange((_event, session) => renderQuizSiteHeader(session));
+
+async function getSupabaseAccessToken(){
+  const { data } = await supabaseClient.auth.getSession();
+  return data?.session?.access_token || '';
+}
+
+function proxyDataUrl(path){
+  const clean = String(path || '').trim().replace(/^\/+/, '').replace(/^data\//i, '');
+  return `${API_BASE}/api/data?path=${encodeURIComponent(clean)}`;
+}
+
+function isProxyUrl(url){
+  try{
+    const parsed = new URL(String(url || ''), location.href);
+    return parsed.origin === location.origin && parsed.pathname === '/api/data';
+  }catch(e){
+    return false;
+  }
+}
+
+async function privateProxyFetch(url, options = {}){
+  const finalUrl = String(url || '').trim();
+  if(!isProxyUrl(finalUrl)) return fetch(finalUrl, options);
+
+  const headers = new Headers(options.headers || {});
+  const token = await getSupabaseAccessToken();
+  if(token) headers.set('Authorization', `Bearer ${token}`);
+
+  let response = await fetch(finalUrl, { ...options, headers });
+  if(response.status !== 401) return response;
+
+  const { data } = await supabaseClient.auth.refreshSession();
+  const refreshedToken = data?.session?.access_token || '';
+  if(!refreshedToken) return response;
+
+  const retryHeaders = new Headers(options.headers || {});
+  retryHeaders.set('Authorization', `Bearer ${refreshedToken}`);
+  return fetch(finalUrl, { ...options, headers: retryHeaders });
+}
+
+function gh(path){
+  return proxyDataUrl(path);
+}
+
+// URLs de datos servidas por la función serverless /api/data.
+const ESCUELAS_INDEX  = gh('Core/escuelas/index.json');
+const FOTOS_JSON_URL  = gh('Core/fotos/foto.json');
+const PHOTOS_BASE_URL = 'Core/fotos/';
+
+// ✅ URL BASE de la app de MODELOS (para iframe)
+const REMOTE_MODELOS_APP_BASE = "https://modelos.tumentorpsicologia.com/apps/modelos/index.html";
+const LOCAL_MODELOS_APP_BASE  = new URL("../modelos/index.html", location.href).href;
+const MODELOS_APP_BASE = (new URLSearchParams(location.search).get("modelosBase") ||
+  (location.protocol === "file:" ? LOCAL_MODELOS_APP_BASE : REMOTE_MODELOS_APP_BASE));
+
+const THEME_KEY = "tmps_skills_theme";
+const THEME_LIGHT = "light";
+const THEME_DARK = "dark";
+
+function getCurrentThemeMode(){
+  return document.body.classList.contains("theme-light") ? THEME_LIGHT : THEME_DARK;
+}
+
+function setThemeButtonIcon(mode){
+  const b = document.getElementById("btnThemeMode");
+  if(!b) return;
+  const isDark = (mode === THEME_DARK);
+  b.innerHTML = isDark
+    ? `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+         <path d="M12 4.5v2.2M12 17.3v2.2M4.5 12h2.2M17.3 12h2.2M6.9 6.9l1.6 1.6M15.5 15.5l1.6 1.6M17.1 6.9l-1.6 1.6M8.5 15.5l-1.6 1.6M12 15.8a3.8 3.8 0 1 0 0-7.6a3.8 3.8 0 0 0 0 7.6Z"
+           stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+       </svg>`
+    : `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+         <path d="M14.8 4.2a7.8 7.8 0 1 0 5 13.8a8.6 8.6 0 1 1-5-13.8Z"
+           stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+       </svg>`;
+  b.setAttribute("title", isDark ? "Cambiar a claro" : "Cambiar a oscuro");
+  b.setAttribute("aria-label", isDark ? "Cambiar a claro" : "Cambiar a oscuro");
+}
+
+function applyTheme(mode, persist=true){
+  const useLight = (mode === THEME_LIGHT);
+  document.body.classList.toggle("theme-light", useLight);
+  setThemeButtonIcon(useLight ? THEME_LIGHT : THEME_DARK);
+  if (persist){
+    localStorage.setItem(THEME_KEY, useLight ? THEME_LIGHT : THEME_DARK);
+  }
+}
+
+// Tema inicial: URL ?theme=light|dark tiene prioridad; si no, localStorage; fallback dark
+const qsTheme = String(new URLSearchParams(location.search).get("theme") || "").toLowerCase();
+const forcedTheme = (qsTheme === THEME_LIGHT || qsTheme === THEME_DARK) ? qsTheme : "";
+applyTheme(
+  forcedTheme || (localStorage.getItem(THEME_KEY) === THEME_LIGHT ? THEME_LIGHT : THEME_DARK),
+  false
+);
+
+function modelosEmbedUrl(modelId, school){
+  // cache-buster para forzar que el iframe abra el modelo correcto siempre
+  const s = (school || "").trim();
+  const theme = getCurrentThemeMode();
+  return `${MODELOS_APP_BASE}?embed=1&solo=1&open=${encodeURIComponent(modelId)}${s ? `&school=${encodeURIComponent(s)}` : ""}&theme=${encodeURIComponent(theme)}&t=${Date.now()}`;
+}
+
+
+
+
+  /* =========================
+     Estado
+     ========================= */
+  const $ = (s)=>document.querySelector(s);
+  const elIdea   = $("#ideaText");
+  const elAns    = $("#answers");
+  const elScore  = $("#score");
+  const elRounds = $("#rounds");
+    const elLives  = $("#lives");
+const elStreak = $("#streak");
+
+  const elStatus = $("#status");
+    const elTopStatus = $("#topStatus");
+
+  const elLabel  = $("#modelLabel");
+  const elAuth   = $("#modelAuthors");
+const elPhoto  = $("#photo");
+const elFrame  = $("#modelFrame");
+// ✅ Para que la rueda funcione: asegura foco en el iframe al entrar / clicar
+if(elFrame){
+  elFrame.addEventListener("pointerenter", ()=> { try{ elFrame.focus(); }catch(e){} });
+  elFrame.addEventListener("pointerdown",  ()=> { try{ elFrame.focus(); }catch(e){} });
+}
+
+    const elGroup  = $("#modelGroup");
+    const elModelSchool = $("#modelSchool");
+const elModelSchoolTxt = $("#modelSchoolTxt");
+
+const pillSchool = $("#pillSchool");
+const pillYear = $("#pillYear");
+const pillCode = $("#pillCode");
+const fsOverlay = $("#fsOverlay");
+const fsResult  = $("#fsResult");
+const fsBody    = $("#fsBody");
+const btnCloseFs = $("#btnCloseFs");
+const btnNextFs  = $("#btnNextFs");
+const elSchoolFilter = $("#schoolFilter");
+const goOverlay = $("#goOverlay");
+const btnGoClose = $("#btnGoClose");
+const elGoScore = $("#goScore");
+const elGoFailedGrid = $("#goFailedGrid");
+const goModelOverlay = $("#goModelOverlay");
+const btnGoModelClose = $("#btnGoModelClose");
+const elGoModelFrame = $("#goModelFrame");
+const elGoCopyHint = $("#goCopyHint");
+const elGoFineText = $("#goFineText");
+const btnThemeMode = $("#btnThemeMode");
+
+
+
+
+let score = 0;
+let rounds = 0;
+
+let lives = 3;
+let maxLives = 5;
+
+let streak = 0;
+let bestStreak = 0;
+
+// récord guardado
+let bestScore = Number(localStorage.getItem("tmps_bestScore") || 0);
+let bestStreakEver = Number(localStorage.getItem("tmps_bestStreak") || 0);
+
+let FAILED_MODELS = [];
+let livesAnimTimer = null;
+let LAST_GO_TIP_INDEX = -1;
+let LAST_REVEAL_MODEL = null;
+let LAST_GO_MODEL = null;
+
+const GO_TIPS = [
+  "Si lees inconsciente, defensas o transferencia, piensa primero en modelos psicodinamicos.",
+  "Si el texto habla de contingencias, refuerzo o extincion, la pista suele ser conductual.",
+  "Cuando aparecen distorsiones cognitivas, reestructuracion o creencias nucleares, mira escuela cognitiva.",
+  "Exposicion mas evitacion suele apuntar a modelos conductuales o cognitivo-conductuales.",
+  "Si ves alianza, empatia y aceptacion incondicional, suele haber base humanista.",
+  "Sistema, patrones relacionales y reencuadre son pistas tipicas de enfoques sistemicos.",
+  "Cuando el foco esta en narrativa e identidad, piensa en constructivismo y terapias narrativas.",
+  "Si aparece mentalizacion, la clave es como la persona entiende estados mentales propios y ajenos.",
+  "Esquemas tempranos y modos suelen discriminar terapia de esquemas frente a TCC clasica.",
+  "En ACT, la pista no es reducir malestar, sino aumentar flexibilidad psicologica y accion valiosa.",
+  "Desfusion, aceptacion y valores son terminologia de ACT mas que de reestructuracion cognitiva.",
+  "Si el concepto central es excepcion al problema y objetivos breves, piensa en centrada en soluciones.",
+  "Cuando se habla de posicion del terapeuta y circularidad, suele ser sistemico estrategico o Milan.",
+  "Relacion terapeutica como factor de cambio atraviesa escuelas, pero en humanista es nucleo explicito.",
+  "Si la intervencion se formula como analisis funcional, la brujula principal es conductual contextual.",
+  "En DBT, distingue validacion, regulacion emocional y tolerancia al malestar.",
+  "Si el texto menciona apego y regulacion interpersonal, compara psicodinamico contemporaneo y mentalizacion.",
+  "Cuando ves experimentos conductuales, suele ser TCC orientada a contraste de hipotesis.",
+  "Microrrupturas y reparacion de alianza ayudan a diferenciar modelos centrados en proceso relacional.",
+  "Si un modelo prioriza significado personal sobre verdad objetiva, suele acercarse al constructivismo.",
+  "Si la palabra clave es insight, suele haber matriz psicodinamica o experiencia emocional correctiva.",
+  "Si se insiste en aqui y ahora corporal o experiencial, suele haber influencia gestalt o humanista.",
+  "Si aparece jerarquia de exposicion, piensa en terapia conductual clasica.",
+  "Si aparece activacion conductual y evitacion pasiva, suele ser depresion en marco cognitivo-conductual.",
+  "Si se nombra metacognicion y relacion con el pensamiento, puede ser metacognitiva o tercera ola.",
+  "Si el lenguaje es pragmatico y orientado a tarea breve, mira modelos estrategicos.",
+  "Si se habla de triangulos relacionales y escenas repetidas, probable lectura psicodinamica.",
+  "Si se usa funcion de la conducta en contexto, suele ser analisis funcional contextual.",
+  "Si se enfatiza autenticidad del terapeuta, suele acercarse a enfoques humanistas.",
+  "Si el cambio se vincula a resignificacion de experiencia, piensa en constructivista.",
+  "Si la tecnica principal es role-play de habilidades, suele ser cognitivo-conductual o DBT.",
+  "Si el foco es patron de comunicacion familiar, probablemente sistemico.",
+  "Si aparece triangulacion familiar, mapa claro hacia sistemico.",
+  "Si se habla de defensa narcisista, escision o idealizacion, suele ser psicodinamico.",
+  "Si se mencionan autorregistros y tareas para casa, pista TCC.",
+  "Si hay trabajo con silla vacia o polaridades, pista gestalt.",
+  "Si aparecen excepciones, escala de avance y pregunta milagro, centrada en soluciones.",
+  "Si el concepto clave es valores y compromiso, mira ACT antes que TCC clasica.",
+  "Si aparece validacion dialectica junto a cambio, probablemente DBT.",
+  "Si el foco es trauma con reprocesamiento bilateral, piensa en EMDR.",
+  "Si se enfatiza seguridad, estabilizacion y ventana de tolerancia, pista trauma informado.",
+  "Si el objetivo es coherencia narrativa biografica, suele ser constructivista o narrativo.",
+  "Si se nombra self observador, suele aparecer en ACT y enfoques contemplativos.",
+  "Si se habla de mente sabia, termino muy DBT.",
+  "Si la pregunta es para que sirve el sintoma, mirada funcional y no solo descriptiva.",
+  "Si la tecnica busca romper intentos de solucion ineficaces, mira estrategico breve.",
+  "Si el encuadre y sus reglas son foco de conflicto, sesgo psicodinamico relacional.",
+  "Si se habla de diferenciacion del self, pista sistemica de Bowen.",
+  "Si se trabajan triangulos y lealtades invisibles, mira sistemica intergeneracional.",
+  "Si se usa psicoeducacion de sesgos atencionales, probable cognitivo.",
+  "Si se habla de fobia y habituacion, pista conductual clasica.",
+  "Si se nombra inhibicion reciproca, referencia conductual historica.",
+  "Si aparece condicionamiento clasico y operante juntos, base conductista.",
+  "Si el objetivo es reparacion de vinculo, mira enfoques relacionales o apego.",
+  "Si se destaca presencia terapeutica mas que tecnica, sesgo humanista.",
+  "Si la clave es externalizar el problema, pista narrativa.",
+  "Si se utilizan documentos terapeuticos y testigos externos, narrativa pura.",
+  "Si se habla de rituales y prescripciones paradojicas, estrategico o sistemico.",
+  "Si hay reencuadre constante del problema, sello sistemico.",
+  "Si el sintoma se interpreta como solucion del sistema, mirada sistemica.",
+  "Si se diferencia pensamiento de hecho, enfoque cognitivo.",
+  "Si se enfatiza aceptacion de emociones sin fusion, tercera ola.",
+  "Si se prioriza exposicion interoceptiva, pista panico en TCC.",
+  "Si se usan experimentos para desconfirmar creencias, sello Beckiano.",
+  "Si aparecen esquemas de abandono o exigencia, terapia de esquemas.",
+  "Si la tecnica principal es imagineria rescripting, pista esquemas o trauma.",
+  "Si se busca reparentalizacion limitada, senal de terapia de esquemas.",
+  "Si se trabaja con partes internas, puede ser IFS u otros enfoques de partes.",
+  "Si se nombra compasion focalizada y voz critica, puede ser CFT.",
+  "Si la pregunta clave es que necesidad cubre esta conducta, enfoque integrativo.",
+  "Si se habla de factores comunes, alianza y expectativas, enfoque transversal.",
+  "Si se menciona teoria del cambio por fases, suele ser integrativo.",
+  "Si aparece ciclo de evitacion experiencial, ACT vuelve a ser candidato.",
+  "Si hay terminos como sobrecontrol emocional, puede aparecer RO-DBT.",
+  "Si se busca mentalizar bajo estres interpersonal, pista MBT.",
+  "Si se usan clarificacion, confrontacion e interpretacion, triada psicodinamica clasica.",
+  "Si se insiste en experiencia emocional correctiva en sesion, psicodinamico relacional.",
+  "Si se nombra desconfirmacion interpersonal, puente entre cognitivo e interpersonal.",
+  "Si el texto parece manualizado por modulos, suele ser CBT o DBT.",
+  "Si se estructura por agenda de sesion, tipico TCC.",
+  "Si aparece feedback de sesion y ajuste de alianza, enfoque monitorizado por proceso.",
+  "Si se habla de evocacion y ambivalencia, puede ser entrevista motivacional.",
+  "Si se usan OARS o lenguaje de cambio, pista entrevista motivacional.",
+  "Si se trabaja problema como historia dominante, narrativa.",
+  "Si se enfatiza contexto cultural y comunitario, mira modelos transculturales.",
+  "Si el modelo usa terminologia contemplativa, probablemente tercera ola.",
+  "Si el objetivo es disminuir fusion con contenido mental, ACT o metacognitivo.",
+  "Si la tecnica es parada de pensamiento, es mas conductual clasico que tercera ola.",
+  "Si se usa tolerancia al malestar con habilidades concretas, DBT.",
+  "Si aparece contrato conductual, pista conductual o cognitivo-conductual.",
+  "Si se trabaja cadena de conducta paso a paso, DBT o analisis funcional.",
+  "Si se formula vulnerabilidad biologica mas ambiente invalidante, DBT clasica.",
+  "Si se centra en patrones interpersonales repetidos, interpersonal o psicodinamico.",
+  "Si se habla de rol social y duelo, puede ser IPT.",
+  "Si se prioriza significado existencial del sintoma, tono humanista-existencial.",
+  "Si aparece libertad, responsabilidad y sentido, clave existencial.",
+  "Si el lenguaje es tecnico de aprendizaje, base conductista fuerte.",
+  "Si se formula por procesos transdiagnosticos, enfoque transversal moderno.",
+  "Si se comparan tecnicas y se cuida alianza, enfoque integrativo basado en evidencia.",
+  "Si un modelo usa mapas de procesos por caso, probablemente integrativo.",
+];
+
+  /** pool de modelos (filtrado): [{id,label,grupo,year,autores,file,url}] */
+  let MODELS = [];
+
+  /** pool de items (filtrado): [{kind, modelId, modelLabel, grupo, year, autores, text}] */
+  let ITEMS = [];
+
+  /** ✅ pools completos (sin filtrar) */
+  let MODELS_ALL = [];
+  let ITEMS_ALL = [];
+
+  /** ✅ filtro actual */
+  let CURRENT_SCHOOL = "todas";
+
+
+  /** mapa de fotos: modelId -> filename */
+  let PHOTO_BY_MODEL = {};
+/** mapa: modelId -> descripcion */
+let DESC_BY_MODEL = {};
+let REPO_MODEL_PATHS_LOWER = null;
+let REPO_MODEL_BASENAME_KEY_MAP = null;
+
+  /** ronda actual */
+  let CURRENT = null;
+
+  /* =========================
+     Utils
+     ========================= */
+    function limpiarAutorFinal(txt){
+  let s = String(txt ?? "").trim();
+
+  // 1) "Referencia: ..." o "Referencias: ..." al final
+  s = s.replace(/\s*(referencias?|ref\.?)\s*:\s*.+$/i, "").trim();
+
+  // 2) cualquier paréntesis final "(...)" (típico APA) al final
+  s = s.replace(/\s*\([^)]*\)\s*\.?\s*$/g, "").trim();
+
+  // 3) "Autor, 1999" o "Autor et al., 1999" al final (sin paréntesis)
+  s = s.replace(/\s*[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ.'-]*(?:\s+et\s+al\.)?,\s*\d{4}[a-z]?\s*\.?\s*$/g, "").trim();
+
+  // 4) "Autor (1999)" al final (sin paréntesis externos)
+  s = s.replace(/\s*[A-ZÁÉÍÓÚÑ][\wÁÉÍÓÚÑáéíóúñ.'-]*(?:\s+et\s+al\.)?\s*\(\s*\d{4}[a-z]?\s*\)\s*\.?\s*$/g, "").trim();
+
+  return s;
+}
+
+  function escapeHtml(str){
+    return String(str ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function pickOne(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  async function mapLimit(arr, limit, mapper){
+    const out = new Array(arr.length);
+    let i = 0;
+
+    async function worker(){
+      while(true){
+        const idx = i++;
+        if(idx >= arr.length) return;
+        out[idx] = await mapper(arr[idx], idx);
+      }
+    }
+
+    const n = Math.max(1, Math.min(limit, arr.length));
+    await Promise.all(Array.from({length:n}, ()=>worker()));
+    return out;
+  }
+
+  function setSchoolColor(grupo){
+    // Si luego quieres: tu mapa real de colores por escuela
+const map = {
+  "Psicoanálisis": "#4E79A7",
+  "Conductismo": "#d69640",
+  "Cognitivo": "#E15759",
+  "Humanista": "#76B7B2",
+  "Sistémico": "#F1CE63",
+  "Constructivista": "#B07AA1",
+  "Integrativo": "#FF9DA7",
+  "Transversal": "#5F7F78"
+};
+
+    const c = map[grupo] || "#D9AA3F";
+    document.documentElement.style.setProperty("--schoolColor", c);
+    document.documentElement.style.setProperty("--panelGlow", `color-mix(in srgb, ${c} 18%, transparent)`);
+  }
+function setRandomDotColor(){
+  const DOT_COLORS = [
+    "#4E79A7", // Psicoanálisis
+    "#d69640", // Conductismo
+    "#E15759", // Cognitivo
+    "#76B7B2", // Humanista
+    "#F1CE63", // Sistémico
+    "#B07AA1", // Constructivista
+    "#FF9DA7", // Integrativo
+    "#5F7F78", // Transversal
+    "#9FB0C3"  // Otros / neutro
+  ];
+  const c = DOT_COLORS[Math.floor(Math.random() * DOT_COLORS.length)];
+  document.documentElement.style.setProperty("--dotColor", c);
+}
+
+  function normalizePhotosJson(json){
+    // Soporta 2 patrones habituales:
+    // A) { models: { "id": "archivo.jpg", ... } }
+    // B) { "models": {...}, ... } o incluso directo { "id": "archivo.jpg" }
+    if(json && typeof json === "object"){
+      if(json.models && typeof json.models === "object") return json.models;
+      // fallback: si viene directo como mapa id->filename
+      const keys = Object.keys(json);
+      const looksLikeMap = keys.length && typeof json[keys[0]] === "string";
+      if(looksLikeMap) return json;
+    }
+    return {};
+  }
+
+
+async function fetchJson(url, opts = {}){
+  const bust = !!opts.bust;
+  const u = bust ? (url + (url.includes("?") ? "&" : "?") + "t=" + Date.now()) : url;
+
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), Number(opts.timeoutMs || 20000));
+
+  try{
+    const r = await privateProxyFetch(u, {
+      cache: bust ? "no-store" : "force-cache",
+      signal: ctrl.signal,
+      headers: { "Accept": "application/json" }
+    });
+
+    if(!r.ok) throw new Error(`HTTP ${r.status} al cargar: ${url}`);
+
+    const txt = await r.text();
+    try{
+      return JSON.parse(txt);
+    }catch(e){
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      const preview = txt.slice(0, 180);
+      throw new Error(`Respuesta no JSON (${ct || "sin content-type"}) en: ${url} · ${preview}`);
+    }
+  } finally {
+    clearTimeout(to);
+  }
+}
+
+function normalizeFileKey(s){
+  return String(s || "")
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .replace(/\.json$/i,'')
+    .replace(/-\d{4}$/,'')
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-+|-+$/g,'');
+}
+
+async function loadRepoModelIndex(){
+  // Un repo privado no expone su árbol al navegador. Las rutas declaradas
+  // en los índices de escuelas se resuelven directamente mediante el proxy.
+  REPO_MODEL_PATHS_LOWER = null;
+  REPO_MODEL_BASENAME_KEY_MAP = null;
+  return false;
+}
+
+function resolveModelFileInRepo(file){
+  if(!REPO_MODEL_PATHS_LOWER || !REPO_MODEL_PATHS_LOWER.size) return null;
+
+  const f = String(file || '').replace(/^\/+/, '');
+  if(!f) return null;
+
+  const rels = [];
+  const add = (r)=>{ if(r && !rels.includes(r)) rels.push(r); };
+
+  add(`Core/${f.replace(/^Core\//,'')}`);
+
+  if(f.toLowerCase().startsWith('modelos/')){
+    const parts = f.split('/');
+    if(parts[1]){
+      const folder = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+      add(`Core/${['modelos', folder, ...parts.slice(2)].join('/')}`);
+    }
+  }
+
+  const m = f.match(/^(.*)-\d{4}\.json$/i);
+  if(m && m[1]){
+    const noYear = `${m[1]}.json`;
+    add(`Core/${noYear.replace(/^Core\//,'')}`);
+
+    if(noYear.toLowerCase().startsWith('modelos/')){
+      const p2 = noYear.split('/');
+      if(p2[1]){
+        const folder2 = p2[1].charAt(0).toUpperCase() + p2[1].slice(1);
+        add(`Core/${['modelos', folder2, ...p2.slice(2)].join('/')}`);
+      }
+    }
+  }
+
+  for(const rel of rels){
+    const found = REPO_MODEL_PATHS_LOWER.get(rel.toLowerCase());
+    if(found) return found;
+  }
+
+  const base = f.split('/').pop() || '';
+  const key = normalizeFileKey(base);
+  if(key && REPO_MODEL_BASENAME_KEY_MAP?.has(key)){
+    return REPO_MODEL_BASENAME_KEY_MAP.get(key);
+  }
+
+  return null;
+}
+
+function modelUrlCandidates(file){
+  const f = String(file || "").replace(/^\/+/, "");
+  if(!f) return [];
+
+  // Si tenemos índice real del repo, NO pedimos rutas inexistentes
+  const resolved = resolveModelFileInRepo(f);
+  if(resolved){
+    return [gh(resolved)];
+  }
+
+  // Si hay índice cargado pero no hay match, evitamos 404 innecesarios
+  if(REPO_MODEL_PATHS_LOWER && REPO_MODEL_PATHS_LOWER.size){
+    return [];
+  }
+
+  // Fallback solo si no se pudo cargar índice del repo
+  const files = [];
+  const add = (x) => { if(x && !files.includes(x)) files.push(x); };
+
+  if (f.toLowerCase().startsWith("modelos/")){
+    const parts = f.split("/");
+    if (parts[1]){
+      const fixedFolder = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+      add(["modelos", fixedFolder, ...parts.slice(2)].join("/"));
+    }
+  }
+
+  add(f);
+
+  const yearSuffix = f.match(/^(.*)-\d{4}\.json$/i);
+  if (yearSuffix && yearSuffix[1]){
+    const noYear = `${yearSuffix[1]}.json`;
+
+    if (noYear.toLowerCase().startsWith("modelos/")){
+      const parts2 = noYear.split("/");
+      if (parts2[1]){
+        const fixedFolder2 = parts2[1].charAt(0).toUpperCase() + parts2[1].slice(1);
+        add(["modelos", fixedFolder2, ...parts2.slice(2)].join("/"));
+      }
+    }
+
+    add(noYear);
+  }
+
+  return files.map(ff => gh(`Core/${ff}`));
+}
+
+
+async function fetchModelJsonResolved(model){
+  const urls = (Array.isArray(model?.urls) && model.urls.length)
+    ? model.urls
+    : [model?.url].filter(Boolean);
+
+  let lastErr = null;
+  for (const u of urls){
+    try{
+      const json = await fetchJson(u);
+      if(json){
+        model.url = u;
+        return json;
+      }
+    }catch(e){
+      lastErr = e;
+    }
+  }
+
+  throw (lastErr || new Error(`No se pudo cargar modelo ${model?.id || ""}`));
+}
+
+function extractIdeasFromModel(modelJson){
+  const ideas = modelJson?.ideasPrincipales;
+  if(!ideas || !Array.isArray(ideas)) return [];
+
+  if(ideas.length && typeof ideas[0] === "string"){
+    return ideas.map(s => String(s).trim()).filter(Boolean);
+  }
+
+  if(ideas.length && typeof ideas[0] === "object"){
+    return ideas.map(o => {
+      if(!o) return "";
+      const titulo = String(o.titulo ?? o.nombre ?? "").trim();
+      const cuerpo = String(
+        o.texto ??
+        o.desarrollo ??
+        o.descripcion ??
+        o.detalle ??
+        o.explicacion ??
+        o.idea ??
+        o.contenido ??
+        ""
+      ).trim();
+
+      if(titulo && cuerpo) return `${titulo}: ${cuerpo}`;
+      if(cuerpo) return cuerpo;
+      if(titulo) return titulo;
+      return "";
+    }).filter(Boolean);
+  }
+
+  return [];
+}
+
+function extractProcedimientosFromModel(modelJson){
+  const arr = modelJson?.procedimientos;
+  if(!arr || !Array.isArray(arr)) return [];
+
+  return arr.map(p => {
+    if(!p) return "";
+    const nombre = String(p.nombre ?? p.titulo ?? "").trim();
+    const texto  = String(p.texto ?? p.descripcion ?? p.detalle ?? "").trim();
+
+    // si no hay texto, al menos el nombre
+    if(nombre && texto) return `${nombre}: ${texto}`;
+    if(texto) return texto;
+    if(nombre) return nombre;
+    return "";
+  }).filter(Boolean);
+}
+
+function extractMicrosFromModel(modelJson){
+  const arr = modelJson?.micros;
+  if(!arr || !Array.isArray(arr)) return [];
+
+  return arr.map(m => {
+    if(!m) return "";
+    const nombre = String(m.nombre ?? m.titulo ?? "").trim();
+    const texto  = String(m.texto ?? m.descripcion ?? m.detalle ?? "").trim();
+
+    if(nombre && texto) return `${nombre}: ${texto}`;
+    if(texto) return texto;
+    if(nombre) return nombre;
+    return "";
+  }).filter(Boolean);
+}
+
+function ingestModelContent(model, modelJson, targetItems){
+  if(!model || !modelJson || !targetItems) return;
+
+  if(typeof modelJson.descripcion === "string"){
+    const d = modelJson.descripcion.trim();
+    if(d) DESC_BY_MODEL[model.id] = d;
+  }
+
+  const ideas = extractIdeasFromModel(modelJson);
+  const procs = extractProcedimientosFromModel(modelJson);
+  const micros = extractMicrosFromModel(modelJson);
+
+  const pushItems = (kind, arr) => {
+    for(const t of (arr || [])){
+      const clean = String(t).trim();
+      if(clean.length < 8) continue;
+
+      targetItems.push({
+        kind,
+        modelId: model.id,
+        modelLabel: model.label,
+        grupo: model.grupo,
+        year: model.year,
+        autores: model.autores,
+        text: clean
+      });
+    }
+  };
+
+  pushItems("idea", ideas);
+  pushItems("procedimiento", procs);
+  pushItems("micro", micros);
+}
+
+function fadeInIframe(iframe, loadingHostEl){
+  if(!iframe || !loadingHostEl) return;
+
+  // 1) marca “cargando” (lo oculta suavemente)
+  loadingHostEl.classList.add("isLoadingFrame");
+
+  // 2) cuando carga, lo mostramos
+  const done = ()=>{
+    loadingHostEl.classList.remove("isLoadingFrame");
+  };
+
+  // importante: {once:true} para no acumular listeners
+  iframe.addEventListener("load", done, { once:true });
+
+  // 3) failsafe: aunque no dispare load (bloqueos raros), NUNCA se queda invisible
+  setTimeout(done, 2500);
+}
+
+function setRevealedPanel(model, revealOn){
+  if(!elFrame) return;
+
+  const rightCard = elFrame.closest(".card.rightCard") || elFrame.parentElement;
+
+  if(!model || !revealOn){
+    LAST_REVEAL_MODEL = null;
+    // limpio
+    elFrame.removeAttribute("src");
+    elFrame.src = "about:blank";
+
+    // ✅ marca “vacío” (para blobs en desktop)
+    if(rightCard) rightCard.classList.add("isEmpty");
+    return;
+  }
+
+  if(isMobile()) return; // en móvil no usamos el iframe lateral
+
+  // ✅ ya hay contenido: quita blobs
+  if(rightCard) rightCard.classList.remove("isEmpty");
+  LAST_REVEAL_MODEL = model;
+
+  fadeInIframe(elFrame, rightCard);
+   elFrame.src = modelosEmbedUrl(model.id, model.grupo);
+
+}
+
+
+function setStatus(html, on=true, kind=""){
+  const desktop = !isMobile(); // tu helper ya existe
+
+  // destino: desktop -> topStatus, móvil -> status inferior
+  const target = (desktop && elTopStatus) ? elTopStatus : elStatus;
+  const other  = (target === elStatus) ? elTopStatus : elStatus;
+
+  // pinta en el destino
+  target.innerHTML = html;
+  target.classList.toggle("is-on", !!on);
+
+  // estilo unificado
+  target.classList.add("fsResult");
+  target.classList.remove("ok","bad");
+  if(kind === "ok")  target.classList.add("ok");
+  if(kind === "bad") target.classList.add("bad");
+
+  // apaga el otro para que no se duplique
+  if(other){
+    other.classList.remove("is-on","ok","bad","fsResult");
+    other.innerHTML = "";
+  }
+}
+
+
+
+  function lockOptions(){
+    for(const b of elAns.querySelectorAll("button.opt")){
+      b.disabled = true;
+    }
+  }
+    
+  function statusHtml(isCorrect, pillText){
+  return `
+    <div class="fsHalo" aria-hidden="true"></div>
+
+    <div class="fsResultRow">
+      <div class="fsResultLeft">
+        <span class="fsResultIcon" aria-hidden="true">${isCorrect ? "✓" : "×"}</span>
+        <div class="fsResultTitle">${isCorrect ? "Correcto" : "Incorrecto"}</div>
+      </div>
+
+      <div class="fsResultPill">${pillText || ""}</div>
+    </div>
+  `;
+}
+  
+function isMobile(){
+  return window.matchMedia && window.matchMedia("(max-width: 900px)").matches;
+}
+
+function openFsPanel(model, isCorrect){
+
+  if(!isMobile()) return;
+  if(!model) return;
+  LAST_REVEAL_MODEL = model;
+
+  const label = escapeHtml(model.label || model.id || "—");
+  const autores = escapeHtml(model.autores || "—");
+  const desc = escapeHtml(DESC_BY_MODEL[model.id] || "—");
+// texto resultado
+const resultHtml = isCorrect
+  ? `
+   
+    <div class="fsHalo" aria-hidden="true"></div>
+
+    <div class="fsResultRow">
+      <div class="fsResultLeft">
+        <span class="fsResultIcon" aria-hidden="true">✓</span>
+        <div class="fsResultTitle">Correcto</div>
+      </div>
+      <div class="fsResultPill">+1</div>
+    </div>
+  `
+  : `
+  
+    <div class="fsHalo" aria-hidden="true"></div>
+
+    <div class="fsResultRow">
+      <div class="fsResultLeft">
+        <span class="fsResultIcon" aria-hidden="true">×</span>
+        <div class="fsResultTitle">Incorrecto</div>
+      </div>
+      <div class="fsResultPill">-1 vida</div>
+    </div>
+  `;
+
+
+
+fsResult.className = "fsResult " + (isCorrect ? "ok" : "bad");
+fsResult.innerHTML = resultHtml;
+
+  // (iframe) ya no necesitamos foto/autor/grupo aquí
+
+
+fsBody.innerHTML = `
+  <iframe
+    class="fsIframe"
+    title="Detalle del modelo"
+    loading="eager"
+    referrerpolicy="no-referrer"
+    tabindex="0"
+       src="${modelosEmbedUrl(model.id, model.grupo)}"
+
+  ></iframe>
+`;
+
+const fsIfr = fsBody.querySelector("iframe.fsIframe");
+
+if(fsIfr){
+  // ✅ fade-in controlado (móvil)
+  fadeInIframe(fsIfr, fsBody);
+
+  // foco al abrir y al tocar (para que la rueda/trackpad y scroll móvil vayan finos)
+  setTimeout(()=>{ try{ fsIfr.focus(); }catch(e){} }, 0);
+  fsIfr.addEventListener("pointerdown", ()=>{ try{ fsIfr.focus(); }catch(e){} });
+}
+
+
+
+
+
+  fsOverlay.classList.add("is-on");
+  fsOverlay.setAttribute("aria-hidden","false");
+
+document.documentElement.style.overflow = "hidden";
+document.body.style.overflow = "hidden";
+
+/* ✅ SIEMPRE ARRIBA: resetea el scroll del overlay */
+fsBody.scrollTop = 0;
+// por si el navegador aplica el scroll después del repaint:
+requestAnimationFrame(() => { fsBody.scrollTop = 0; });
+
+}
+
+
+function closeFsPanel(){
+  fsOverlay.classList.remove("is-on");
+  fsOverlay.setAttribute("aria-hidden","true");
+  document.documentElement.style.overflow = "";
+  document.body.style.overflow = "";
+
+  // ✅ limpia iframe móvil
+  if(fsBody) fsBody.innerHTML = "";
+}
+
+function openGameOverOverlay(){
+  if(!goOverlay) return;
+  goOverlay.classList.add("is-on");
+  goOverlay.setAttribute("aria-hidden", "false");
+  document.body.classList.add("gameover-on");
+}
+
+function closeGameOverOverlay(){
+  if(!goOverlay) return;
+  goOverlay.classList.remove("is-on");
+  goOverlay.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("gameover-on");
+  if(elGoCopyHint) elGoCopyHint.textContent = "";
+  closeGoModelOverlay();
+}
+
+function openGoModelOverlay(url){
+  if(!goModelOverlay || !elGoModelFrame || !url) return;
+  LAST_GO_MODEL = url;
+  elGoModelFrame.src = url;
+  goModelOverlay.classList.add("is-on");
+  goModelOverlay.setAttribute("aria-hidden","false");
+}
+
+function closeGoModelOverlay(){
+  if(!goModelOverlay) return;
+  goModelOverlay.classList.remove("is-on");
+  goModelOverlay.setAttribute("aria-hidden","true");
+  if(elGoModelFrame) elGoModelFrame.src = "about:blank";
+  LAST_GO_MODEL = null;
+}
+
+function pickGameOverTip(){
+  if(!Array.isArray(GO_TIPS) || !GO_TIPS.length) return "Lee las fichas de los modelos para mejorar tus puntuaciones.";
+  if(GO_TIPS.length === 1) return GO_TIPS[0];
+
+  let idx = Math.floor(Math.random() * GO_TIPS.length);
+  if(idx === LAST_GO_TIP_INDEX){
+    idx = (idx + 1 + Math.floor(Math.random() * (GO_TIPS.length - 1))) % GO_TIPS.length;
+  }
+  LAST_GO_TIP_INDEX = idx;
+  return GO_TIPS[idx];
+}
+
+function addFailedModel(model){
+  if(!model || !model.id) return;
+  if(FAILED_MODELS.some(x => x.id === model.id)) return;
+  FAILED_MODELS.push({
+    id: model.id,
+    label: model.label || model.id,
+    grupo: model.grupo || "",
+    reviewed: false
+  });
+}
+
+function renderFailedModels(){
+  if(!elGoFailedGrid) return;
+
+  if(!FAILED_MODELS.length){
+    elGoFailedGrid.innerHTML = `<div class="goFailedEmpty">No has fallado modelos en esta partida.</div>`;
+    return;
+  }
+
+  elGoFailedGrid.innerHTML = FAILED_MODELS.map(m => `
+    <div class="goFailedCard ${m.reviewed ? 'is-open' : ''}">
+      <div class="goFailedLabel">${escapeHtml(m.label)}</div>
+      <div class="goFailedMeta">${escapeHtml(m.grupo || "")}</div>
+      <div class="goFailedActions">
+        <button class="btn goOpenModelBtn ${m.reviewed ? 'is-open' : ''}" data-open-model-id="${escapeHtml(m.id)}">${m.reviewed ? 'Abierta' : 'Abrir ficha'}</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openFailedModelPreview(modelId){
+  if(!modelId) return;
+  const model = (MODELS_ALL || []).find(m => String(m.id) === String(modelId))
+    || (MODELS || []).find(m => String(m.id) === String(modelId));
+  if(!model) return;
+
+  const hit = FAILED_MODELS.find(x => String(x.id) === String(modelId));
+  if(hit && !hit.reviewed){
+    hit.reviewed = true;
+    renderFailedModels();
+  }
+
+  openGoModelOverlay(modelosEmbedUrl(model.id, model.grupo));
+}
+
+function rethemeEmbeddedIframes(){
+  if (LAST_REVEAL_MODEL){
+    setRevealedPanel(LAST_REVEAL_MODEL, true);
+  }
+  const fsIfr = fsBody ? fsBody.querySelector("iframe.fsIframe") : null;
+  if (fsIfr && LAST_REVEAL_MODEL){
+    fsIfr.src = modelosEmbedUrl(LAST_REVEAL_MODEL.id, LAST_REVEAL_MODEL.grupo);
+  }
+  if (goModelOverlay && goModelOverlay.classList.contains("is-on") && LAST_GO_MODEL){
+    try{
+      const u = new URL(LAST_GO_MODEL, location.href);
+      const openId = u.searchParams.get("open") || "";
+      const school = u.searchParams.get("school") || "";
+      if (openId){
+        elGoModelFrame.src = modelosEmbedUrl(openId, school);
+      }
+    }catch(e){}
+  }
+}
+
+function pulseHudValue(el, kind){
+  if(!el) return;
+  el.classList.remove('hudPulseUp','hudPulseDown');
+  void el.offsetWidth;
+  el.classList.add(kind === 'down' ? 'hudPulseDown' : 'hudPulseUp');
+  setTimeout(()=> el.classList.remove('hudPulseUp','hudPulseDown'), 360);
+}
+
+function animateLivesTransition(prevLives, nextLives){
+  if(!elLives) return;
+
+  if(livesAnimTimer){
+    clearTimeout(livesAnimTimer);
+    livesAnimTimer = null;
+  }
+
+  elLives.textContent = String(prevLives);
+  elLives.classList.remove('hudLifePendingUp','hudLifePendingDown','hudPulseUp','hudPulseDown');
+  void elLives.offsetWidth;
+
+  const dir = (nextLives > prevLives) ? 'up' : 'down';
+  elLives.classList.add(dir === 'up' ? 'hudLifePendingUp' : 'hudLifePendingDown');
+
+  livesAnimTimer = setTimeout(()=>{
+    elLives.classList.remove('hudLifePendingUp','hudLifePendingDown');
+    elLives.textContent = String(nextLives);
+    pulseHudValue(elLives, dir === 'up' ? 'up' : 'down');
+    livesAnimTimer = null;
+  }, 230);
+}
+
+function updateHud(){
+  const prevScore = Number(elScore?.textContent ?? score);
+  const prevLives = Number(elLives?.textContent ?? lives);
+
+  if(elScore) elScore.textContent = score;
+  if(elRounds) elRounds.textContent = rounds;
+  if(elStreak) elStreak.textContent = streak;
+
+  if(elLives){
+    if(Number.isFinite(prevLives) && lives !== prevLives){
+      animateLivesTransition(prevLives, lives);
+    }else if(!Number.isFinite(prevLives)){
+      elLives.textContent = String(lives);
+    }
+  }
+
+  if(Number.isFinite(prevScore) && score !== prevScore){
+    pulseHudValue(elScore, score > prevScore ? 'up' : 'down');
+  }
+}
+  /* =========================
+     Filtro por escuela
+     ========================= */
+  function populateSchoolFilter(){
+    if(!elSchoolFilter) return;
+
+    // conservar "todas" y reconstruir el resto
+    const keep = `<option value="todas">Todas</option>`;
+
+    const grupos = Array.from(new Set((MODELS_ALL || []).map(m => m.grupo).filter(Boolean)))
+      .sort((a,b)=> a.localeCompare(b, "es"));
+
+    elSchoolFilter.innerHTML = keep + grupos.map(g =>
+      `<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`
+    ).join("");
+
+    elSchoolFilter.value = CURRENT_SCHOOL || "todas";
+  }
+
+  function applySchoolFilter(){
+    const v = (CURRENT_SCHOOL || "todas");
+
+    if(v === "todas"){
+      MODELS = MODELS_ALL.slice();
+      ITEMS  = ITEMS_ALL.slice();
+    }else{
+      MODELS = MODELS_ALL.filter(m => m.grupo === v);
+      ITEMS  = ITEMS_ALL.filter(it => it.grupo === v);
+    }
+
+    // si no hay suficiente para 4 opciones, avisamos
+    if(MODELS.length < 4){
+      elIdea.textContent = "No hay suficientes modelos en esta escuela para jugar (mínimo 4).";
+      elAns.innerHTML = "";
+      setStatus(`Selecciona otra escuela o <b>Todas</b>.`, true);
+      setRevealedPanel(null, false);
+      return;
+    }
+
+    if(!ITEMS.length){
+      elIdea.textContent = "No he encontrado ideas/procedimientos/micros en esta escuela.";
+      elAns.innerHTML = "";
+      setStatus(`Selecciona otra escuela o <b>Todas</b>.`, true);
+      setRevealedPanel(null, false);
+      return;
+    }
+
+    resetGame();
+  }
+
+  /* =========================
+     Juego
+     ========================= */
+ function buildQuestion(){
+  if(!ITEMS.length){
+    elIdea.textContent = "No he encontrado ideas/procedimientos/micros en los modelos cargados.";
+    elAns.innerHTML = "";
+    setStatus("Revisa que los JSON tengan <b>ideasPrincipales</b>, <b>procedimientos</b> o <b>micros</b>.", true);
+    setRevealedPanel(null, false);
+if(pillYear) pillYear.textContent = "—";
+if(pillCode) pillCode.textContent = "—";
+
+    return;
+  }
+
+  const item = pickOne(ITEMS);
+  const correct = MODELS.find(m => m.id === item.modelId);
+  if(!correct) return buildQuestion();
+
+  const pool = MODELS.filter(m => m.id !== correct.id);
+  const distractors = shuffle(pool).slice(0, 3);
+  const options = shuffle([correct, ...distractors]);
+
+  CURRENT = {
+    kind: item.kind,
+    text: item.text,
+    correctId: correct.id,
+    correctLabel: correct.label,
+    correctAutores: correct.autores,
+    correctGrupo: correct.grupo,
+    correctYear: correct.year,
+    options
+  };
+
+  setSchoolColor(correct.grupo);
+  setRandomDotColor();
+
+  pillYear.textContent = correct.year ? String(correct.year) : "—";
+
+  // pill de tipo
+const kindLabel = (CURRENT.kind === "idea") ? "idea"
+                : (CURRENT.kind === "procedimiento") ? "procedimiento"
+                : "micro-intervención";
+pillCode.textContent = kindLabel;
+
+
+elIdea.textContent = limpiarAutorFinal(CURRENT.text);
+
+
+  elAns.innerHTML = options.map(m => {
+    const label = escapeHtml(m.label || m.id);
+    const grupo = escapeHtml(m.grupo || "");
+    return `<button class="opt" data-id="${escapeHtml(m.id)}">
+      ${label}<span style="display:block; margin-top:4px; font-weight:700; opacity:.72; font-size:12px;">${grupo}</span>
+    </button>`;
+  }).join("");
+
+  setStatus("", false);
+  setRevealedPanel(correct, false);
+}
+
+
+  function onChoose(id){
+    if(!CURRENT) return;
+
+rounds += 1;
+
+const correct = CURRENT.correctId === id;
+
+
+    lockOptions();
+
+    // marcar
+    for(const b of elAns.querySelectorAll("button.opt")){
+      const bid = b.getAttribute("data-id");
+      if(bid === CURRENT.correctId) b.classList.add("correct");
+      if(bid === id && !correct) b.classList.add("wrong");
+    }
+
+if(correct){
+
+  score += 1;
+  streak += 1;
+
+  if(streak > bestStreak) bestStreak = streak;
+updateHud();
+
+  // cada 5 aciertos → +1 vida (máx)
+  if(streak % 5 === 0 && lives < maxLives){
+    lives += 1;
+   setStatus(statusHtml(true, "+1 vida"), true, "ok");
+
+  }else{
+setStatus(statusHtml(true, "+1"), true, "ok");
+
+  }
+
+}else{
+
+lives -= 1;
+streak = 0;
+
+updateHud();
+
+setStatus(statusHtml(false, "-1 vida"), true, "bad");
+
+const failedModel = MODELS.find(m => m.id === CURRENT.correctId);
+addFailedModel(failedModel);
+
+if(lives <= 0){
+  gameOver();
+  return;
+}
+
+}
+
+
+// revelar
+const model = MODELS.find(m => m.id === CURRENT.correctId);
+setRevealedPanel(model, true);
+
+// ✅ en móvil: abrir panel derecho a pantalla completa (sin clonar DOM)
+openFsPanel(model, correct);
+
+
+  }
+function gameOver(){
+
+  // guardar récords
+  if(score > bestScore){
+    bestScore = score;
+    localStorage.setItem("tmps_bestScore", bestScore);
+  }
+  if(bestStreak > bestStreakEver){
+    bestStreakEver = bestStreak;
+    localStorage.setItem("tmps_bestStreak", bestStreakEver);
+  }
+
+  elAns.innerHTML = "";
+  setRevealedPanel(null, false);
+  closeFsPanel();
+
+  // limpia estado inline
+  elIdea.classList.remove("is-gameover");
+  setStatus("", false);
+
+  // rellena overlay fullscreen
+  if(elGoScore) elGoScore.textContent = String(score);
+  if(elGoCopyHint) elGoCopyHint.textContent = "";
+  if(elGoFineText) elGoFineText.textContent = pickGameOverTip();
+  renderFailedModels();
+
+  openGameOverOverlay();
+}
+
+
+function resetGame(){
+
+  score = 0;
+  rounds = 0;
+  lives = 3;
+  streak = 0;
+  bestStreak = 0;
+
+  updateHud();
+  FAILED_MODELS = [];
+
+  // limpiar estados de overlays
+  elIdea.classList.remove("is-gameover");
+  closeGameOverOverlay();
+  closeFsPanel();
+  setStatus("", false);
+
+  buildQuestion();
+}
+
+
+
+  /* =========================
+     Carga inicial
+     ========================= */
+  async function init(){
+    try{
+      elIdea.textContent = "Cargando modelos…";
+setStatus(`Origen: <b>${escapeHtml(location.origin)}</b> · Href: <b>${escapeHtml(location.href)}</b>`, true);
+
+     const accessToken = await getSupabaseAccessToken();
+     if(!accessToken){
+       throw new Error('Inicia sesión para acceder al quiz y a los datos de la biblioteca.');
+     }
+
+     const [escuelasIndex, fotosJson] = await Promise.all([
+  fetchJson(ESCUELAS_INDEX),
+  fetchJson(FOTOS_JSON_URL),
+  loadRepoModelIndex()
+]);
+
+PHOTO_BY_MODEL = normalizePhotosJson(fotosJson);
+
+// 1) escuelasIndex suele ser array de {id,label,file,...}
+const schools = Array.isArray(escuelasIndex) ? escuelasIndex : (escuelasIndex.escuelas || []);
+
+// 2) cargar cada escuela (Core/{entry.file}) y acumular school.modelos[]
+const schoolEntries = schools.filter(s => s && s.file);
+const schoolJsons = await mapLimit(schoolEntries, 6, async (s) => {
+  try{
+    return { status: "fulfilled", value: await fetchJson(gh(`Core/${String(s.file).replace(/^\/+/,"")}`)) };
+  }catch(reason){
+    return { status: "rejected", reason };
+  }
+});
+
+const summaries = [];
+for (const res of schoolJsons){
+  if (res.status !== "fulfilled") continue;
+  const school = res.value;
+  const modelos = Array.isArray(school?.modelos) ? school.modelos : [];
+  for (const m of modelos){
+    if (!m?.id || !m?.file) continue;
+    summaries.push({
+      id: m.id,
+      label: m.label || m.nombre || m.id,
+      grupo: m.grupo || school.label || school.id || "",
+      year: m.year ?? "",
+      autores: m.autores || "",
+      file: m.file
+    });
+  }
+}
+
+// 3) MODELS = lista final con url real al JSON del modelo
+MODELS = summaries.map(m => {
+  const urls = modelUrlCandidates(m.file);
+  return {
+    ...m,
+    urls,
+    url: urls[0] || gh(`Core/${String(m.file).replace(/^\/+/,"")}`)
+  };
+});
+
+      if(!MODELS.length){
+        elIdea.textContent = "No he podido construir la lista de modelos desde el index.";
+        setStatus("Ajusta MODELS_INDEX_URL y revisa el formato del index.json.", true);
+        return;
+      }
+
+      // Carga progresiva: lote inicial rápido + resto en segundo plano
+      const seedCount = Math.min(MODELS.length, isMobile() ? 18 : 36);
+      const seedModels = MODELS.slice(0, seedCount);
+      const tailModels = MODELS.slice(seedCount);
+
+      elIdea.textContent = `Cargando ideas… (${seedModels.length}/${MODELS.length})`;
+
+      ITEMS = [];
+      const seedJsons = await mapLimit(seedModels, 10, async (m) => {
+        try{
+          return { status: "fulfilled", value: await fetchModelJsonResolved(m) };
+        }catch(reason){
+          return { status: "rejected", reason };
+        }
+      });
+
+      for(let i=0;i<seedJsons.length;i++){
+        const res = seedJsons[i];
+        if(res.status !== "fulfilled") continue;
+        ingestModelContent(seedModels[i], res.value, ITEMS);
+      }
+
+      if(!ITEMS.length){
+        elIdea.textContent = "No he encontrado ideas/procedimientos/micros en los modelos cargados.";
+        setStatus("Verifica que tus modelos tengan <b>ideasPrincipales</b>, <b>procedimientos</b> o <b>micros</b>.", true);
+        return;
+      }
+
+      // ✅ pools iniciales (ya jugables)
+      MODELS_ALL = MODELS.slice();
+      ITEMS_ALL  = ITEMS.slice();
+
+      populateSchoolFilter();
+      CURRENT_SCHOOL = (elSchoolFilter?.value || "todas");
+      applySchoolFilter();
+
+      // Completa la base en background sin bloquear UI
+      if(tailModels.length){
+        (async () => {
+          const tailJsons = await mapLimit(tailModels, 8, async (m) => {
+            try{
+              return { status: "fulfilled", value: await fetchModelJsonResolved(m) };
+            }catch(reason){
+              return { status: "rejected", reason };
+            }
+          });
+
+          const extraItems = [];
+          for(let i=0;i<tailJsons.length;i++){
+            const res = tailJsons[i];
+            if(res.status !== "fulfilled") continue;
+            ingestModelContent(tailModels[i], res.value, extraItems);
+          }
+
+          if(extraItems.length){
+            ITEMS_ALL = ITEMS_ALL.concat(extraItems);
+
+            // Si aún no hay pregunta visible (o no hay opciones), refresca una vez
+            const hasOptions = !!(elAns && elAns.querySelector("button.opt"));
+            if(!hasOptions){
+              applySchoolFilter();
+            }
+          }
+        })().catch((e)=>{
+          console.warn("Carga de fondo incompleta:", e);
+        });
+      }
+
+    }catch(err){
+      console.error(err);
+      elIdea.textContent = "Error cargando datos.";
+      setStatus(`Fallo: <b>${escapeHtml(err?.message || String(err))}</b><span class="small">Revisa URLs, CORS y rutas.</span>`, true);
+    }
+  }
+
+  // eventos
+ // eventos
+document.addEventListener("click", (e)=>{
+  const b = e.target.closest?.("button.opt");
+  if(!b) return;
+  if(b.disabled) return;
+  onChoose(b.getAttribute("data-id"));
+});
+document.addEventListener("click", (e)=>{
+  const t = e.target;
+
+  const openBtn = t && t.closest ? t.closest("button[data-open-model-id]") : null;
+  if(openBtn){
+    openFailedModelPreview(openBtn.getAttribute("data-open-model-id"));
+    return;
+  }
+
+  if(t && t.id === "btnPlayAgain"){
+    resetGame();
+    return;
+  }
+});
+
+// botón siguiente normal (desktop)
+$("#btnNext").addEventListener("click", ()=>{
+  if(fsOverlay.classList.contains("is-on")) return;
+  buildQuestion();
+
+  /* ✅ SIEMPRE ARRIBA */
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+});
+
+
+$("#btnReset").addEventListener("click", ()=> resetGame());
+
+if(btnThemeMode){
+  btnThemeMode.addEventListener("click", ()=>{
+    const next = (getCurrentThemeMode() === THEME_DARK) ? THEME_LIGHT : THEME_DARK;
+    applyTheme(next, true);
+    rethemeEmbeddedIframes();
+  });
+}
+
+// botón siguiente del fullscreen (móvil)
+btnNextFs.addEventListener("click", ()=>{
+  closeFsPanel();
+  buildQuestion();
+
+  /* ✅ SIEMPRE ARRIBA (pantalla principal) */
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+});
+
+
+// cerrar overlay (móvil): mismo comportamiento que "Siguiente"
+btnCloseFs.addEventListener("click", ()=>{
+  closeFsPanel();
+  buildQuestion();
+
+  /* ✅ SIEMPRE ARRIBA (pantalla principal) */
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+});
+
+fsOverlay.addEventListener("click", (e)=>{
+  if(e.target === fsOverlay) closeFsPanel();
+});
+
+if(btnGoClose){
+  btnGoClose.addEventListener("click", ()=> resetGame());
+}
+
+if(btnGoModelClose){
+  btnGoModelClose.addEventListener("click", ()=> closeGoModelOverlay());
+}
+
+if(goModelOverlay){
+  goModelOverlay.addEventListener("click", (e)=>{
+    if(e.target === goModelOverlay) closeGoModelOverlay();
+  });
+}
+
+if(goOverlay){
+  goOverlay.addEventListener("click", (e)=>{
+    if(e.target === goOverlay) closeGameOverOverlay();
+  });
+}
+
+window.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){
+    if(goModelOverlay && goModelOverlay.classList.contains("is-on")){
+      closeGoModelOverlay();
+    }else if(goOverlay && goOverlay.classList.contains("is-on")){
+      resetGame();
+    }else if(fsOverlay && fsOverlay.classList.contains("is-on")){
+      closeFsPanel();
+    }
+  }
+});
+
+// ✅ cambio de escuela
+if(elSchoolFilter){
+  elSchoolFilter.addEventListener("change", ()=>{
+    CURRENT_SCHOOL = elSchoolFilter.value || "todas";
+    applySchoolFilter();
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  });
+}
+
+init().finally(()=>{
+  // micro-ritual de entrada (pro)
+  requestAnimationFrame(()=> document.body.classList.add("loaded"));
+
+// ✅ Fijo: el iframe siempre ocupa el alto del panel (no se auto-redimensiona)
+const modelFrame = document.getElementById("modelFrame");
+if(modelFrame){
+  modelFrame.style.height = "100%";
+}
+
+
+});
+
+
+
+
+  </script>
+</body>
+</html>
