@@ -140,11 +140,29 @@ function isPublicLandingAssetPath(path) {
     );
 }
 
+function isPublicModelImagePath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  const lowerPath = value.toLowerCase();
+  const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']
+    .some((ext) => lowerPath.endsWith(ext));
+
+  return isImage && (
+    lowerPath.startsWith('core/fotos/')
+    || lowerPath.startsWith('core/imagenes/vida/')
+  );
+}
+
 function isPublicModelDataPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();
 
   return isPublicLandingAssetPath(value)
+    || isPublicModelImagePath(value)
+    // Estos indices solo relacionan modelos/autores con sus imagenes publicas.
+    || lowerPath === 'core/fotos/foto.json'
+    || lowerPath === 'core/fotos.json'
+    || lowerPath === 'core/foto.json'
+    || lowerPath === 'core/imagenes/vida/index.json'
     || lowerPath === 'core/escuelas/index.json'
     || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
     || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
