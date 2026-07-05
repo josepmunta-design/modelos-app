@@ -1,0 +1,3146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Mapamundi · Modelos de Psicoterapia</title>
+<meta name="description" content="Atlas histórico e interactivo de los modelos de psicoterapia: escuelas, autores, ciudades y años de origen.">
+
+<!-- Dependencias -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<!-- Tipografía editorial -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   MAPAMUNDI — estilos encapsulados en este documento (ruta independiente).
+   No se tocan estilos globales de otras rutas.
+   ========================================================================== */
+
+:root{
+  --mm-serif: "Instrument Serif", Georgia, "Times New Roman", serif;
+  --mm-sans: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Tema oscuro (atlas nocturno) — por defecto */
+  --mm-bg: #14171c;
+  --mm-bg-raised: rgba(24, 28, 35, 0.86);
+  --mm-bg-raised-solid: #1b2027;
+  --mm-bg-overlay: rgba(13, 16, 20, 0.62);
+  --mm-ink: #e8e3d8;
+  --mm-ink-soft: #b4aea0;
+  --mm-ink-faint: #7d786c;
+  --mm-hairline: rgba(232, 227, 216, 0.14);
+  --mm-hairline-strong: rgba(232, 227, 216, 0.26);
+  --mm-accent: #d4a24e;
+  --mm-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --mm-shadow-soft: 0 8px 28px rgba(0, 0, 0, 0.35);
+  --mm-tile-filter: brightness(0.92) contrast(1.02) sepia(0.14) hue-rotate(-6deg) saturate(0.85);
+  --mm-grain-opacity: 0.05;
+  --mm-focus: 0 0 0 2px rgba(212, 162, 78, 0.65);
+}
+
+body[data-mm-theme="light"]{
+  /* Tema crema (atlas de papel) */
+  --mm-bg: #efe9dd;
+  --mm-bg-raised: rgba(250, 246, 238, 0.9);
+  --mm-bg-raised-solid: #f7f2e8;
+  --mm-bg-overlay: rgba(56, 50, 40, 0.34);
+  --mm-ink: #2c2822;
+  --mm-ink-soft: #5c554a;
+  --mm-ink-faint: #8d8577;
+  --mm-hairline: rgba(44, 40, 34, 0.14);
+  --mm-hairline-strong: rgba(44, 40, 34, 0.28);
+  --mm-accent: #9a6b1f;
+  --mm-shadow: 0 18px 50px rgba(60, 50, 30, 0.22), 0 2px 8px rgba(60, 50, 30, 0.14);
+  --mm-shadow-soft: 0 8px 28px rgba(60, 50, 30, 0.16);
+  --mm-tile-filter: sepia(0.22) saturate(0.82) brightness(1.02) contrast(0.97);
+  --mm-grain-opacity: 0.07;
+  --mm-focus: 0 0 0 2px rgba(154, 107, 31, 0.6);
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+/* [hidden] debe ganar a cualquier display explícito de las clases propias */
+#mmApp [hidden]{ display: none !important; }
+a.mm-btn{ text-decoration: none; }
+
+html, body.mm-body{
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--mm-bg);
+  color: var(--mm-ink);
+  font-family: var(--mm-sans);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+#mmApp{ position: fixed; inset: 0; }
+
+/* ---------- Mapa base ---------- */
+#mmMap{
+  position: absolute; inset: 0;
+  background: var(--mm-bg);
+  outline: none;
+}
+#mmMap .leaflet-tile-pane{ filter: var(--mm-tile-filter); }
+#mmMap .leaflet-control-attribution{
+  background: transparent;
+  color: var(--mm-ink-faint);
+  font-family: var(--mm-sans);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  padding-right: 10px;
+}
+#mmMap .leaflet-control-attribution a{ color: var(--mm-ink-faint); }
+
+/* Grano de papel muy sutil (imagen estática: sin coste por frame) */
+#mmGrain{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 640;
+  opacity: var(--mm-grain-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+}
+
+/* Viñeta cinematográfica */
+#mmVignette{
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 641;
+  background: radial-gradient(ellipse 120% 105% at 50% 42%, transparent 55%, rgba(0,0,0,0.16) 100%);
+}
+body[data-mm-theme="light"] #mmVignette{
+  background: radial-gradient(ellipse 120% 105% at 50% 42%, transparent 60%, rgba(70,58,38,0.12) 100%);
+}
+
+/* ---------- Superficies compartidas ---------- */
+.mm-surface{
+  background: var(--mm-bg-raised);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  border: 1px solid var(--mm-hairline);
+  box-shadow: var(--mm-shadow-soft);
+  border-radius: 14px;
+}
+
+.mm-btn{
+  appearance: none;
+  border: 1px solid var(--mm-hairline);
+  background: transparent;
+  color: var(--mm-ink-soft);
+  font-family: var(--mm-sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: color 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+  white-space: nowrap;
+}
+.mm-btn:hover{ color: var(--mm-ink); border-color: var(--mm-hairline-strong); }
+.mm-btn:focus-visible{ outline: none; box-shadow: var(--mm-focus); }
+.mm-btn[aria-pressed="true"]{
+  color: var(--mm-ink);
+  border-color: var(--mm-hairline-strong);
+  background: rgba(127, 127, 127, 0.12);
+}
+.mm-btn .mm-ic{ width: 15px; height: 15px; flex: none; }
+.mm-ic{ display: inline-block; vertical-align: middle; }
+.mm-ic svg{ display: block; width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- Cabecera ---------- */
+#mmHeader{
+  position: absolute;
+  top: 14px; left: 14px; right: 14px;
+  z-index: 720;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+#mmHeader > *{ pointer-events: auto; }
+
+#mmBrand{
+  padding: 12px 18px 13px;
+  max-width: 380px;
+}
+#mmBrand h1{
+  margin: 0;
+  font-family: var(--mm-serif);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+}
+#mmBrand p{
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--mm-ink-faint);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+#mmToolbar{
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+#mmToolbarRow{
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ---------- Buscador global ---------- */
+/* z-index: el desplegable de resultados debe tapar la fila de botones,
+   que también crea stacking context por su backdrop-filter */
+#mmSearchWrap{ position: relative; z-index: 6; padding: 8px; width: min(340px, 78vw); }
+#mmSearchBox{ position: relative; display: flex; align-items: center; }
+#mmSearchBox .mm-ic{
+  position: absolute; left: 11px;
+  width: 14px; height: 14px;
+  color: var(--mm-ink-faint);
+  pointer-events: none;
+}
+#mmSearchInput{
+  width: 100%;
+  border: 1px solid var(--mm-hairline);
+  background: transparent;
+  color: var(--mm-ink);
+  border-radius: 10px;
+  font-family: var(--mm-sans);
+  font-size: 13px;
+  padding: 9px 30px 9px 33px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+#mmSearchInput::placeholder{ color: var(--mm-ink-faint); }
+#mmSearchInput:focus{ border-color: var(--mm-hairline-strong); box-shadow: var(--mm-focus); }
+#mmSearchInput::-webkit-search-cancel-button{ display: none; }
+#mmSearchClear{
+  position: absolute; right: 6px;
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-ink-faint);
+  font-size: 15px; line-height: 1;
+  padding: 5px;
+  display: none;
+}
+#mmSearchClear:hover{ color: var(--mm-ink); }
+
+#mmSearchResults{
+  position: absolute;
+  top: calc(100% + 6px); left: 0; right: 0;
+  max-height: min(46vh, 380px);
+  overflow-y: auto;
+  border-radius: 12px;
+  display: none;
+  z-index: 730;
+}
+#mmSearchResults.open{ display: block; }
+.mm-sr-item{
+  display: flex; align-items: center; gap: 11px;
+  width: 100%;
+  text-align: left;
+  border: none; background: none; cursor: pointer;
+  padding: 10px 14px;
+  color: var(--mm-ink);
+  font-family: var(--mm-sans);
+  border-bottom: 1px solid var(--mm-hairline);
+}
+.mm-sr-item:last-child{ border-bottom: none; }
+.mm-sr-item:hover, .mm-sr-item:focus-visible{ background: rgba(127,127,127,0.1); outline: none; }
+.mm-sr-dot{ width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.mm-sr-main{ min-width: 0; }
+.mm-sr-label{
+  display: block;
+  font-family: var(--mm-serif);
+  font-size: 14px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mm-sr-meta{
+  display: block;
+  font-size: 11px;
+  color: var(--mm-ink-faint);
+  margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mm-sr-empty{ padding: 14px; font-size: 12.5px; color: var(--mm-ink-faint); font-style: italic; margin: 0; }
+
+/* ---------- Controles de zoom propios ---------- */
+#mmZoomCtl{
+  position: absolute;
+  right: 14px; top: 50%;
+  transform: translateY(-50%);
+  z-index: 700;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border-radius: 12px;
+}
+#mmZoomCtl button{
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-ink-soft);
+  width: 40px; height: 40px;
+  font-size: 19px;
+  font-family: var(--mm-serif);
+  display: grid; place-items: center;
+  transition: color 0.3s ease, background 0.3s ease;
+}
+#mmZoomCtl button + button{ border-top: 1px solid var(--mm-hairline); }
+#mmZoomCtl button:hover{ color: var(--mm-ink); background: rgba(127,127,127,0.1); }
+#mmZoomCtl button:focus-visible{ outline: none; box-shadow: inset var(--mm-focus); }
+
+/* ---------- Postal de la localizacion seleccionada ---------- */
+#mmLocationCard{
+  position:absolute;
+  top:142px;
+  right:14px;
+  z-index:705;
+  width:min(320px,calc(100vw - 28px));
+  aspect-ratio:16 / 9;
+  overflow:hidden;
+  border-radius:14px;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-6px);
+  transition:opacity .22s ease,transform .28s ease,visibility 0s linear .28s;
+  pointer-events:none;
+}
+#mmLocationCard.show{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+  transition:opacity .22s ease,transform .28s ease,visibility 0s;
+}
+#mmLocationImage{ width:100%;height:100%;display:block;object-fit:cover; }
+#mmLocationCard::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 42%,rgba(7,9,12,.86) 100%);
+}
+#mmLocationTitle{
+  position:absolute;left:15px;right:15px;bottom:12px;z-index:1;
+  margin:0;color:#fff;font-family:var(--mm-serif);font-size:20px;font-weight:500;
+  line-height:1.08;letter-spacing:.01em;text-shadow:0 2px 12px rgba(0,0,0,.72);
+}
+@media(max-width:720px){
+  #mmLocationCard{top:128px;width:min(260px,calc(100vw - 28px));}
+}
+
+/* ---------- Nodos de modelos ---------- */
+.mm-node{ background: none !important; border: none !important; }
+.mm-node span{
+  display: block;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  background: var(--node-color, #999);
+  border: 1.5px solid rgba(10, 12, 15, 0.85);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 0 10px -1px var(--node-color, transparent),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.5, 1), box-shadow 0.3s ease;
+}
+body[data-mm-theme="light"] .mm-node span{
+  border-color: rgba(250, 246, 238, 0.95);
+  box-shadow:
+    0 0 0 1px rgba(44, 40, 34, 0.22),
+    0 2px 7px rgba(60, 50, 30, 0.35);
+}
+.mm-node:hover span, .mm-node:focus-visible span{
+  transform: scale(1.35);
+  box-shadow:
+    0 0 0 1.5px rgba(255,255,255,0.35),
+    0 0 16px 0 var(--node-color, transparent),
+    0 3px 9px rgba(0,0,0,0.45);
+}
+.mm-node:focus-visible{ outline: none; }
+.mm-node.mm-node-enter span{ animation: mmNodePop 0.7s cubic-bezier(0.25, 1.35, 0.42, 1) backwards; }
+@keyframes mmNodePop{
+  0%{ transform: scale(0); opacity: 0; }
+  55%{ opacity: 1; }
+  75%{ transform: scale(1.28); }
+  100%{ transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce){
+  .mm-node.mm-node-enter span{ animation: none; }
+}
+
+/* Tooltip de nodo */
+.mm-tooltip{
+  background: var(--mm-bg-raised-solid) !important;
+  border: 1px solid var(--mm-hairline-strong) !important;
+  border-radius: 10px !important;
+  box-shadow: var(--mm-shadow-soft) !important;
+  color: var(--mm-ink) !important;
+  padding: 9px 12px !important;
+  font-family: var(--mm-sans);
+  line-height: 1.45;
+  min-width: 170px;
+  max-width: 280px;
+  white-space: normal !important;
+}
+.mm-tooltip::before{ display: none !important; }
+.mm-tt-label{
+  font-family: var(--mm-sans);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.015em;
+  overflow-wrap: break-word;
+}
+.mm-tt-authors{ font-size: 11.5px; color: var(--mm-ink-soft); margin-top: 2px; }
+.mm-tt-meta{ font-size: 11px; color: var(--mm-ink-faint); margin-top: 3px; }
+.mm-tt-school{
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--mm-ink-faint);
+  margin-top: 6px;
+}
+.mm-tt-school i{ width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+/* ---------- Clusters (anillo con proporciones por escuela) ---------- */
+.mm-cluster{ background: none !important; border: none !important; }
+.mm-cluster .mm-cl-ring{
+  position: relative;
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+body[data-mm-theme="light"] .mm-cluster .mm-cl-ring{
+  box-shadow: 0 4px 14px rgba(60,50,30,0.3), 0 0 0 1px rgba(44,40,34,0.16);
+}
+.mm-cluster:hover .mm-cl-ring{ transform: scale(1.12); }
+.mm-cluster .mm-cl-core{
+  position: absolute; inset: 5px;
+  border-radius: 50%;
+  background: var(--mm-bg-raised-solid);
+  display: grid; place-items: center;
+  font-family: var(--mm-serif);
+  font-weight: 500;
+  color: var(--mm-ink);
+  letter-spacing: 0.01em;
+}
+.mm-cluster.mm-cl-s .mm-cl-core{ font-size: 12px; }
+.mm-cluster.mm-cl-m .mm-cl-core{ font-size: 13.5px; }
+.mm-cluster.mm-cl-l .mm-cl-core{ font-size: 15px; inset: 6px; }
+
+/* ---------- Cronología editorial (inferior) ---------- */
+#mmTimeline{
+  position: absolute;
+  left: 50%; bottom: 16px;
+  transform: translateX(-50%);
+  width: min(860px, calc(100vw - 28px));
+  z-index: 710;
+  padding: 14px 22px 10px;
+  border-radius: 16px;
+}
+#mmTlTop{
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 2px;
+}
+#mmTlYearWrap{ display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+#mmTlYear{
+  font-family: var(--mm-serif);
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+#mmTlYearNote{
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+  white-space: nowrap;
+}
+#mmTlControls{ display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+#mmTlPlay{
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--mm-hairline-strong);
+  background: transparent;
+  color: var(--mm-ink);
+  cursor: pointer;
+  display: grid; place-items: center;
+  transition: background 0.3s ease, transform 0.2s ease;
+  flex: none;
+}
+#mmTlPlay:hover{ background: rgba(127,127,127,0.12); }
+#mmTlPlay:focus-visible{ outline: none; box-shadow: var(--mm-focus); }
+#mmTlPlay .mm-ic{ width: 14px; height: 14px; }
+#mmTlPlay .mm-ic svg{ fill: currentColor; stroke: none; }
+.mm-tl-group{
+  display: inline-flex;
+  border: 1px solid var(--mm-hairline);
+  border-radius: 9px;
+  overflow: hidden;
+}
+.mm-tl-group button{
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-ink-faint);
+  font-family: var(--mm-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 6px 10px;
+  transition: color 0.3s ease, background 0.3s ease;
+}
+.mm-tl-group button + button{ border-left: 1px solid var(--mm-hairline); }
+.mm-tl-group button[aria-pressed="true"]{ color: var(--mm-ink); background: rgba(127,127,127,0.14); }
+.mm-tl-group button:focus-visible{ outline: none; box-shadow: inset var(--mm-focus); }
+
+#mmTlSliderWrap{ position: relative; padding: 12px 0 20px; }
+#mmTlTrackDeco{
+  position: absolute;
+  left: 0; right: 0; top: 18px;
+  height: 2px;
+  pointer-events: none;
+}
+#mmTlTrackDeco .mm-tl-rail{
+  position: absolute; inset: 0;
+  background: var(--mm-hairline-strong);
+}
+#mmTlTrackDeco .mm-tl-fill{
+  position: absolute; left: 0; top: 0; bottom: 0;
+  background: var(--mm-accent);
+  width: 0%;
+}
+#mmTlSlider{
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 14px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 2;
+}
+#mmTlSlider::-webkit-slider-thumb{
+  -webkit-appearance: none;
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  border: 2.5px solid var(--mm-bg-raised-solid);
+  box-shadow: 0 0 0 1px var(--mm-hairline-strong), 0 2px 8px rgba(0,0,0,0.4);
+}
+#mmTlSlider::-moz-range-thumb{
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  border: 2.5px solid var(--mm-bg-raised-solid);
+  box-shadow: 0 0 0 1px var(--mm-hairline-strong), 0 2px 8px rgba(0,0,0,0.4);
+}
+#mmTlSlider:focus-visible{ outline: none; }
+#mmTlSlider:focus-visible::-webkit-slider-thumb{ box-shadow: var(--mm-focus), 0 2px 8px rgba(0,0,0,0.4); }
+#mmTlTicks{
+  position: absolute;
+  left: 0; right: 0; top: 24px; bottom: 0;
+  pointer-events: none;
+}
+.mm-tick{
+  position: absolute;
+  transform: translateX(-50%);
+  text-align: center;
+}
+.mm-tick i{
+  display: block;
+  width: 1px; height: 5px;
+  background: var(--mm-hairline-strong);
+  margin: 0 auto 3px;
+}
+.mm-tick b{
+  font-weight: 400;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  color: var(--mm-ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+#mmTlCount{
+  font-size: 11px;
+  color: var(--mm-ink-faint);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+#mmTlCount strong{ color: var(--mm-ink-soft); font-weight: 600; }
+
+/* ---------- Drawer de escuelas ---------- */
+#mmSchoolsDrawer{
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: min(330px, 88vw);
+  z-index: 750;
+  transform: translateX(calc(100% + 20px));
+  transition: transform 0.45s cubic-bezier(0.32, 0.9, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  background: var(--mm-bg-raised);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  border-left: 1px solid var(--mm-hairline);
+  box-shadow: var(--mm-shadow);
+}
+#mmSchoolsDrawer.open{ transform: translateX(0); }
+.mm-drawer-head{
+  padding: 20px 20px 12px;
+  border-bottom: 1px solid var(--mm-hairline);
+}
+.mm-drawer-head h2{
+  margin: 0;
+  font-family: var(--mm-serif);
+  font-size: 19px;
+  font-weight: 500;
+}
+.mm-drawer-head p{
+  margin: 3px 0 0;
+  font-size: 10.5px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+}
+.mm-drawer-close{
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--mm-hairline);
+  background: none;
+  color: var(--mm-ink-soft);
+  cursor: pointer;
+  display: grid; place-items: center;
+  font-size: 15px;
+  transition: color 0.3s ease, border-color 0.3s ease;
+  z-index: 3;
+}
+.mm-drawer-close:hover{ color: var(--mm-ink); border-color: var(--mm-hairline-strong); }
+.mm-drawer-close:focus-visible{ outline: none; box-shadow: var(--mm-focus); }
+
+#mmSchoolTools{ padding: 12px 20px 4px; }
+#mmSchoolSearch{
+  width: 100%;
+  border: 1px solid var(--mm-hairline);
+  background: transparent;
+  color: var(--mm-ink);
+  border-radius: 9px;
+  font-family: var(--mm-sans);
+  font-size: 12.5px;
+  padding: 8px 11px;
+  outline: none;
+}
+#mmSchoolSearch:focus{ border-color: var(--mm-hairline-strong); box-shadow: var(--mm-focus); }
+#mmSchoolBulk{
+  display: flex; gap: 14px;
+  padding: 9px 1px 2px;
+}
+#mmSchoolBulk button{
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-ink-faint);
+  font-family: var(--mm-sans);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 0;
+  border-bottom: 1px solid transparent;
+  transition: color 0.3s ease;
+}
+#mmSchoolBulk button:hover{ color: var(--mm-ink); }
+#mmSchoolBulk button:focus-visible{ outline: none; color: var(--mm-ink); border-bottom-color: var(--mm-accent); }
+
+#mmSchoolList{
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 12px 20px;
+  scrollbar-width: thin;
+}
+.mm-school-item{
+  display: flex; align-items: center; gap: 11px;
+  width: 100%;
+  border: none; background: none; cursor: pointer;
+  text-align: left;
+  padding: 9px 9px;
+  border-radius: 10px;
+  color: var(--mm-ink);
+  font-family: var(--mm-sans);
+  transition: background 0.25s ease, opacity 0.3s ease;
+}
+.mm-school-item:hover{ background: rgba(127,127,127,0.1); }
+.mm-school-item:focus-visible{ outline: none; box-shadow: inset var(--mm-focus); }
+.mm-school-item[aria-pressed="false"]{ opacity: 0.42; }
+.mm-school-swatch{
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  flex: none;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.18), 0 1px 4px rgba(0,0,0,0.35);
+}
+body[data-mm-theme="light"] .mm-school-swatch{ box-shadow: 0 0 0 1px rgba(44,40,34,0.2); }
+.mm-school-item[aria-pressed="false"] .mm-school-swatch{ background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--mm-ink-faint); }
+.mm-school-name{
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mm-school-count{
+  font-size: 11px;
+  color: var(--mm-ink-faint);
+  font-variant-numeric: tabular-nums;
+  flex: none;
+}
+.mm-school-empty{ padding: 16px 10px; font-size: 12px; font-style: italic; color: var(--mm-ink-faint); }
+
+/* ---------- Panel de detalle de modelo ---------- */
+#mmDetail{
+  position: absolute;
+  top: 14px; bottom: 14px; left: 14px;
+  width: min(360px, calc(100vw - 28px));
+  z-index: 740;
+  border-radius: 16px;
+  transform: translateX(calc(-100% - 34px));
+  transition: transform 0.5s cubic-bezier(0.32, 0.9, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#mmDetail.open{ transform: translateX(0); }
+#mmDetailBar{ height: 4px; flex: none; background: var(--mm-accent); }
+#mmDetailScroll{
+  flex: 1;
+  overflow-y: auto;
+  padding: 22px 24px 24px;
+  scrollbar-width: thin;
+}
+#mmDetailSchool{
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+  margin: 0 0 10px;
+}
+#mmDetailSchool i{ width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+#mmDetailTitle{
+  margin: 0;
+  font-family: var(--mm-serif);
+  font-size: 25px;
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: 0.005em;
+  padding-right: 30px;
+}
+#mmDetailAuthors{
+  margin: 9px 0 0;
+  font-family: var(--mm-serif);
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--mm-ink-soft);
+  line-height: 1.4;
+}
+#mmDetailMetaRow{
+  display: flex; flex-wrap: wrap; gap: 7px 18px;
+  margin: 16px 0 0;
+  padding: 13px 0;
+  border-top: 1px solid var(--mm-hairline);
+  border-bottom: 1px solid var(--mm-hairline);
+}
+.mm-meta-cell{ min-width: 70px; }
+.mm-meta-cell b{
+  display: block;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+  margin-bottom: 2px;
+}
+.mm-meta-cell span{
+  font-family: var(--mm-serif);
+  font-size: 15px;
+  color: var(--mm-ink);
+}
+#mmDetailSummary{
+  margin: 16px 0 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--mm-ink-soft);
+}
+#mmDetailActions{
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+#mmOpenFicha{
+  border: none;
+  background: var(--mm-accent);
+  color: #14120c;
+  font-family: var(--mm-sans);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: filter 0.3s ease, transform 0.2s ease;
+}
+#mmOpenFicha:hover{ filter: brightness(1.08); }
+#mmOpenFicha:active{ transform: scale(0.985); }
+#mmOpenFicha:focus-visible{ outline: none; box-shadow: var(--mm-focus); }
+#mmOpenFicha .mm-ic{ width: 15px; height: 15px; }
+#mmOpenExternal{
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-ink-faint);
+  font-family: var(--mm-sans);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 4px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease;
+}
+#mmOpenExternal:hover{ color: var(--mm-ink); }
+#mmOpenExternal:focus-visible{ outline: none; color: var(--mm-ink); }
+
+/* ---------- Modal ficha completa (iframe) ---------- */
+#mmFicha{
+  position: absolute; inset: 0;
+  z-index: 800;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(8px, 2.5vw, 34px);
+  background: var(--mm-bg-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+#mmFicha.open{ display: flex; }
+#mmFicha.visible{ opacity: 1; }
+#mmFichaFrame{
+  position: relative;
+  width: min(1180px, 100%);
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--mm-bg-raised-solid);
+  border: 1px solid var(--mm-hairline-strong);
+  box-shadow: var(--mm-shadow);
+  transform: translateY(16px) scale(0.985);
+  transition: transform 0.45s cubic-bezier(0.32, 0.9, 0.25, 1);
+}
+#mmFicha.visible #mmFichaFrame{ transform: translateY(0) scale(1); }
+#mmFichaHead{
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px 10px 20px;
+  border-bottom: 1px solid var(--mm-hairline);
+}
+#mmFichaTitle{
+  font-family: var(--mm-serif);
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  min-width: 0;
+}
+#mmFichaBtns{ display: flex; gap: 8px; flex: none; }
+#mmFichaBody{ flex: 1; position: relative; background: #fff; }
+#mmFichaIframe{
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+#mmFichaLoading{
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  background: var(--mm-bg-raised-solid);
+  color: var(--mm-ink-faint);
+  font-family: var(--mm-serif);
+  font-style: italic;
+  font-size: 14px;
+  transition: opacity 0.4s ease;
+}
+
+/* ---------- Funciones premium bloqueadas sin suscripción ---------- */
+.mm-lock{ display: none; width: 11px; height: 11px; flex: none; color: var(--mm-accent); }
+body:not(.mm-premium) [data-premium-gate]{ opacity: 0.62; }
+body:not(.mm-premium) [data-premium-gate] .mm-lock{ display: inline-block; }
+body:not(.mm-premium) #mmTlSliderWrap{ cursor: pointer; }
+#mmTlSlider:disabled{ opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+body:not(.mm-premium) #mmTlTrackDeco .mm-tl-fill{ opacity: 0.5; }
+
+/* ---------- Cuenta y suscripción ---------- */
+#mmToolbar{ position: relative; }
+#mmBtnAccount .mm-acc-dot{
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--mm-ink-faint);
+  flex: none;
+  display: none;
+}
+#mmBtnAccount.is-logged .mm-acc-dot{ display: inline-block; }
+#mmBtnAccount.is-active .mm-acc-dot{ background: #6fbf73; box-shadow: 0 0 6px rgba(111,191,115,0.7); }
+
+#mmAccountPop{
+  position: absolute;
+  top: calc(100% + 8px); right: 0;
+  width: min(300px, calc(100vw - 28px));
+  z-index: 760;
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: none;
+}
+#mmAccountPop.open{ display: block; }
+#mmAccEmail{
+  margin: 0 0 2px;
+  font-family: var(--mm-serif);
+  font-size: 14.5px;
+  font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#mmAccStatus{
+  margin: 0 0 12px;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+  display: flex; align-items: center; gap: 6px;
+}
+#mmAccStatus i{ width: 7px; height: 7px; border-radius: 50%; background: var(--mm-ink-faint); display: inline-block; }
+#mmAccStatus.is-active i{ background: #6fbf73; }
+#mmAccountPop .mm-acc-actions{ display: flex; flex-direction: column; gap: 8px; }
+#mmAccountPop .mm-acc-note{
+  margin: 10px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--mm-ink-faint);
+}
+.mm-btn-primary{
+  border: none !important;
+  background: var(--mm-accent) !important;
+  color: #14120c !important;
+  font-weight: 600 !important;
+  justify-content: center;
+}
+.mm-btn-primary:hover{ filter: brightness(1.08); }
+.mm-btn-block{ width: 100%; justify-content: center; }
+
+/* Modal de acceso (login / crear cuenta / recuperar) */
+#mmAuth{
+  position: absolute; inset: 0;
+  z-index: 820;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: var(--mm-bg-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#mmAuth.open{ display: flex; }
+#mmAuth.visible{ opacity: 1; }
+#mmAuthCard{
+  width: min(400px, 100%);
+  border-radius: 16px;
+  padding: 26px 28px 24px;
+  background: var(--mm-bg-raised-solid);
+  border: 1px solid var(--mm-hairline-strong);
+  box-shadow: var(--mm-shadow);
+  transform: translateY(14px);
+  transition: transform 0.4s cubic-bezier(0.32, 0.9, 0.25, 1);
+  position: relative;
+}
+#mmAuth.visible #mmAuthCard{ transform: translateY(0); }
+#mmAuthKicker{
+  margin: 0 0 4px;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+}
+#mmAuthTitle{
+  margin: 0 0 6px;
+  font-family: var(--mm-serif);
+  font-size: 22px;
+  font-weight: 500;
+}
+#mmAuthCopy{
+  margin: 0 0 18px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--mm-ink-soft);
+}
+#mmAuthForm label{
+  display: block;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+  margin-bottom: 14px;
+}
+#mmAuthForm input{
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  border: 1px solid var(--mm-hairline);
+  background: transparent;
+  color: var(--mm-ink);
+  border-radius: 9px;
+  font-family: var(--mm-sans);
+  font-size: 14px;
+  padding: 10px 12px;
+  outline: none;
+}
+#mmAuthForm input:focus{ border-color: var(--mm-hairline-strong); box-shadow: var(--mm-focus); }
+#mmAuthSubmit{
+  width: 100%;
+  border: none;
+  background: var(--mm-accent);
+  color: #14120c;
+  font-family: var(--mm-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: filter 0.3s ease;
+  margin-top: 2px;
+}
+#mmAuthSubmit:hover{ filter: brightness(1.08); }
+#mmAuthSubmit:disabled{ opacity: 0.6; cursor: default; }
+#mmAuthSubmit:focus-visible{ outline: none; box-shadow: var(--mm-focus); }
+#mmAuthLinks{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 14px;
+}
+#mmAuthLinks button{
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-ink-faint);
+  font-family: var(--mm-sans);
+  font-size: 11.5px;
+  padding: 2px 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.3s ease;
+}
+#mmAuthLinks button:hover{ color: var(--mm-ink); }
+#mmAuthMeta{
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--mm-hairline);
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--mm-ink-faint);
+}
+#mmAuthError{
+  display: none;
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d98383;
+}
+#mmAuthError.is-ok{ color: #8fbf8f; }
+#mmAuthClose{ position: absolute; top: 14px; right: 14px; }
+
+/* Descripción del modelo en el panel de detalle */
+#mmDetailFrase{
+  margin: 16px 0 0;
+  font-family: var(--mm-sans);
+  font-style: normal;
+  font-weight: 600;
+  font-size: 13.5px;
+  line-height: 1.65;
+  letter-spacing: 0.01em;
+  color: var(--mm-ink);
+  padding-left: 12px;
+  border-left: 2px solid var(--mm-accent);
+}
+#mmDetailDesc{
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--mm-ink-soft);
+  white-space: pre-line;
+}
+#mmDetailDescStatus{
+  margin: 14px 0 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--mm-ink-faint);
+}
+#mmDetailDescStatus button{
+  border: none; background: none; cursor: pointer;
+  color: var(--mm-accent);
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ---------- Loader editorial ---------- */
+#mmLoader{
+  position: absolute; inset: 0;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: var(--mm-bg);
+  transition: opacity 0.7s ease;
+}
+#mmLoader.done{ opacity: 0; pointer-events: none; }
+#mmLoaderMark{
+  font-family: var(--mm-serif);
+  font-size: clamp(26px, 4.5vw, 40px);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  text-align: center;
+  line-height: 1.2;
+  padding: 0 20px;
+}
+#mmLoaderMark em{ font-style: italic; color: var(--mm-accent); }
+#mmLoaderRule{
+  width: 130px; height: 1px;
+  background: var(--mm-hairline-strong);
+  position: relative;
+  overflow: hidden;
+}
+#mmLoaderRule::after{
+  content: "";
+  position: absolute;
+  left: -40%; top: 0; bottom: 0;
+  width: 40%;
+  background: var(--mm-accent);
+  animation: mmRule 1.4s ease-in-out infinite;
+}
+@keyframes mmRule{ to{ left: 100%; } }
+#mmLoaderStatus{
+  font-size: 10.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mm-ink-faint);
+}
+
+/* ---------- Estados vacío / error ---------- */
+#mmEmpty, #mmError{
+  position: absolute;
+  left: 50%; top: 42%;
+  transform: translate(-50%, -50%);
+  z-index: 705;
+  text-align: center;
+  padding: 26px 34px;
+  border-radius: 16px;
+  max-width: min(420px, calc(100vw - 40px));
+  display: none;
+}
+#mmEmpty.show, #mmError.show{ display: block; }
+#mmEmpty h3, #mmError h3{
+  margin: 0 0 8px;
+  font-family: var(--mm-serif);
+  font-size: 20px;
+  font-weight: 500;
+}
+#mmEmpty p, #mmError p{
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--mm-ink-soft);
+}
+
+/* ---------- Scrollbars discretos (WebKit) ---------- */
+#mmApp ::-webkit-scrollbar{ width: 8px; height: 8px; }
+#mmApp ::-webkit-scrollbar-thumb{ background: var(--mm-hairline-strong); border-radius: 8px; }
+#mmApp ::-webkit-scrollbar-track{ background: transparent; }
+
+/* El panel lateral usa una barra mas oscura en el atlas nocturno. */
+body:not([data-mm-theme="light"]) #mmDetailScroll{
+  scrollbar-color:#4a5059 #171b21;
+  scrollbar-width:thin;
+}
+body:not([data-mm-theme="light"]) #mmDetailScroll::-webkit-scrollbar{
+  width:9px;
+}
+body:not([data-mm-theme="light"]) #mmDetailScroll::-webkit-scrollbar-track{
+  background:#171b21;
+  border-left:1px solid rgba(255,255,255,.035);
+}
+body:not([data-mm-theme="light"]) #mmDetailScroll::-webkit-scrollbar-thumb{
+  min-height:44px;
+  border:2px solid #171b21;
+  border-radius:999px;
+  background:#4a5059;
+  background-clip:padding-box;
+}
+body:not([data-mm-theme="light"]) #mmDetailScroll::-webkit-scrollbar-thumb:hover{
+  background:#626a75;
+  background-clip:padding-box;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px){
+  #mmHeader{ flex-direction: column; align-items: stretch; }
+  #mmToolbar{ align-items: stretch; }
+  #mmToolbarRow{ justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  #mmToolbarRow::-webkit-scrollbar{ display: none; }
+  #mmSearchWrap{ width: 100%; }
+  #mmBrand{ max-width: none; padding: 10px 16px 11px; }
+  #mmBrand h1{ font-size: 17px; }
+  #mmBrand p{ font-size: 9.5px; }
+}
+@media (max-width: 640px){
+  #mmZoomCtl{ display: none; } /* en móvil mandan los gestos táctiles */
+  #mmTimeline{ padding: 10px 14px 6px; bottom: 10px; width: calc(100vw - 20px); }
+  #mmTlYear{ font-size: 26px; }
+  #mmTlYearNote{ display: none; }
+  #mmTlCount{ display: none; }
+  .mm-tick b{ font-size: 8.5px; }
+  .mm-tick.mm-tick-minor b{ display: none; }
+  #mmDetail{
+    top: auto; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    max-height: 68vh;
+    border-radius: 18px 18px 0 0;
+    transform: translateY(calc(100% + 20px));
+  }
+  #mmDetail.open{ transform: translateY(0); }
+  #mmSchoolsDrawer{ width: min(300px, 86vw); }
+  #mmFicha{ padding: 0; }
+  #mmFichaFrame{ border-radius: 0; border: none; }
+  .mm-btn .mm-btn-txt{ display: none; }
+  .mm-btn{ padding: 8px 10px; }
+}
+@media (prefers-reduced-motion: reduce){
+  #mmDetail, #mmSchoolsDrawer, #mmFichaFrame, #mmFicha{ transition-duration: 0.01s; }
+}
+</style>
+</head>
+
+<body class="mm-body" data-mm-theme="dark">
+<div id="mmApp">
+
+  <div id="mmMap" role="application" aria-label="Mapamundi de modelos de psicoterapia"></div>
+  <div id="mmGrain" aria-hidden="true"></div>
+  <div id="mmVignette" aria-hidden="true"></div>
+
+  <!-- Cabecera -->
+  <header id="mmHeader">
+    <div id="mmBrand" class="mm-surface">
+      <h1>Mapamundi de la Psicoterapia</h1>
+      <p>Atlas histórico · Modelos y escuelas</p>
+    </div>
+
+    <div id="mmToolbar">
+      <div id="mmSearchWrap" class="mm-surface">
+        <div id="mmSearchBox">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg></span>
+          <input id="mmSearchInput" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Buscar modelo, autor, ciudad o país…"
+                 aria-label="Buscar modelo, autor, ciudad o país" />
+          <button id="mmSearchClear" aria-label="Limpiar búsqueda">✕</button>
+        </div>
+        <div id="mmSearchResults" class="mm-surface" role="listbox" aria-label="Resultados de búsqueda"></div>
+      </div>
+
+      <div id="mmToolbarRow" class="mm-surface">
+        <button class="mm-btn" id="mmBtnSchools" data-premium-gate aria-haspopup="true" aria-expanded="false">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h13M10 18h10"/><circle cx="4" cy="12" r="1.3"/><circle cx="6" cy="18" r="1.3"/></svg></span>
+          <span class="mm-btn-txt">Escuelas</span>
+          <span class="mm-ic mm-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+        </button>
+        <button class="mm-btn" id="mmBtnLabels" data-premium-gate aria-pressed="false" title="Mostrar u ocultar nombres geográficos">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></svg></span>
+          <span class="mm-btn-txt">Etiquetas</span>
+          <span class="mm-ic mm-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+        </button>
+        <button class="mm-btn" id="mmBtnTheme" data-premium-gate title="Cambiar entre atlas nocturno y de papel">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 13A8.5 8.5 0 1 1 11 3a7 7 0 0 0 10 10Z"/></svg></span>
+          <span class="mm-btn-txt">Tema</span>
+          <span class="mm-ic mm-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+        </button>
+        <button class="mm-btn" id="mmBtnWorld" title="Volver a la vista global">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.7 2.6 4 5.7 4 9s-1.3 6.4-4 9c-2.7-2.6-4-5.7-4-9s1.3-6.4 4-9Z"/></svg></span>
+          <span class="mm-btn-txt">Vista global</span>
+        </button>
+        <button class="mm-btn" id="mmBtnAccount" aria-haspopup="true" aria-expanded="false" title="Cuenta y suscripción">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/></svg></span>
+          <span class="mm-btn-txt" id="mmBtnAccountTxt">Entrar</span>
+          <span class="mm-acc-dot" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <!-- Popover de cuenta (sesión iniciada) -->
+      <div id="mmAccountPop" class="mm-surface" role="dialog" aria-label="Cuenta">
+        <p id="mmAccEmail"></p>
+        <p id="mmAccStatus"><i></i><span>Comprobando suscripción…</span></p>
+        <div class="mm-acc-actions">
+          <button class="mm-btn mm-btn-primary mm-btn-block" id="mmAccSubscribe" hidden>Suscribirme · 9,95 €/mes</button>
+          <a class="mm-btn mm-btn-block" id="mmAccBiblioteca" href="/modelos/" hidden>Abrir la Biblioteca</a>
+          <button class="mm-btn mm-btn-block" id="mmAccPortal" hidden>Gestionar suscripción</button>
+          <button class="mm-btn mm-btn-block" id="mmAccSignOut">Cerrar sesión</button>
+        </div>
+        <p class="mm-acc-note" id="mmAccNote" hidden>10 días gratis sin tarjeta · Después 9,95 €/mes · Cancela cuando quieras.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Modal de acceso (mismo sistema compartido de Tu Mentor Psicología) -->
+  <div id="mmAuth" role="dialog" aria-modal="true" aria-labelledby="mmAuthTitle">
+    <div id="mmAuthCard">
+      <button class="mm-drawer-close" id="mmAuthClose" aria-label="Cerrar">✕</button>
+      <p id="mmAuthKicker">Área privada</p>
+      <h2 id="mmAuthTitle">Acceso</h2>
+      <p id="mmAuthCopy">El acceso se comparte entre las apps de Tu Mentor Psicología.</p>
+      <form id="mmAuthForm">
+        <label id="mmAuthEmailLabel">Email
+          <input id="mmAuthEmail" name="email" type="email" autocomplete="email" required>
+        </label>
+        <label id="mmAuthPassLabel"><span id="mmAuthPassText">Contraseña</span>
+          <input id="mmAuthPass" name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <label id="mmAuthPassRepeatLabel" hidden>Repetir nueva contraseña
+          <input id="mmAuthPassRepeat" name="password_repeat" type="password" autocomplete="new-password">
+        </label>
+        <button id="mmAuthSubmit" type="submit">Entrar</button>
+        <div id="mmAuthLinks">
+          <button type="button" id="mmAuthCreate">Crear cuenta</button>
+          <button type="button" id="mmAuthForgot">¿Has olvidado tu contraseña?</button>
+          <button type="button" id="mmAuthBack" hidden>Volver al inicio de sesión</button>
+        </div>
+      </form>
+      <p id="mmAuthError" role="alert"></p>
+      <p id="mmAuthMeta">10 días gratis · Después, 9,95 €/mes · Cancela cuando quieras.<br>Un solo acceso para todas las apps conectadas.</p>
+    </div>
+  </div>
+
+  <!-- Zoom -->
+  <nav id="mmZoomCtl" class="mm-surface" aria-label="Controles de zoom">
+    <button id="mmZoomIn" aria-label="Acercar">+</button>
+    <button id="mmZoomOut" aria-label="Alejar">−</button>
+  </nav>
+
+  <figure id="mmLocationCard" class="mm-surface" aria-live="polite" aria-hidden="true">
+    <img id="mmLocationImage" alt="" />
+    <figcaption id="mmLocationTitle"></figcaption>
+  </figure>
+
+  <!-- Cronología -->
+  <section id="mmTimeline" class="mm-surface" aria-label="Cronología histórica">
+    <div id="mmTlTop">
+      <div id="mmTlYearWrap">
+        <span id="mmTlYear">—</span>
+        <span id="mmTlYearNote">hasta este año</span>
+      </div>
+      <span id="mmTlCount" aria-live="polite"><strong>0</strong> modelos visibles</span>
+      <div id="mmTlControls">
+        <button id="mmTlPlay" data-premium-gate aria-label="Reproducir cronología">
+          <span class="mm-ic" id="mmTlPlayIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5Z"/></svg></span>
+        </button>
+        <div class="mm-tl-group" data-premium-gate role="group" aria-label="Velocidad de reproducción">
+          <button data-speed="slow" aria-pressed="false">Lenta</button>
+          <button data-speed="mid" aria-pressed="true">Media</button>
+          <button data-speed="fast" aria-pressed="false">Rápida</button>
+        </div>
+        <div class="mm-tl-group" data-premium-gate role="group" aria-label="Modo temporal">
+          <button data-tlmode="cumulative" aria-pressed="true" title="Modelos surgidos hasta el año actual">Acumulado</button>
+          <button data-tlmode="single" aria-pressed="false" title="Solo modelos surgidos exactamente en el año actual">Solo año</button>
+        </div>
+      </div>
+    </div>
+    <div id="mmTlSliderWrap">
+      <div id="mmTlTrackDeco" aria-hidden="true"><div class="mm-tl-rail"></div><div class="mm-tl-fill"></div></div>
+      <input id="mmTlSlider" type="range" min="1880" max="2026" step="1" value="2026" disabled
+             aria-label="Año de la cronología (requiere suscripción)" />
+      <div id="mmTlTicks" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- Drawer de escuelas -->
+  <aside id="mmSchoolsDrawer" role="dialog" aria-modal="false" aria-label="Filtro de escuelas">
+    <div class="mm-drawer-head">
+      <h2>Escuelas</h2>
+      <p>Filtra por tradición terapéutica</p>
+      <button class="mm-drawer-close" id="mmSchoolsClose" aria-label="Cerrar panel de escuelas">✕</button>
+    </div>
+    <div id="mmSchoolTools">
+      <input id="mmSchoolSearch" type="search" placeholder="Buscar escuela…" aria-label="Buscar escuela" autocomplete="off">
+      <div id="mmSchoolBulk">
+        <button id="mmSchoolsAll">Todas</button>
+        <button id="mmSchoolsNone">Ninguna</button>
+      </div>
+    </div>
+    <div id="mmSchoolList"></div>
+  </aside>
+
+  <!-- Panel de detalle -->
+  <aside id="mmDetail" class="mm-surface" role="dialog" aria-modal="false" aria-label="Detalle del modelo">
+    <div id="mmDetailBar"></div>
+    <button class="mm-drawer-close" id="mmDetailClose" aria-label="Cerrar detalle">✕</button>
+    <div id="mmDetailScroll">
+      <p id="mmDetailSchool"><i></i><span></span></p>
+      <h2 id="mmDetailTitle"></h2>
+      <p id="mmDetailAuthors"></p>
+      <div id="mmDetailMetaRow">
+        <div class="mm-meta-cell"><b>Año</b><span id="mmDetailYear">—</span></div>
+        <div class="mm-meta-cell"><b>Ciudad</b><span id="mmDetailCity">—</span></div>
+        <div class="mm-meta-cell"><b>País</b><span id="mmDetailCountry">—</span></div>
+      </div>
+      <p id="mmDetailFrase"></p>
+      <p id="mmDetailSummary"></p>
+      <p id="mmDetailDesc"></p>
+      <p id="mmDetailDescStatus"></p>
+      <div id="mmDetailActions">
+        <button id="mmOpenFicha">
+          <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19.5V5a1 1 0 0 1 1-1h5.5c1 0 1.5.4 1.5 1.4V20c0-.8-.6-1.5-1.6-1.5H4Zm16 0V5a1 1 0 0 0-1-1h-5.5c-1 0-1.5.4-1.5 1.4V20c0-.8.6-1.5 1.6-1.5H20Z"/></svg></span>
+          Abrir ficha completa
+        </button>
+        <button id="mmOpenExternal">Abrir en una pestaña nueva</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Modal ficha completa -->
+  <div id="mmFicha" role="dialog" aria-modal="true" aria-label="Ficha completa del modelo">
+    <div id="mmFichaFrame">
+      <div id="mmFichaHead">
+        <span id="mmFichaTitle"></span>
+        <div id="mmFichaBtns">
+          <button class="mm-btn" id="mmFichaExternal" title="Abrir en pestaña nueva">
+            <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg></span>
+            <span class="mm-btn-txt">Pestaña nueva</span>
+          </button>
+          <button class="mm-btn" id="mmFichaClose">
+            <span class="mm-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+            <span class="mm-btn-txt">Cerrar</span>
+          </button>
+        </div>
+      </div>
+      <div id="mmFichaBody">
+        <iframe id="mmFichaIframe" title="Ficha del modelo en la Biblioteca de Modelos"></iframe>
+        <div id="mmFichaLoading">Abriendo ficha…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estados -->
+  <div id="mmEmpty" class="mm-surface">
+    <h3>Ningún modelo a la vista</h3>
+    <p>Los filtros actuales no devuelven resultados. Prueba a avanzar la cronología o a reactivar escuelas.</p>
+    <button class="mm-btn" id="mmEmptyReset">Restablecer filtros</button>
+  </div>
+  <div id="mmError" class="mm-surface">
+    <h3>No se pudieron cargar los datos</h3>
+    <p id="mmErrorMsg">Comprueba tu conexión e inténtalo de nuevo.</p>
+    <button class="mm-btn" id="mmErrorRetry">Reintentar</button>
+  </div>
+
+  <!-- Loader -->
+  <div id="mmLoader">
+    <div id="mmLoaderMark">Mapamundi de la <em>Psicoterapia</em></div>
+    <div id="mmLoaderRule"></div>
+    <div id="mmLoaderStatus">Preparando el atlas…</div>
+  </div>
+
+</div>
+
+<script>
+/* ==========================================================================
+   MAPAMUNDI — Modelos de Psicoterapia
+   Carga de datos: mismo mecanismo que public/modelos/index.html
+   (proxy privado /api/data + sesión Supabase compartida 'tmp-shared-auth-v1')
+   ========================================================================== */
+(() => {
+"use strict";
+
+/* ---------------------------------------------------------------
+   1) CAPA DE DATOS — réplica del mecanismo de public/modelos
+   --------------------------------------------------------------- */
+const HOST = location.hostname.toLowerCase();
+const IS_LOCAL_DEV = ['localhost', '127.0.0.1', '::1', ''].includes(HOST);
+
+const API_BASE = (() => {
+  if (!IS_LOCAL_DEV) return location.origin;
+  const configured = localStorage.getItem('MODELOS_LOCAL_API_BASE');
+  if (configured) return configured.replace(/\/+$/, '');
+  // En local, el proxy /api/data corre en `vercel dev` (puerto 3000)
+  return location.port && location.port !== '3000' ? 'http://127.0.0.1:3000' : '';
+})();
+
+const SUPABASE_URL = "https://yritadgaurvplltgubii.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm";
+// Misma storageKey que la app de Modelos: la sesión se comparte entre rutas.
+const supabaseClient = window.supabase?.createClient
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storageKey: 'tmp-shared-auth-v1'
+      }
+    })
+  : null;
+
+async function getSupabaseAccessToken(){
+  if (!supabaseClient) return "";
+  try{
+    const { data } = await supabaseClient.auth.getSession();
+    return data?.session?.access_token || "";
+  }catch(e){
+    return "";
+  }
+}
+
+function proxyDataUrl(path){
+  const clean = String(path || '').replace(/^\/+/, '').replace(/^data\//, '');
+  return `${API_BASE}/api/data?path=${encodeURIComponent(clean)}`;
+}
+
+function isProxyUrl(url){
+  try{
+    const parsed = new URL(String(url || ''), location.href);
+    if (parsed.pathname !== '/api/data') return false;
+    if (API_BASE) return parsed.origin === new URL(API_BASE, location.href).origin;
+    return parsed.origin === location.origin;
+  }catch(e){
+    return String(url || '').startsWith(`${API_BASE}/api/data`);
+  }
+}
+
+// Fetch con token Supabase + reintento tras refresh en 401 (igual que modelos)
+async function privateProxyFetch(url, options = {}){
+  const finalUrl = String(url || '').trim();
+  if (!isProxyUrl(finalUrl)) return fetch(finalUrl, options);
+
+  const headers = new Headers(options.headers || {});
+  const token = await getSupabaseAccessToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
+  const response = await fetch(finalUrl, { ...options, headers });
+  if (response.status !== 401 || !supabaseClient) return response;
+
+  let refreshedToken = "";
+  try{
+    const { data } = await supabaseClient.auth.refreshSession();
+    refreshedToken = data?.session?.access_token || "";
+  }catch(e){ /* sin sesión */ }
+  if (!refreshedToken) return response;
+
+  const retryHeaders = new Headers(options.headers || {});
+  retryHeaders.set('Authorization', `Bearer ${refreshedToken}`);
+  return fetch(finalUrl, { ...options, headers: retryHeaders });
+}
+
+async function fetchJson(url, { bust = false } = {}){
+  let finalUrl = String(url || '').trim();
+  if (bust){
+    try{
+      const u = new URL(finalUrl, location.href);
+      u.searchParams.set('_v', String(Date.now()));
+      finalUrl = u.href;
+    }catch(e){ /* seguimos sin cache-buster */ }
+  }
+  const r = await privateProxyFetch(finalUrl, { headers: { Accept: 'application/json' } });
+  if (!r.ok) throw new Error(`HTTP ${r.status} ${finalUrl}`);
+  return r.json();
+}
+
+async function fetchFirstJson(urls, opts = {}){
+  let lastErr = null;
+  for (const u of (urls || []).filter(Boolean)){
+    try{
+      const data = await fetchJson(u, opts);
+      if (data) return data;
+    }catch(e){ lastErr = e; }
+  }
+  if (lastErr) throw lastErr;
+  return null;
+}
+
+function slugify(s){
+  return String(s)
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, '')
+    .trim();
+}
+
+// Visibilidad de un modelo dentro de la app (misma lógica que modelos)
+function normKey(value){
+  return String(value ?? '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '');
+}
+function isVisibilityOff(value){
+  if (value === false) return true;
+  if (typeof value === 'number') return value === 0;
+  const n = normKey(value);
+  return ['off', 'false', 'no', '0', 'oculto', 'hidden'].includes(n);
+}
+function isModelVisibleInApp(m){
+  if (!m || typeof m !== 'object') return false;
+  if (m.hideInModels === true) return false;
+  return !isVisibilityOff(m.modelos) && !isVisibilityOff(m.models);
+}
+
+/* ---------- URLs de la ficha (misma lógica que public/modelos) ---------- */
+const MODELOS_APP_BASE = (() => {
+  const path = String(location.pathname || '/');
+  if (/\/mapamundi(\/|$)/.test(path)){
+    return path.replace(/\/mapamundi(\/|$).*$/, '/modelos/');
+  }
+  return '/modelos/';
+})();
+
+// Iframe: modo embed documentado en modelos (?embed=1&open=<id>)
+function fichaEmbedUrl(id){
+  return `${MODELOS_APP_BASE}?embed=1&open=${encodeURIComponent(String(id))}`;
+}
+// Pestaña nueva: ruta canónica /modelos/<id> (rewrite de Vercel). En local
+// sin rewrites usamos la variante ?open= que la app también entiende.
+function fichaExternalUrl(id){
+  if (IS_LOCAL_DEV) return `${MODELOS_APP_BASE}?open=${encodeURIComponent(String(id))}`;
+  return `${MODELOS_APP_BASE}${encodeURIComponent(String(id))}`;
+}
+
+/* ---------------------------------------------------------------
+   2) PALETA DE ESCUELAS
+   --------------------------------------------------------------- */
+// Colores oficiales de las escuelas (paleta de la Biblioteca de Modelos)
+const SCHOOL_PALETTE = [
+  { match: ['psicoanalisis', 'psicoanalitico', 'psicodinamico'], color: '#4E79A7' },
+  { match: ['conductismo', 'conductual', 'comportamental'],      color: '#D69640' },
+  { match: ['cognitivo', 'cognitiva', 'cognitivoconductual'],    color: '#E15759' },
+  { match: ['humanista', 'humanistaexistencial', 'existencial'], color: '#76B7B2' },
+  { match: ['sistemico', 'sistemica', 'familiar'],               color: '#F1CE63' },
+  { match: ['constructivista', 'constructivismo'],               color: '#B07AA1' },
+  { match: ['integrativo', 'integrador', 'integracion'],         color: '#FF9DA7' },
+  { match: ['transversal', 'transversales'],                     color: '#5F7F78' },
+  { match: ['fronteras', 'frontera'],                            color: '#8D6E63' },
+  { match: ['otros', 'otras'],                                   color: '#F2F2F2' },
+  { match: ['epistemologia', 'epistemologico'],                  color: '#D9AA3F' }
+];
+// Reserva elegante para grupos no previstos (se generan dinámicamente)
+const FALLBACK_COLORS = ['#B08968', '#7A9CC6', '#C48FBB', '#96B3A1', '#CFA45E', '#8E9BC4'];
+let fallbackIdx = 0;
+const schoolColorCache = new Map();
+
+function schoolColor(grupo){
+  const key = normKey(grupo) || 'sinescuela';
+  if (schoolColorCache.has(key)) return schoolColorCache.get(key);
+  let color = null;
+  // Primera pasada: coincidencia exacta o por prefijo (más específica)
+  for (const entry of SCHOOL_PALETTE){
+    if (entry.match.some(tok => key === tok || key.startsWith(tok))){
+      color = entry.color;
+      break;
+    }
+  }
+  // Segunda pasada: coincidencia por inclusión (p. ej. "fronteras del campo…")
+  if (!color){
+    for (const entry of SCHOOL_PALETTE){
+      if (entry.match.some(tok => key.includes(tok))){
+        color = entry.color;
+        break;
+      }
+    }
+  }
+  if (!color){
+    color = FALLBACK_COLORS[fallbackIdx % FALLBACK_COLORS.length];
+    fallbackIdx++;
+  }
+  schoolColorCache.set(key, color);
+  return color;
+}
+
+/* ---------------------------------------------------------------
+   3) ESTADO GLOBAL
+   --------------------------------------------------------------- */
+const state = {
+  models: [],               // modelos normalizados con coordenadas
+  schools: [],              // [{key, label, color, total}]
+  activeSchools: new Set(), // keys activas
+  yearMin: 1880,
+  yearMax: new Date().getFullYear(),
+  currentYear: new Date().getFullYear(),
+  tlMode: 'cumulative',     // 'cumulative' | 'single'
+  playing: false,
+  speed: 'mid',
+  selectedModel: null,
+  labelsOn: false,
+  dataLoaded: false
+};
+const SPEEDS = { slow: 4, mid: 10, fast: 26 }; // años por segundo
+const $ = (id) => document.getElementById(id);
+
+/* ---------------------------------------------------------------
+   4) MAPA BASE
+   --------------------------------------------------------------- */
+const INITIAL_VIEW = { center: [30, 5], zoom: 2.4 };
+
+const map = L.map('mmMap', {
+  center: INITIAL_VIEW.center,
+  zoom: INITIAL_VIEW.zoom,
+  minZoom: 2,
+  maxZoom: 18,
+  zoomControl: false,
+  zoomSnap: 0.2,
+  zoomDelta: 0.6,
+  wheelPxPerZoomLevel: 90,
+  worldCopyJump: true,
+  maxBounds: [[-72, -220], [84, 220]],
+  maxBoundsViscosity: 0.6,
+  attributionControl: true
+});
+map.attributionControl.setPrefix(false);
+
+const TILES = {
+  dark:  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+  darkLabels: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
+  light: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+  lightLabels: 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
+};
+const TILE_OPTS = {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19,
+  updateWhenIdle: true,
+  keepBuffer: 3
+};
+
+let baseLayer = null;
+let labelLayer = null;
+
+function applyTheme(theme){
+  document.body.setAttribute('data-mm-theme', theme);
+  try{ localStorage.setItem('mapamundi-theme', theme); }catch(e){}
+  if (baseLayer) map.removeLayer(baseLayer);
+  if (labelLayer){ map.removeLayer(labelLayer); labelLayer = null; }
+  baseLayer = L.tileLayer(theme === 'light' ? TILES.light : TILES.dark, TILE_OPTS).addTo(map);
+  if (state.labelsOn) addLabelLayer();
+}
+function addLabelLayer(){
+  const theme = document.body.getAttribute('data-mm-theme');
+  labelLayer = L.tileLayer(theme === 'light' ? TILES.lightLabels : TILES.darkLabels, { ...TILE_OPTS, pane: 'shadowPane' }).addTo(map);
+}
+function toggleLabels(){
+  state.labelsOn = !state.labelsOn;
+  $('mmBtnLabels').setAttribute('aria-pressed', String(state.labelsOn));
+  try{ localStorage.setItem('mapamundi-labels', state.labelsOn ? '1' : '0'); }catch(e){}
+  if (state.labelsOn) addLabelLayer();
+  else if (labelLayer){ map.removeLayer(labelLayer); labelLayer = null; }
+}
+
+/* ---------------------------------------------------------------
+   5) CLUSTER + MARCADORES
+   --------------------------------------------------------------- */
+const clusterGroup = L.markerClusterGroup({
+  chunkedLoading: true,
+  showCoverageOnHover: false,
+  spiderfyOnMaxZoom: true,
+  zoomToBoundsOnClick: true,
+  maxClusterRadius: 46,
+  spiderLegPolylineOptions: { weight: 1, color: '#999', opacity: 0.4 },
+  iconCreateFunction: createClusterIcon
+});
+map.addLayer(clusterGroup);
+
+const LOCATION_IMAGE_DIR = 'Core/imagenes/localizacion';
+let locationImageIndexPromise = null;
+let locationCardRequest = 0;
+let locationImageObjectUrl = '';
+
+function locationImageKey(value){
+  return String(value || '')
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/[^a-z0-9]+/g, '');
+}
+
+function loadLocationImageIndex(){
+  if (locationImageIndexPromise) return locationImageIndexPromise;
+  locationImageIndexPromise = fetchJson(proxyDataUrl(LOCATION_IMAGE_DIR), { bust:true })
+    .then(rows => (Array.isArray(rows) ? rows : []))
+    .then(rows => rows
+      .filter(row => row?.type === 'file' && /\.(?:jpe?g|png|webp|gif)$/i.test(String(row?.name || '')))
+      .map(row => ({
+        name:String(row.name),
+        key:locationImageKey(row.name),
+        path:String(row.path || `${LOCATION_IMAGE_DIR}/${row.name}`).replace(/^data\//, '')
+      }))
+    )
+    .catch(error => {
+      console.warn('[mapamundi] no se pudo indexar imagenes de localizacion:', error?.message || error);
+      return [];
+    });
+  return locationImageIndexPromise;
+}
+
+function hideLocationCard(){
+  locationCardRequest += 1;
+  const card = $('mmLocationCard');
+  card.classList.remove('show');
+  card.setAttribute('aria-hidden', 'true');
+}
+
+function locationFromModels(models){
+  const entries = (Array.isArray(models) ? models : []).map(model => {
+    const city = String(model?.ciudad || '').split(',')[0].trim();
+    const country = String(model?.pais || '').trim();
+    return { city, country, label:city || country };
+  }).filter(entry => entry.label);
+  if (!entries.length) return null;
+
+  const counts = new Map();
+  entries.forEach(entry => {
+    const key = locationImageKey(entry.label);
+    const current = counts.get(key) || { ...entry, key, count:0 };
+    current.count += 1;
+    counts.set(key, current);
+  });
+  return [...counts.values()].sort((a, b) => b.count - a.count)[0] || null;
+}
+
+async function showLocationCard(models){
+  const location = locationFromModels(models);
+  if (!location){ hideLocationCard(); return; }
+  const request = ++locationCardRequest;
+  const files = await loadLocationImageIndex();
+  if (request !== locationCardRequest) return;
+
+  const cityKey = locationImageKey(location.city);
+  const countryKey = locationImageKey(location.country);
+  const combinedKey = locationImageKey(`${location.city} ${location.country}`);
+  const keys = [cityKey, combinedKey, countryKey].filter(Boolean);
+  let match = files.find(file => keys.includes(file.key));
+  if (!match){
+    match = files.find(file => keys.some(key => key.length >= 3 && (file.key.includes(key) || key.includes(file.key))));
+  }
+  if (!match){ hideLocationCard(); return; }
+
+  let imageResponse;
+  try{
+    imageResponse = await privateProxyFetch(proxyDataUrl(match.path), {
+      headers:{ Accept:'image/avif,image/webp,image/png,image/jpeg,image/*' }
+    });
+  }catch(error){
+    if (request === locationCardRequest) hideLocationCard();
+    return;
+  }
+  if (request !== locationCardRequest) return;
+  if (!imageResponse.ok){ hideLocationCard(); return; }
+  const imageBlob = await imageResponse.blob();
+  if (request !== locationCardRequest) return;
+  const objectUrl = URL.createObjectURL(imageBlob);
+
+  const card = $('mmLocationCard');
+  const image = $('mmLocationImage');
+  const title = $('mmLocationTitle');
+  image.onload = () => {
+    if (request !== locationCardRequest){ URL.revokeObjectURL(objectUrl); return; }
+    if (locationImageObjectUrl) URL.revokeObjectURL(locationImageObjectUrl);
+    locationImageObjectUrl = objectUrl;
+    title.textContent = location.label;
+    image.alt = `Vista de ${location.label}`;
+    card.classList.add('show');
+    card.setAttribute('aria-hidden', 'false');
+  };
+  image.onerror = () => {
+    URL.revokeObjectURL(objectUrl);
+    if (request === locationCardRequest) hideLocationCard();
+  };
+  image.src = objectUrl;
+}
+
+clusterGroup.on('clusterclick', event => {
+  const models = event.layer.getAllChildMarkers()
+    .map(marker => marker.options.mmModel)
+    .filter(Boolean);
+  showLocationCard(models);
+});
+
+// Anillo con proporciones de color por escuela (conic-gradient)
+function createClusterIcon(cluster){
+  const children = cluster.getAllChildMarkers();
+  const count = children.length;
+  const byColor = new Map();
+  for (const ch of children){
+    const c = ch.options.mmColor || '#999';
+    byColor.set(c, (byColor.get(c) || 0) + 1);
+  }
+  const parts = [...byColor.entries()].sort((a, b) => b[1] - a[1]);
+  let acc = 0;
+  const stops = parts.map(([color, n]) => {
+    const from = (acc / count) * 360;
+    acc += n;
+    const to = (acc / count) * 360;
+    return `${color} ${from.toFixed(1)}deg ${to.toFixed(1)}deg`;
+  }).join(', ');
+
+  let size = 40, cls = 'mm-cl-s';
+  if (count >= 10){ size = 48; cls = 'mm-cl-m'; }
+  if (count >= 40){ size = 58; cls = 'mm-cl-l'; }
+
+  return L.divIcon({
+    className: `mm-cluster ${cls}`,
+    iconSize: [size, size],
+    html: `<div class="mm-cl-ring" style="background:conic-gradient(${stops})"><div class="mm-cl-core">${count}</div></div>`
+  });
+}
+
+function nodeSizeFor(model){
+  // importance clamped 0–4 (default 2), como en la app de Modelos
+  const raw = Number(model.importance);
+  const imp = Number.isFinite(raw) ? Math.max(0, Math.min(4, raw)) : 2;
+  return Math.round(9 + imp * 3); // 9–21 px
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
+function formatAuthors(autores){
+  return String(autores || '').split(/\s*;\s*/).filter(Boolean).join(' · ');
+}
+
+function createMarker(model){
+  const size = nodeSizeFor(model);
+  const icon = L.divIcon({
+    className: 'mm-node',
+    iconSize: [size, size],
+    html: `<span style="--node-color:${model.color}"></span>`
+  });
+  const marker = L.marker([model.lat, model.lon], {
+    icon,
+    keyboard: true,
+    alt: model.label,
+    mmColor: model.color,
+    mmId: model.id,
+    mmModel: model
+  });
+
+  const authors = formatAuthors(model.autores);
+  const metaBits = [model.year || null, model.ciudad || null].filter(Boolean).join(' · ');
+  marker.bindTooltip(
+    `<div class="mm-tt-label">${escapeHtml(model.label)}</div>` +
+    (authors ? `<div class="mm-tt-authors">${escapeHtml(authors)}</div>` : '') +
+    (metaBits ? `<div class="mm-tt-meta">${escapeHtml(metaBits)}</div>` : '') +
+    `<div class="mm-tt-school"><i style="background:${model.color}"></i>${escapeHtml(model.grupo)}</div>`,
+    { className: 'mm-tooltip', direction: 'top', offset: [0, -8], opacity: 1 }
+  );
+
+  marker.on('click', () => {
+    showLocationCard([model]);
+    openDetail(model);
+  });
+  marker.on('add', () => {
+    // Animación de aparición (la clase se limpia sola al terminar)
+    const el = marker.getElement();
+    if (el){
+      el.classList.add('mm-node-enter');
+      setTimeout(() => el.classList.remove('mm-node-enter'), 750);
+    }
+  });
+  return marker;
+}
+
+/* ---------------------------------------------------------------
+   6) NORMALIZACIÓN Y CARGA DE DATOS
+   --------------------------------------------------------------- */
+function normalizeModel(raw, schoolLabel){
+  if (!raw || typeof raw !== 'object') return null;
+  const id = String(raw.id || '').trim();
+  if (!id) return null;
+
+  const lat = Number(raw.lat ?? raw.latitude);
+  const lon = Number(raw.lon ?? raw.lng ?? raw.longitude);
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lon) &&
+    Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
+  if (!hasCoords) return null; // sin ubicación no puede vivir en el mapa
+
+  let year = parseInt(raw.year, 10);
+  if (!Number.isFinite(year) || year < 1700 || year > 2100) year = null;
+
+  const grupo = String(raw.grupo || raw.group || schoolLabel || 'Sin escuela').trim() || 'Sin escuela';
+
+  return {
+    id,
+    label: String(raw.label || raw.nombre || id).trim(),
+    year,
+    grupo,
+    groupKey: normKey(grupo) || 'sinescuela',
+    color: schoolColor(grupo),
+    lat, lon,
+    ciudad: String(raw.ciudad || raw.city || '').trim(),
+    pais: String(raw.pais || raw['país'] || raw.country || '').trim(),
+    autores: String(raw.autores || raw.authors || '').trim(),
+    importance: raw.importance,
+    file: String(raw.file || raw.archivo || '').trim(),
+    summary: String(raw.summary || raw.resumen || '').trim(),
+    _search: normKey(
+      [raw.label, raw.autores, raw.ciudad, raw.pais, grupo].filter(Boolean).join(' ')
+    )
+  };
+}
+
+function extractSchoolModels(school){
+  if (!school) return [];
+  if (Array.isArray(school)) return school;
+  if (Array.isArray(school.modelos)) return school.modelos;
+  if (Array.isArray(school.models)) return school.models;
+  if (school.modelos && typeof school.modelos === 'object') return Object.values(school.modelos);
+  if (school.models && typeof school.models === 'object') return Object.values(school.models);
+  return [];
+}
+
+// Epistemologías fuera del mapa: son marcos, no modelos geolocalizables
+function isEpistemologiaGroup(value){
+  return normKey(value).startsWith('epistemolog');
+}
+
+function hasValidCoords(raw){
+  const lat = Number(raw?.lat ?? raw?.latitude);
+  const lon = Number(raw?.lon ?? raw?.lng ?? raw?.longitude);
+  return Number.isFinite(lat) && Number.isFinite(lon) &&
+    Math.abs(lat) <= 90 && Math.abs(lon) <= 180 && !(lat === 0 && lon === 0);
+}
+
+/* Unifica coordenadas por ciudad: todos los modelos de la misma ciudad
+   comparten el mismo punto (mediana del grupo) y, por tanto, el mismo
+   cluster. Al pulsarlo, el cluster se abre en abanico (spiderfy) en vez
+   de forzar un zoom a nivel de calle. */
+function cityKeyOf(m){
+  const city = normKey(String(m.ciudad || '').split(',')[0]);
+  if (!city) return '';
+  return `${city}|${normKey(m.pais)}`;
+}
+function median(values){
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+function unifyCityCoords(models){
+  const groups = new Map();
+  for (const m of models){
+    const key = cityKeyOf(m);
+    if (!key) continue;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(m);
+  }
+  for (const group of groups.values()){
+    if (group.length < 2) continue;
+    const lat = median(group.map(m => m.lat));
+    const lon = median(group.map(m => m.lon));
+    for (const m of group){ m.lat = lat; m.lon = lon; }
+  }
+}
+
+async function loadAllData(){
+  const status = $('mmLoaderStatus');
+  status.textContent = 'Consultando el índice de escuelas…';
+
+  const idx = await fetchJson(proxyDataUrl('Core/escuelas/index.json'), { bust: true });
+  const entries = (Array.isArray(idx) ? idx : (Array.isArray(idx?.escuelas) ? idx.escuelas : []))
+    .filter((e) => !isEpistemologiaGroup(e?.id) && !isEpistemologiaGroup(e?.label));
+  if (!entries.length) throw new Error('Índice de escuelas vacío');
+
+  const byId = new Map();
+  const rescue = []; // modelos sin coordenadas en el JSON de escuela
+  let done = 0;
+
+  await Promise.allSettled(entries.map(async (entry) => {
+    const label = String(entry?.label || entry?.id || '').trim();
+    const slug = String(entry?.id || slugify(label)).trim();
+
+    // Mismos candidatos de ruta que usa la app de Modelos
+    const candidates = [];
+    const add = (p) => { const u = proxyDataUrl(p); if (!candidates.includes(u)) candidates.push(u); };
+    if (slug) add(`Core/escuelas/${slug}.json`);
+    if (entry?.file){
+      const rawFile = String(entry.file).trim().replace(/^\/+/, '');
+      add(rawFile.startsWith('Core/') ? rawFile : `Core/${rawFile}`);
+    }
+
+    try{
+      const school = await fetchFirstJson(candidates, { bust: true });
+      const schoolLabel = String(school?.label || label || slug);
+      extractSchoolModels(school)
+        .filter((m) => m && typeof m === 'object')
+        .filter(isModelVisibleInApp)
+        .forEach((m) => {
+          if (isEpistemologiaGroup(m.grupo || m.group || schoolLabel)) return;
+          const model = normalizeModel(m, schoolLabel);
+          if (model && !byId.has(model.id)){
+            byId.set(model.id, model); // dedupe por id
+          }else if (!model && String(m.id || '').trim() && !hasValidCoords(m)){
+            rescue.push({ raw: m, schoolLabel });
+          }
+        });
+    }catch(err){
+      console.warn('[mapamundi] escuela no disponible:', slug, err?.message || err);
+    }finally{
+      done++;
+      status.textContent = `Cargando escuelas… ${done} / ${entries.length}`;
+    }
+  }));
+
+  // Segunda pasada: si la escuela no trae lat/lon, se buscan en el JSON
+  // propio del modelo (ficha pública; privada como respaldo con suscripción)
+  if (rescue.length){
+    let fixed = 0;
+    status.textContent = `Completando coordenadas… 0 / ${rescue.length}`;
+    await Promise.allSettled(rescue.map(async ({ raw, schoolLabel }) => {
+      const id = String(raw.id || '').trim();
+      const file = String(raw.file || raw.archivo || '').trim().replace(/^\/+/, '');
+      try{
+        if (!id || byId.has(id) || !file) return;
+        const candidates = [];
+        if (file.startsWith('modelos/')){
+          candidates.push(proxyDataUrl(`Core/${file.replace(/^modelos\//, 'modelos-publicos/')}`));
+        }
+        if (window.HAS_SUBSCRIPTION_ACCESS === true){
+          candidates.push(proxyDataUrl(file.startsWith('Core/') ? file : `Core/${file}`));
+        }
+        const ficha = await fetchFirstJson(candidates, { bust: true });
+        if (!ficha) return;
+        const merged = { ...raw, ...ficha, id, file: raw.file || raw.archivo };
+        if (isEpistemologiaGroup(merged.grupo || merged.group || schoolLabel)) return;
+        const model = normalizeModel(merged, schoolLabel);
+        if (model && !byId.has(model.id)){
+          byId.set(model.id, model);
+          // La ficha ya está descargada: se aprovecha para el panel de detalle
+          MODEL_EXTRAS_CACHE.set(model.id, {
+            frase: String(ficha.frase || '').trim(),
+            summary: String(ficha.summary || ficha.resumen || '').trim(),
+            descripcion: String(ficha.descripcion || ficha.description || '').trim()
+          });
+        }
+      }catch(err){
+        console.warn('[mapamundi] modelo sin coordenadas localizables:', id);
+      }finally{
+        fixed++;
+        status.textContent = `Completando coordenadas… ${fixed} / ${rescue.length}`;
+      }
+    }));
+  }
+
+  const models = [...byId.values()];
+  if (!models.length) throw new Error('No se recibieron modelos con coordenadas');
+  unifyCityCoords(models);
+  return models;
+}
+
+/* ---------------------------------------------------------------
+   7) FILTRADO Y RENDER
+   --------------------------------------------------------------- */
+const markersById = new Map(); // id -> L.Marker
+const onMapIds = new Set();    // ids actualmente en el cluster
+
+function modelMatchesFilters(m){
+  if (!state.activeSchools.has(m.groupKey)) return false;
+  if (state.tlMode === 'single'){
+    return m.year !== null && m.year === state.currentYear;
+  }
+  // acumulado: sin año fiable → siempre visible (no se puede fechar)
+  return m.year === null || m.year <= state.currentYear;
+}
+
+let renderQueued = false;
+function scheduleRender(){
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => { renderQueued = false; render(); });
+}
+
+function render(){
+  const toAdd = [];
+  const toRemove = [];
+  let visible = 0;
+  const perSchool = new Map();
+
+  for (const m of state.models){
+    const show = modelMatchesFilters(m);
+    if (show){
+      visible++;
+      perSchool.set(m.groupKey, (perSchool.get(m.groupKey) || 0) + 1);
+      if (!onMapIds.has(m.id)){
+        toAdd.push(markersById.get(m.id));
+        onMapIds.add(m.id);
+      }
+    }else if (onMapIds.has(m.id)){
+      toRemove.push(markersById.get(m.id));
+      onMapIds.delete(m.id);
+    }
+  }
+
+  if (toRemove.length) clusterGroup.removeLayers(toRemove);
+  if (toAdd.length) clusterGroup.addLayers(toAdd);
+
+  // Contador + estado vacío
+  $('mmTlCount').innerHTML = `<strong>${visible}</strong> ${visible === 1 ? 'modelo visible' : 'modelos visibles'}`;
+  $('mmEmpty').classList.toggle('show', state.dataLoaded && visible === 0);
+
+  // Contadores por escuela en el drawer
+  for (const s of state.schools){
+    const el = document.getElementById(`mmSchoolCount-${s.key}`);
+    if (el) el.textContent = `${perSchool.get(s.key) || 0} / ${s.total}`;
+  }
+}
+
+/* ---------------------------------------------------------------
+   8) CRONOLOGÍA
+   --------------------------------------------------------------- */
+const tlSlider = $('mmTlSlider');
+const tlFill = document.querySelector('#mmTlTrackDeco .mm-tl-fill');
+
+function setYear(y, { fromSlider = false } = {}){
+  const year = Math.max(state.yearMin, Math.min(state.yearMax, Math.round(y)));
+  state.currentYear = year;
+  $('mmTlYear').textContent = year;
+  if (!fromSlider) tlSlider.value = String(year);
+  const pct = state.yearMax === state.yearMin
+    ? 100
+    : ((year - state.yearMin) / (state.yearMax - state.yearMin)) * 100;
+  tlFill.style.width = `${pct}%`;
+  scheduleRender();
+}
+
+function buildTicks(){
+  const wrap = $('mmTlTicks');
+  wrap.innerHTML = '';
+  const span = state.yearMax - state.yearMin;
+  if (span <= 0) return;
+  const years = new Set([state.yearMin, state.yearMax]);
+  for (let y = Math.ceil(state.yearMin / 20) * 20; y < state.yearMax; y += 20){
+    if (y > state.yearMin) years.add(y);
+  }
+  [...years].sort((a, b) => a - b).forEach((y) => {
+    const pct = ((y - state.yearMin) / span) * 100;
+    const isEdge = y === state.yearMin || y === state.yearMax;
+    // No amontonar etiquetas junto a los extremos
+    const nearEdge = !isEdge && (pct < 5 || pct > 95);
+    const tick = document.createElement('span');
+    tick.className = 'mm-tick' + (y % 40 !== 0 && !isEdge ? ' mm-tick-minor' : '');
+    tick.style.left = `${pct}%`;
+    tick.innerHTML = `<i></i>${nearEdge ? '' : `<b>${y}</b>`}`;
+    wrap.appendChild(tick);
+  });
+}
+
+/* Reproducción con requestAnimationFrame: continua y fluida */
+let playRaf = null;
+let playCarry = 0;
+let playLastTs = 0;
+
+function setPlaying(on){
+  state.playing = on;
+  $('mmTlPlay').setAttribute('aria-label', on ? 'Pausar cronología' : 'Reproducir cronología');
+  $('mmTlPlayIcon').innerHTML = on
+    ? '<svg viewBox="0 0 24 24"><path d="M7 4h3.4v16H7zM13.6 4H17v16h-3.6z"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5Z"/></svg>';
+  if (on){
+    if (state.currentYear >= state.yearMax) setYear(state.yearMin);
+    playLastTs = 0;
+    playCarry = 0;
+    playRaf = requestAnimationFrame(playStep);
+  }else if (playRaf){
+    cancelAnimationFrame(playRaf);
+    playRaf = null;
+  }
+}
+
+function playStep(ts){
+  if (!state.playing) return;
+  if (!playLastTs) playLastTs = ts;
+  const dt = (ts - playLastTs) / 1000;
+  playLastTs = ts;
+  playCarry += dt * SPEEDS[state.speed];
+  if (playCarry >= 1){
+    const advance = Math.floor(playCarry);
+    playCarry -= advance;
+    const next = state.currentYear + advance;
+    if (next >= state.yearMax){
+      setYear(state.yearMax);
+      setPlaying(false);
+      return;
+    }
+    setYear(next);
+  }
+  playRaf = requestAnimationFrame(playStep);
+}
+
+/* ---------------------------------------------------------------
+   9) DRAWER DE ESCUELAS
+   --------------------------------------------------------------- */
+function buildSchools(){
+  const bySchool = new Map();
+  for (const m of state.models){
+    if (!bySchool.has(m.groupKey)){
+      bySchool.set(m.groupKey, { key: m.groupKey, label: m.grupo, color: m.color, total: 0 });
+    }
+    bySchool.get(m.groupKey).total++;
+  }
+  state.schools = [...bySchool.values()].sort((a, b) => b.total - a.total || a.label.localeCompare(b.label, 'es'));
+  state.activeSchools = new Set(state.schools.map(s => s.key));
+  renderSchoolList();
+}
+
+function renderSchoolList(){
+  const list = $('mmSchoolList');
+  const q = normKey($('mmSchoolSearch').value);
+  list.innerHTML = '';
+  let shown = 0;
+
+  for (const s of state.schools){
+    if (q && !normKey(s.label).includes(q)) continue;
+    shown++;
+    const active = state.activeSchools.has(s.key);
+    const btn = document.createElement('button');
+    btn.className = 'mm-school-item';
+    btn.setAttribute('aria-pressed', String(active));
+    btn.innerHTML =
+      `<span class="mm-school-swatch" style="background:${s.color}"></span>` +
+      `<span class="mm-school-name">${escapeHtml(s.label)}</span>` +
+      `<span class="mm-school-count" id="mmSchoolCount-${s.key}">— / ${s.total}</span>`;
+    btn.addEventListener('click', () => {
+      if (state.activeSchools.has(s.key)) state.activeSchools.delete(s.key);
+      else state.activeSchools.add(s.key);
+      btn.setAttribute('aria-pressed', String(state.activeSchools.has(s.key)));
+      scheduleRender();
+    });
+    list.appendChild(btn);
+  }
+
+  if (!shown){
+    list.innerHTML = '<p class="mm-school-empty">Ninguna escuela coincide con la búsqueda.</p>';
+  }
+  scheduleRender();
+}
+
+function setDrawer(open){
+  $('mmSchoolsDrawer').classList.toggle('open', open);
+  $('mmBtnSchools').setAttribute('aria-expanded', String(open));
+}
+
+/* ---------------------------------------------------------------
+   10) BUSCADOR GLOBAL
+   --------------------------------------------------------------- */
+const searchInput = $('mmSearchInput');
+const searchResults = $('mmSearchResults');
+const searchClear = $('mmSearchClear');
+
+function runSearch(){
+  const q = normKey(searchInput.value);
+  searchClear.style.display = searchInput.value ? 'block' : 'none';
+  if (q.length < 2){
+    searchResults.classList.remove('open');
+    searchResults.innerHTML = '';
+    return;
+  }
+  const hits = [];
+  for (const m of state.models){
+    if (m._search.includes(q)){
+      hits.push(m);
+      if (hits.length >= 8) break;
+    }
+  }
+  searchResults.innerHTML = '';
+  if (!hits.length){
+    searchResults.innerHTML = '<p class="mm-sr-empty">Sin resultados en el atlas.</p>';
+  }else{
+    for (const m of hits){
+      const item = document.createElement('button');
+      item.className = 'mm-sr-item';
+      item.setAttribute('role', 'option');
+      const meta = [m.year, m.ciudad, m.grupo].filter(Boolean).join(' · ');
+      item.innerHTML =
+        `<span class="mm-sr-dot" style="background:${m.color}"></span>` +
+        `<span class="mm-sr-main"><span class="mm-sr-label">${escapeHtml(m.label)}</span>` +
+        `<span class="mm-sr-meta">${escapeHtml([formatAuthors(m.autores), meta].filter(Boolean).join(' — '))}</span></span>`;
+      item.addEventListener('click', () => goToModel(m));
+      searchResults.appendChild(item);
+    }
+  }
+  searchResults.classList.add('open');
+}
+
+function goToModel(m){
+  searchResults.classList.remove('open');
+  // Garantiza que el modelo es alcanzable: activa escuela y adelanta el año
+  if (!state.activeSchools.has(m.groupKey)){
+    state.activeSchools.add(m.groupKey);
+    renderSchoolList();
+  }
+  if (state.tlMode === 'single' && m.year !== null && m.year !== state.currentYear){
+    setTlMode('cumulative');
+  }
+  if (m.year !== null && m.year > state.currentYear) setYear(m.year);
+  render(); // render inmediato antes de volar
+
+  map.flyTo([m.lat, m.lon], Math.max(map.getZoom(), 9), { duration: 1.6 });
+  map.once('moveend', () => openDetail(m));
+}
+
+/* ---------------------------------------------------------------
+   11) PANEL DE DETALLE + FICHA (iframe)
+   --------------------------------------------------------------- */
+/* Ficha ligera del modelo (frase, resumen y descripción).
+   Las entradas de escuela no incluyen la descripción: se carga bajo demanda
+   desde Core/modelos-publicos/... (pública) con fallback a la privada
+   cuando hay suscripción activa — mismos ficheros que usa la app de Modelos. */
+const MODEL_EXTRAS_CACHE = new Map();   // id -> {frase, summary, descripcion}
+const MODEL_EXTRAS_PENDING = new Map(); // id -> Promise
+
+async function loadModelExtras(m){
+  const id = m.id;
+  if (MODEL_EXTRAS_CACHE.has(id)) return MODEL_EXTRAS_CACHE.get(id);
+  if (MODEL_EXTRAS_PENDING.has(id)) return MODEL_EXTRAS_PENDING.get(id);
+
+  const file = String(m.file || '').trim().replace(/^\/+/, '');
+  if (!file){
+    const fallback = { frase: '', summary: m.summary || '', descripcion: '' };
+    MODEL_EXTRAS_CACHE.set(id, fallback);
+    return fallback;
+  }
+
+  const candidates = [];
+  // 1) ficha pública (accesible sin sesión)
+  if (file.startsWith('modelos/')){
+    candidates.push(proxyDataUrl(`Core/${file.replace(/^modelos\//, 'modelos-publicos/')}`));
+  }
+  // 2) ficha privada completa (requiere suscripción activa)
+  if (window.HAS_SUBSCRIPTION_ACCESS === true){
+    candidates.push(proxyDataUrl(file.startsWith('Core/') ? file : `Core/${file}`));
+  }
+
+  const promise = (async () => {
+    let data = null;
+    try{
+      data = await fetchFirstJson(candidates, { bust: true });
+    }catch(e){ /* sin ficha disponible */ }
+    const extras = {
+      frase: String(data?.frase || '').trim(),
+      summary: String(data?.summary || data?.resumen || m.summary || '').trim(),
+      descripcion: String(data?.descripcion || data?.description || '').trim()
+    };
+    MODEL_EXTRAS_CACHE.set(id, extras);
+    return extras;
+  })().finally(() => MODEL_EXTRAS_PENDING.delete(id));
+
+  MODEL_EXTRAS_PENDING.set(id, promise);
+  return promise;
+}
+
+function renderDetailExtras(m, extras, { loading = false } = {}){
+  const fraseEl = $('mmDetailFrase');
+  const summaryEl = $('mmDetailSummary');
+  const descEl = $('mmDetailDesc');
+  const statusEl = $('mmDetailDescStatus');
+
+  const frase = extras?.frase || '';
+  fraseEl.textContent = frase ? `«${frase.replace(/^[«"']+|[»"']+$/g, '')}»` : '';
+  fraseEl.style.display = frase ? '' : 'none';
+
+  const summary = extras?.summary || m.summary || '';
+  summaryEl.textContent = summary;
+  summaryEl.style.display = summary ? '' : 'none';
+
+  const desc = extras?.descripcion || '';
+  descEl.textContent = desc;
+  descEl.style.display = desc ? '' : 'none';
+
+  if (loading){
+    statusEl.textContent = 'Recuperando la ficha…';
+    statusEl.style.display = '';
+  }else if (!desc && !summary){
+    statusEl.innerHTML = 'Descripción no disponible en abierto. <button type="button" id="mmDescLogin">Inicia sesión</button> para acceder a la ficha completa.';
+    statusEl.style.display = '';
+    const loginBtn = document.getElementById('mmDescLogin');
+    if (loginBtn) loginBtn.addEventListener('click', () => openAuth('login'));
+  }else{
+    statusEl.textContent = '';
+    statusEl.style.display = 'none';
+  }
+}
+
+function openDetail(m){
+  state.selectedModel = m;
+  $('mmDetailBar').style.background = m.color;
+  const schoolEl = $('mmDetailSchool');
+  schoolEl.querySelector('i').style.background = m.color;
+  schoolEl.querySelector('span').textContent = m.grupo;
+  $('mmDetailTitle').textContent = m.label;
+  $('mmDetailAuthors').textContent = formatAuthors(m.autores) || '';
+  $('mmDetailAuthors').style.display = m.autores ? '' : 'none';
+  $('mmDetailYear').textContent = m.year ?? '—';
+  $('mmDetailCity').textContent = m.ciudad || '—';
+  $('mmDetailCountry').textContent = m.pais || '—';
+
+  // Estado inmediato con lo que ya se conoce + carga de la descripción
+  const cached = MODEL_EXTRAS_CACHE.get(m.id) || null;
+  renderDetailExtras(m, cached, { loading: !cached });
+  if (!cached){
+    loadModelExtras(m).then((extras) => {
+      if (state.selectedModel?.id === m.id) renderDetailExtras(m, extras);
+    });
+  }
+
+  $('mmDetailScroll').scrollTop = 0;
+  $('mmDetail').classList.add('open');
+}
+function closeDetail(){
+  $('mmDetail').classList.remove('open');
+}
+
+const ficha = $('mmFicha');
+const fichaIframe = $('mmFichaIframe');
+const fichaLoading = $('mmFichaLoading');
+let fichaPrevFocus = null;
+
+function openFicha(m){
+  if (!m) return;
+  fichaPrevFocus = document.activeElement;
+  $('mmFichaTitle').textContent = m.label;
+  fichaLoading.style.opacity = '1';
+  fichaLoading.style.display = 'grid';
+  fichaIframe.src = fichaEmbedUrl(m.id);
+  ficha.classList.add('open');
+  requestAnimationFrame(() => ficha.classList.add('visible'));
+  $('mmFichaClose').focus();
+}
+function closeFicha(){
+  ficha.classList.remove('visible');
+  setTimeout(() => {
+    ficha.classList.remove('open');
+    fichaIframe.src = 'about:blank'; // libera la ficha; el mapa conserva su estado
+  }, 420);
+  if (fichaPrevFocus && typeof fichaPrevFocus.focus === 'function') fichaPrevFocus.focus();
+}
+fichaIframe.addEventListener('load', () => {
+  const src = fichaIframe.getAttribute('src') || '';
+  if (!src || src === 'about:blank') return;
+  fichaLoading.style.opacity = '0';
+  setTimeout(() => { fichaLoading.style.display = 'none'; }, 420);
+});
+
+/* ---------------------------------------------------------------
+   11b) LOGIN Y SUSCRIPCIÓN — mismo sistema compartido que
+   public/index.html y public/modelos (sesión 'tmp-shared-auth-v1',
+   /api/billing-status, /api/create-checkout-session, /api/create-portal-session)
+   --------------------------------------------------------------- */
+window.HAS_SUBSCRIPTION_ACCESS = false;
+
+/* Funciones reservadas a suscriptores: tema, etiquetas, filtro de
+   escuelas y cronología. Sin suscripción, el atlas se ve completo
+   (acumulado, todas las escuelas, tema nocturno) pero sin controles. */
+function isPremium(){
+  return window.HAS_SUBSCRIPTION_ACCESS === true;
+}
+
+function promptPremium(){
+  if (currentSession){
+    setAccountPop(true); // ya con sesión: ofrece el botón Suscribirme
+    return;
+  }
+  openAuth('login', 'Esta función forma parte de la suscripción. Inicia sesión o crea tu cuenta para activarla.');
+}
+
+let premiumApplied = null;
+function applyPremiumState(active){
+  if (premiumApplied === active) return;
+  premiumApplied = active;
+  document.body.classList.toggle('mm-premium', active);
+  tlSlider.disabled = !active;
+  if (active) return;
+
+  // Al bloquear, vuelve al estado por defecto del atlas
+  if (state.playing) setPlaying(false);
+  if (state.tlMode !== 'cumulative') setTlMode('cumulative');
+  if (state.dataLoaded && state.currentYear !== state.yearMax) setYear(state.yearMax);
+  setDrawer(false);
+  if (state.schools.length && state.activeSchools.size !== state.schools.length){
+    state.activeSchools = new Set(state.schools.map(s => s.key));
+    renderSchoolList();
+  }
+  if (state.labelsOn) toggleLabels();
+  if (document.body.getAttribute('data-mm-theme') !== 'dark') applyTheme('dark');
+}
+
+const authEls = {
+  modal: $('mmAuth'),
+  card: $('mmAuthCard'),
+  title: $('mmAuthTitle'),
+  copy: $('mmAuthCopy'),
+  form: $('mmAuthForm'),
+  emailLabel: $('mmAuthEmailLabel'),
+  email: $('mmAuthEmail'),
+  passLabel: $('mmAuthPassLabel'),
+  passText: $('mmAuthPassText'),
+  pass: $('mmAuthPass'),
+  passRepeatLabel: $('mmAuthPassRepeatLabel'),
+  passRepeat: $('mmAuthPassRepeat'),
+  submit: $('mmAuthSubmit'),
+  create: $('mmAuthCreate'),
+  forgot: $('mmAuthForgot'),
+  back: $('mmAuthBack'),
+  error: $('mmAuthError'),
+  btnAccount: $('mmBtnAccount'),
+  btnAccountTxt: $('mmBtnAccountTxt'),
+  pop: $('mmAccountPop'),
+  accEmail: $('mmAccEmail'),
+  accStatus: $('mmAccStatus'),
+  accSubscribe: $('mmAccSubscribe'),
+  accBiblioteca: $('mmAccBiblioteca'),
+  accPortal: $('mmAccPortal'),
+  accSignOut: $('mmAccSignOut'),
+  accNote: $('mmAccNote')
+};
+let authMode = 'login';          // login | signup->via botón | recover | reset
+let currentSession = null;
+let recoveryLinkInvalid = false;
+let authRenderVersion = 0;
+
+function setAuthError(message, ok = false){
+  authEls.error.textContent = message || '';
+  authEls.error.style.display = message ? 'block' : 'none';
+  authEls.error.classList.toggle('is-ok', !!ok);
+}
+
+function hasResetPasswordParam(){
+  try{
+    return new URLSearchParams(location.search).get('reset_password') === '1';
+  }catch(e){ return false; }
+}
+function clearResetPasswordParam(){
+  if (!hasResetPasswordParam()) return;
+  try{
+    const url = new URL(location.href);
+    url.searchParams.delete('reset_password');
+    history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }catch(e){}
+}
+function passwordResetRedirectUrl(){
+  const url = new URL(location.href);
+  url.search = '';
+  url.hash = '';
+  url.searchParams.set('reset_password', '1');
+  return url.href;
+}
+
+function setAuthMode(mode){
+  authMode = mode;
+  authEls.title.textContent = 'Acceso';
+  authEls.copy.textContent = 'El acceso se comparte entre las apps de Tu Mentor Psicología.';
+  authEls.emailLabel.hidden = false;
+  authEls.email.required = true;
+  authEls.passLabel.hidden = false;
+  authEls.passText.textContent = 'Contraseña';
+  authEls.pass.required = true;
+  authEls.pass.autocomplete = 'current-password';
+  authEls.pass.value = '';
+  authEls.passRepeatLabel.hidden = true;
+  authEls.passRepeat.required = false;
+  authEls.passRepeat.value = '';
+  authEls.submit.textContent = 'Entrar';
+  authEls.submit.hidden = false;
+  authEls.create.hidden = false;
+  authEls.forgot.hidden = false;
+  authEls.back.hidden = true;
+
+  if (mode === 'recover'){
+    authEls.title.textContent = 'Recuperar contraseña';
+    authEls.copy.textContent = 'Introduce tu email y te enviaremos un enlace para crear una nueva contraseña.';
+    authEls.passLabel.hidden = true;
+    authEls.pass.required = false;
+    authEls.submit.textContent = 'Enviar enlace';
+    authEls.create.hidden = true;
+    authEls.forgot.hidden = true;
+    authEls.back.hidden = false;
+  }
+
+  if (mode === 'reset'){
+    authEls.title.textContent = 'Crear nueva contraseña';
+    authEls.copy.textContent = recoveryLinkInvalid
+      ? 'El enlace de recuperación ha caducado o no es válido. Solicita un nuevo enlace.'
+      : 'Introduce tu nueva contraseña.';
+    authEls.emailLabel.hidden = true;
+    authEls.email.required = false;
+    authEls.passLabel.hidden = recoveryLinkInvalid;
+    authEls.passText.textContent = 'Nueva contraseña';
+    authEls.pass.required = !recoveryLinkInvalid;
+    authEls.pass.autocomplete = 'new-password';
+    authEls.passRepeatLabel.hidden = recoveryLinkInvalid;
+    authEls.passRepeat.required = !recoveryLinkInvalid;
+    authEls.submit.textContent = 'Guardar nueva contraseña';
+    authEls.submit.hidden = recoveryLinkInvalid;
+    authEls.create.hidden = true;
+    authEls.forgot.hidden = true;
+    authEls.back.hidden = false;
+    authEls.back.textContent = recoveryLinkInvalid ? 'Solicitar nuevo enlace' : 'Volver al inicio de sesión';
+  }
+}
+
+function openAuth(mode = 'login', message = '', ok = false){
+  if (!supabaseClient){
+    console.warn('[mapamundi] Supabase no disponible');
+    return;
+  }
+  if (mode === 'login') recoveryLinkInvalid = false;
+  setAuthMode(mode);
+  setAuthError('');
+  if (message) setAuthError(message, ok);
+  setAccountPop(false);
+  authEls.modal.classList.add('open');
+  requestAnimationFrame(() => authEls.modal.classList.add('visible'));
+  setTimeout(() => (mode === 'reset' ? authEls.pass : authEls.email)?.focus(), 60);
+}
+function closeAuth(){
+  authEls.modal.classList.remove('visible');
+  setTimeout(() => authEls.modal.classList.remove('open'), 360);
+}
+
+function setAccountPop(open){
+  authEls.pop.classList.toggle('open', open);
+  authEls.btnAccount.setAttribute('aria-expanded', String(open));
+}
+
+async function getBillingStatus(session){
+  if (!session?.access_token) return { active: false, status: 'inactive' };
+  try{
+    const response = await fetch(`${API_BASE}/api/billing-status`, {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    if (!response.ok) return { active: false, status: 'inactive' };
+    return await response.json();
+  }catch(e){
+    return { active: false, status: 'inactive' };
+  }
+}
+
+async function startBillingFlow(endpoint, button){
+  const { data } = await supabaseClient.auth.getSession();
+  const token = data?.session?.access_token || currentSession?.access_token || '';
+  if (!token){ openAuth(); return; }
+
+  const previousText = button?.textContent || '';
+  if (button){ button.disabled = true; button.textContent = 'Abriendo…'; }
+  try{
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.url){
+      throw new Error(payload.error || 'No se ha podido abrir Stripe.');
+    }
+    location.href = payload.url;
+  }catch(error){
+    openAuth('login', error?.message || 'No se ha podido abrir Stripe.');
+  }finally{
+    if (button){ button.disabled = false; button.textContent = previousText; }
+  }
+}
+
+async function renderAuthState(session){
+  const renderVersion = ++authRenderVersion;
+  currentSession = session || null;
+  const email = session?.user?.email || '';
+
+  authEls.btnAccount.classList.toggle('is-logged', !!session);
+  authEls.btnAccountTxt.textContent = session ? 'Cuenta' : 'Entrar';
+  authEls.accEmail.textContent = email;
+  authEls.accSubscribe.hidden = true;
+  authEls.accBiblioteca.hidden = true;
+  authEls.accPortal.hidden = true;
+  authEls.accNote.hidden = true;
+  authEls.btnAccount.classList.remove('is-active');
+
+  if (!session){
+    window.HAS_SUBSCRIPTION_ACCESS = false;
+    applyPremiumState(false);
+    setAccountPop(false);
+    authEls.accStatus.classList.remove('is-active');
+    authEls.accStatus.querySelector('span').textContent = 'Sin sesión';
+    return;
+  }
+
+  if (authMode !== 'reset' && !hasResetPasswordParam()) closeAuth();
+  authEls.accStatus.classList.remove('is-active');
+  authEls.accStatus.querySelector('span').textContent = 'Comprobando suscripción…';
+
+  const billing = await getBillingStatus(session);
+  if (renderVersion !== authRenderVersion) return;
+
+  const active = !!billing?.active;
+  const hadAccess = window.HAS_SUBSCRIPTION_ACCESS;
+  window.HAS_SUBSCRIPTION_ACCESS = active;
+  applyPremiumState(active);
+  // Con la suscripción recién activa, las fichas cacheadas en abierto
+  // deben poder recargarse en su versión completa.
+  if (active && !hadAccess) MODEL_EXTRAS_CACHE.clear();
+
+  authEls.btnAccount.classList.toggle('is-active', active);
+  authEls.accStatus.classList.toggle('is-active', active);
+  authEls.accStatus.querySelector('span').textContent = active
+    ? 'Suscripción activa'
+    : 'Sin suscripción activa';
+  authEls.accSubscribe.hidden = active;
+  authEls.accNote.hidden = active;
+  authEls.accBiblioteca.hidden = !active;
+  authEls.accPortal.hidden = !active;
+}
+
+/* Eventos de cuenta y acceso */
+authEls.btnAccount.addEventListener('click', () => {
+  if (!currentSession){ openAuth(); return; }
+  setAccountPop(!authEls.pop.classList.contains('open'));
+});
+document.addEventListener('click', (e) => {
+  if (!authEls.pop.contains(e.target) && !authEls.btnAccount.contains(e.target)) setAccountPop(false);
+});
+authEls.accSignOut.addEventListener('click', async () => {
+  authEls.accSignOut.disabled = true;
+  try{ await supabaseClient.auth.signOut(); }catch(e){}
+  authEls.accSignOut.disabled = false;
+  setAccountPop(false);
+});
+authEls.accSubscribe.addEventListener('click', () => startBillingFlow('/api/create-checkout-session', authEls.accSubscribe));
+authEls.accPortal.addEventListener('click', () => startBillingFlow('/api/create-portal-session', authEls.accPortal));
+authEls.accBiblioteca.setAttribute('href', MODELOS_APP_BASE);
+
+$('mmAuthClose').addEventListener('click', closeAuth);
+authEls.modal.addEventListener('click', (e) => { if (e.target === authEls.modal) closeAuth(); });
+authEls.forgot.addEventListener('click', () => { recoveryLinkInvalid = false; openAuth('recover'); });
+authEls.back.addEventListener('click', () => {
+  if (recoveryLinkInvalid){ recoveryLinkInvalid = false; openAuth('recover'); return; }
+  recoveryLinkInvalid = false;
+  openAuth('login');
+});
+
+authEls.create.addEventListener('click', async () => {
+  setAuthError('');
+  if (!authEls.form.reportValidity()) return;
+  authEls.create.disabled = true;
+  authEls.submit.disabled = true;
+  authEls.create.textContent = 'Creando cuenta…';
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: authEls.email.value.trim(),
+    password: authEls.pass.value
+  });
+  authEls.create.disabled = false;
+  authEls.submit.disabled = false;
+  authEls.create.textContent = 'Crear cuenta';
+  if (error){ setAuthError(error.message || 'No se ha podido crear la cuenta.'); return; }
+  if (data?.session){ renderAuthState(data.session); authEls.form.reset(); return; }
+  setAuthError('Cuenta creada. Revisa tu email para confirmar el acceso.', true);
+});
+
+async function sendPasswordRecovery(email){
+  if (!email){ setAuthError('Introduce tu email.'); authEls.email.focus(); return; }
+  authEls.submit.disabled = true;
+  authEls.submit.textContent = 'Enviando enlace…';
+  try{
+    await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: passwordResetRedirectUrl() });
+  }catch(e){ /* respuesta homogénea */ }
+  setAuthError('Si existe una cuenta asociada a ese email, recibirás un enlace para restablecer la contraseña.', true);
+  authEls.submit.disabled = false;
+  authEls.submit.textContent = 'Enviar enlace';
+}
+
+async function saveNewPassword(password, repeated){
+  if (!password || !repeated){ setAuthError('Completa los dos campos de contraseña.'); return; }
+  if (password.length < 8){ setAuthError('La contraseña debe tener al menos 8 caracteres.'); return; }
+  if (password !== repeated){ setAuthError('Las contraseñas no coinciden.'); return; }
+  const { data } = await supabaseClient.auth.getSession();
+  if (!data?.session){
+    recoveryLinkInvalid = true;
+    openAuth('reset', 'El enlace de recuperación ha caducado o no es válido. Solicita un nuevo enlace.');
+    return;
+  }
+  authEls.submit.disabled = true;
+  authEls.submit.textContent = 'Guardando…';
+  try{
+    const { error } = await supabaseClient.auth.updateUser({ password });
+    if (error) throw error;
+    clearResetPasswordParam();
+    recoveryLinkInvalid = false;
+    openAuth('login', 'Contraseña actualizada correctamente.', true);
+  }catch(error){
+    setAuthError(error?.message || 'No se pudo actualizar la contraseña.');
+  }finally{
+    authEls.submit.disabled = false;
+    authEls.submit.textContent = authMode === 'reset' ? 'Guardar nueva contraseña' : 'Entrar';
+  }
+}
+
+authEls.form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  setAuthError('');
+  const email = authEls.email.value.trim();
+  const password = authEls.pass.value;
+
+  if (authMode === 'recover'){ await sendPasswordRecovery(email); return; }
+  if (authMode === 'reset'){ await saveNewPassword(password, authEls.passRepeat.value); return; }
+
+  authEls.submit.disabled = true;
+  authEls.submit.textContent = 'Entrando…';
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  authEls.submit.disabled = false;
+  authEls.submit.textContent = 'Entrar';
+  if (error){ setAuthError(error.message || 'No se ha podido iniciar sesión.'); return; }
+  renderAuthState(data?.session || null);
+  authEls.form.reset();
+});
+
+async function checkInitialSession(){
+  if (!supabaseClient) return;
+  const { data } = await supabaseClient.auth.getSession();
+  renderAuthState(data?.session || null);
+  if (new URLSearchParams(location.search).get('auth') === 'login' && !data?.session){
+    openAuth();
+    history.replaceState({}, '', `${location.pathname}${location.hash || ''}`);
+  }
+  if (hasResetPasswordParam()){
+    if (data?.session){ recoveryLinkInvalid = false; openAuth('reset'); }
+    else{
+      recoveryLinkInvalid = true;
+      openAuth('reset', 'El enlace de recuperación ha caducado o no es válido. Solicita un nuevo enlace.');
+    }
+  }
+}
+
+if (supabaseClient){
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    renderAuthState(session);
+    if (event === 'PASSWORD_RECOVERY' || hasResetPasswordParam()){
+      if (session){ recoveryLinkInvalid = false; openAuth('reset'); }
+      else if (hasResetPasswordParam()){
+        recoveryLinkInvalid = true;
+        openAuth('reset', 'El enlace de recuperación ha caducado o no es válido. Solicita un nuevo enlace.');
+      }
+    }
+  });
+}
+
+/* ---------------------------------------------------------------
+   12) EVENTOS DE UI
+   --------------------------------------------------------------- */
+$('mmZoomIn').addEventListener('click', () => map.zoomIn());
+$('mmZoomOut').addEventListener('click', () => map.zoomOut());
+$('mmBtnWorld').addEventListener('click', () => {
+  map.flyTo(INITIAL_VIEW.center, INITIAL_VIEW.zoom, { duration: 1.4 });
+});
+$('mmBtnLabels').addEventListener('click', () => {
+  if (!isPremium()){ promptPremium(); return; }
+  toggleLabels();
+});
+$('mmBtnTheme').addEventListener('click', () => {
+  if (!isPremium()){ promptPremium(); return; }
+  const next = document.body.getAttribute('data-mm-theme') === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+});
+$('mmBtnSchools').addEventListener('click', () => {
+  if (!isPremium()){ promptPremium(); return; }
+  setDrawer(!$('mmSchoolsDrawer').classList.contains('open'));
+});
+$('mmSchoolsClose').addEventListener('click', () => setDrawer(false));
+$('mmSchoolSearch').addEventListener('input', renderSchoolList);
+$('mmSchoolsAll').addEventListener('click', () => {
+  state.activeSchools = new Set(state.schools.map(s => s.key));
+  renderSchoolList();
+});
+$('mmSchoolsNone').addEventListener('click', () => {
+  state.activeSchools.clear();
+  renderSchoolList();
+});
+
+$('mmDetailClose').addEventListener('click', closeDetail);
+$('mmOpenFicha').addEventListener('click', () => openFicha(state.selectedModel));
+$('mmOpenExternal').addEventListener('click', () => {
+  if (state.selectedModel) window.open(fichaExternalUrl(state.selectedModel.id), '_blank', 'noopener');
+});
+$('mmFichaClose').addEventListener('click', closeFicha);
+$('mmFichaExternal').addEventListener('click', () => {
+  if (state.selectedModel) window.open(fichaExternalUrl(state.selectedModel.id), '_blank', 'noopener');
+});
+ficha.addEventListener('click', (e) => { if (e.target === ficha) closeFicha(); });
+
+tlSlider.addEventListener('input', () => {
+  if (!isPremium()){ tlSlider.value = String(state.currentYear); return; }
+  if (state.playing) setPlaying(false);
+  setYear(Number(tlSlider.value), { fromSlider: true });
+});
+// El slider deshabilitado no recibe eventos: el aviso llega desde su contenedor
+$('mmTlSliderWrap').addEventListener('click', () => {
+  if (!isPremium()) promptPremium();
+});
+$('mmTlPlay').addEventListener('click', () => {
+  if (!isPremium()){ promptPremium(); return; }
+  setPlaying(!state.playing);
+});
+
+document.querySelectorAll('[data-speed]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (!isPremium()){ promptPremium(); return; }
+    state.speed = btn.dataset.speed;
+    document.querySelectorAll('[data-speed]').forEach(b =>
+      b.setAttribute('aria-pressed', String(b === btn)));
+  });
+});
+
+function setTlMode(mode){
+  state.tlMode = mode;
+  document.querySelectorAll('[data-tlmode]').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.tlmode === mode)));
+  $('mmTlYearNote').textContent = mode === 'single' ? 'solo este año' : 'hasta este año';
+  scheduleRender();
+}
+document.querySelectorAll('[data-tlmode]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (!isPremium()){ promptPremium(); return; }
+    setTlMode(btn.dataset.tlmode);
+  });
+});
+
+searchInput.addEventListener('input', runSearch);
+searchInput.addEventListener('focus', () => { if (searchInput.value) runSearch(); });
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  runSearch();
+  searchInput.focus();
+});
+document.addEventListener('click', (e) => {
+  if (!$('mmSearchWrap').contains(e.target)) searchResults.classList.remove('open');
+});
+
+$('mmEmptyReset').addEventListener('click', () => {
+  state.activeSchools = new Set(state.schools.map(s => s.key));
+  setTlMode('cumulative');
+  setYear(state.yearMax);
+  renderSchoolList();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (ficha.classList.contains('open')){ closeFicha(); return; }
+  if (authEls.modal.classList.contains('open')){ closeAuth(); return; }
+  if (authEls.pop.classList.contains('open')){ setAccountPop(false); return; }
+  if ($('mmDetail').classList.contains('open')){ closeDetail(); return; }
+  if ($('mmSchoolsDrawer').classList.contains('open')){ setDrawer(false); return; }
+  searchResults.classList.remove('open');
+});
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(buildTicks, 180);
+});
+
+/* ---------------------------------------------------------------
+   13) ARRANQUE
+   --------------------------------------------------------------- */
+function restorePrefs(){
+  let theme = 'dark';
+  try{
+    const saved = localStorage.getItem('mapamundi-theme');
+    if (saved === 'light' || saved === 'dark') theme = saved;
+    state.labelsOn = localStorage.getItem('mapamundi-labels') === '1';
+  }catch(e){}
+  $('mmBtnLabels').setAttribute('aria-pressed', String(state.labelsOn));
+  applyTheme(theme);
+}
+
+async function boot(){
+  restorePrefs();
+  $('mmError').classList.remove('show');
+
+  // Sesión y suscripción en paralelo a la carga de datos (no bloquea el mapa)
+  checkInitialSession().catch((e) => console.warn('[mapamundi] sesión:', e));
+
+  try{
+    const models = await loadAllData();
+    state.models = models;
+
+    // Rango temporal real de los datos
+    const years = models.map(m => m.year).filter(y => y !== null);
+    state.yearMin = years.length ? Math.min(...years) : 1880;
+    state.yearMax = years.length ? Math.max(...years) : new Date().getFullYear();
+    state.currentYear = state.yearMax;
+    tlSlider.min = String(state.yearMin);
+    tlSlider.max = String(state.yearMax);
+    tlSlider.value = String(state.yearMax);
+    buildTicks();
+    setYear(state.yearMax);
+
+    // Marcadores (una sola vez; los filtros solo añaden/quitan del cluster)
+    for (const m of models){
+      markersById.set(m.id, createMarker(m));
+    }
+
+    buildSchools();
+    state.dataLoaded = true;
+    render();
+
+    const loader = $('mmLoader');
+    $('mmLoaderStatus').textContent = `${models.length} modelos en el atlas`;
+    setTimeout(() => loader.classList.add('done'), 350);
+    setTimeout(() => loader.remove(), 1300);
+  }catch(err){
+    console.error('[mapamundi] error de carga:', err);
+    $('mmLoader').classList.add('done');
+    const msg = /HTTP (401|403)/.test(String(err?.message))
+      ? 'Tu sesión no permite acceder a los datos. Inicia sesión en la Biblioteca de Modelos y vuelve a intentarlo.'
+      : 'Comprueba tu conexión e inténtalo de nuevo. Si trabajas en local, arranca `vercel dev` para que el proxy /api/data esté disponible.';
+    $('mmErrorMsg').textContent = msg;
+    $('mmError').classList.add('show');
+  }
+}
+
+$('mmErrorRetry').addEventListener('click', () => {
+  $('mmLoader').classList.remove('done');
+  boot();
+});
+
+boot();
+
+})();
+</script>
+</body>
+</html>
