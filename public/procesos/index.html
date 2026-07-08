@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es" data-pro-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Procesos de cambio · Atlas de técnicas</title>
+<meta name="description" content="Técnicas, procedimientos y microintervenciones del repositorio de modelos de psicoterapia, ordenadas por procesos y subprocesos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --pro-serif:"Instrument Serif", Georgia, "Times New Roman", serif;
+  --pro-sans:"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --pro-bg:#14171c;
+  --pro-raised:rgba(24,28,35,.88);
+  --pro-solid:#1b2027;
+  --pro-inset:rgba(232,227,216,.045);
+  --pro-ink:#e8e3d8;
+  --pro-soft:#b4aea0;
+  --pro-faint:#7d786c;
+  --pro-line:rgba(232,227,216,.14);
+  --pro-line-strong:rgba(232,227,216,.28);
+  --pro-accent:#d4a24e;
+  --pro-accent-soft:rgba(212,162,78,.14);
+  --pro-focus:0 0 0 2px rgba(212,162,78,.62);
+  --pro-shadow:0 18px 48px rgba(0,0,0,.32);
+  --pro-grain:.05;
+}
+html[data-pro-theme="light"]{
+  --pro-bg:#efe9dd;
+  --pro-raised:rgba(250,246,238,.92);
+  --pro-solid:#f7f2e8;
+  --pro-inset:rgba(44,40,34,.045);
+  --pro-ink:#2c2822;
+  --pro-soft:#5c554a;
+  --pro-faint:#8d8577;
+  --pro-line:rgba(44,40,34,.14);
+  --pro-line-strong:rgba(44,40,34,.28);
+  --pro-accent:#9a6b1f;
+  --pro-accent-soft:rgba(154,107,31,.12);
+  --pro-focus:0 0 0 2px rgba(154,107,31,.58);
+  --pro-shadow:0 18px 44px rgba(60,50,30,.14);
+  --pro-grain:.07;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--pro-bg);color:var(--pro-ink);font-family:var(--pro-sans);font-size:15px;-webkit-font-smoothing:antialiased}
+button,input{font:inherit}
+::selection{background:var(--pro-accent-soft)}
+#proGrain,#proVignette{position:fixed;inset:0;pointer-events:none}
+#proGrain{z-index:3;opacity:var(--pro-grain);mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-size:240px}
+#proVignette{z-index:4;background:radial-gradient(ellipse 120% 105% at 50% 42%,transparent 58%,rgba(0,0,0,.16))}
+html[data-pro-theme="light"] #proVignette{background:radial-gradient(ellipse 120% 105% at 50% 42%,transparent 62%,rgba(70,58,38,.12))}
+#proTopbar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 22px;background:var(--pro-raised);backdrop-filter:blur(14px) saturate(1.08);-webkit-backdrop-filter:blur(14px) saturate(1.08);border-bottom:1px solid var(--pro-line)}
+#proBrand{text-decoration:none;color:inherit;min-width:0}
+#proBrand .kicker{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--pro-faint);margin-bottom:1px;white-space:nowrap}
+#proBrand .title{display:block;font-family:var(--pro-serif);font-size:20px;font-weight:500;line-height:1.1;white-space:nowrap}
+#proTools{display:flex;align-items:center;gap:9px;min-width:0}
+#proSearchWrap{position:relative;width:min(380px,46vw)}
+#proSearch{width:100%;border:1px solid var(--pro-line);background:transparent;color:var(--pro-ink);border-radius:10px;padding:8px 32px 8px 34px;outline:none;font-size:13px}
+#proSearch:focus{border-color:var(--pro-line-strong);box-shadow:var(--pro-focus)}
+#proSearch::placeholder{color:var(--pro-faint)}
+.search-ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--pro-faint)}
+.search-ic svg,.btn-ic svg{display:block;width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+#proSearchClear{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:none;border:0;background:transparent;color:var(--pro-faint);cursor:pointer;padding:5px 8px;font-size:15px}
+#proSearchResults{position:absolute;top:calc(100% + 8px);left:0;right:0;max-height:min(64vh,520px);overflow:auto;border-radius:12px;background:var(--pro-solid);border:1px solid var(--pro-line);box-shadow:var(--pro-shadow);display:none;z-index:72}
+#proSearchResults.open{display:block}
+.sr-title{padding:9px 14px 5px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--pro-faint)}
+.sr-item{display:block;width:100%;text-align:left;border:0;background:transparent;color:var(--pro-ink);cursor:pointer;padding:9px 14px;font-size:13px;line-height:1.35}
+.sr-item:hover,.sr-item.active{background:var(--pro-accent-soft)}
+.sr-item small{display:block;color:var(--pro-faint);margin-top:2px}
+.sr-empty{padding:14px;color:var(--pro-faint);font-size:13px}
+.pro-btn{appearance:none;border:1px solid var(--pro-line);background:transparent;color:var(--pro-soft);border-radius:10px;padding:8px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:500;text-decoration:none;white-space:nowrap}
+.pro-btn:hover{color:var(--pro-ink);border-color:var(--pro-line-strong)}
+.pro-btn:focus-visible,.sub-toggle:focus-visible,.toc-item:focus-visible,.proc-entry:focus-visible,.item-head:focus-visible{outline:none;box-shadow:var(--pro-focus)}
+.btn-ic{width:15px;height:15px;flex:none}
+#proLayout{position:relative;z-index:5;display:grid;grid-template-columns:268px minmax(0,1fr);max-width:1320px;margin:0 auto;padding:76px 24px 0}
+#proToc{position:sticky;top:76px;align-self:start;max-height:calc(100vh - 90px);overflow:auto;padding:26px 22px 30px 2px;scrollbar-width:thin}
+.toc-title{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--pro-faint);margin:0 0 12px}
+.toc-item{display:flex;align-items:baseline;gap:9px;width:100%;text-align:left;border:0;background:transparent;cursor:pointer;padding:5px 8px 5px 0;color:var(--pro-soft);font-size:12.5px;line-height:1.3;border-radius:7px}
+.toc-item:hover,.toc-item.active{color:var(--pro-ink)}
+.toc-item .n{font-family:var(--pro-serif);font-size:12px;color:var(--pro-faint);min-width:26px;text-align:right;font-variant-numeric:tabular-nums}
+.toc-item.active .n{color:var(--pro-accent)}
+.toc-sep{border:0;border-top:1px solid var(--pro-line);margin:12px 0}
+#proContent{min-width:0;padding:34px 8px 90px 46px;border-left:1px solid var(--pro-line);min-height:80vh}
+.hero{padding:26px 0 8px}
+.hero-kicker,.cap-kicker{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--pro-faint);margin:0 0 12px}
+.hero h1,.cap-title{font-family:var(--pro-serif);font-weight:500;line-height:.96;letter-spacing:0;margin:0;color:var(--pro-ink)}
+.hero h1{font-size:clamp(54px,10vw,128px);max-width:980px}
+.hero h1 em{font-style:italic;color:var(--pro-accent)}
+.lead{max-width:760px;font-size:18px;line-height:1.55;color:var(--pro-soft);margin:22px 0 0}
+.note{max-width:760px;color:var(--pro-faint);line-height:1.55;margin:16px 0 0}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:1px;margin:34px 0 36px;border:1px solid var(--pro-line);background:var(--pro-line);border-radius:8px;overflow:hidden}
+.stat{background:var(--pro-solid);padding:18px 16px;min-width:0}
+.stat .v{font-family:var(--pro-serif);font-size:38px;line-height:1;color:var(--pro-accent);font-variant-numeric:tabular-nums}
+.stat .k{margin-top:7px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--pro-faint)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 24px}
+.seg{display:inline-flex;border:1px solid var(--pro-line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-right:1px solid var(--pro-line);background:transparent;color:var(--pro-soft);padding:8px 11px;cursor:pointer;font-size:12.5px}
+.seg button:last-child{border-right:0}
+.seg button.active{background:var(--pro-accent-soft);color:var(--pro-ink)}
+.process-list{border-top:1px solid var(--pro-line)}
+.proc-entry{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:16px;align-items:start;width:100%;text-align:left;border:0;border-bottom:1px solid var(--pro-line);background:transparent;color:inherit;cursor:pointer;padding:20px 0}
+.proc-code{font-family:var(--pro-serif);font-size:26px;color:var(--proc-color,var(--pro-accent));line-height:1}
+.proc-name{font-family:var(--pro-serif);font-size:30px;line-height:1.05;font-weight:500;margin:0}
+.proc-desc{color:var(--pro-soft);line-height:1.48;margin:7px 0 0;max-width:760px}
+.proc-count{text-align:right;color:var(--pro-faint);font-variant-numeric:tabular-nums;font-size:12px;white-space:nowrap;margin-top:3px}
+.cap-head{position:relative;padding:28px 0 26px}
+.cap-ghost{position:absolute;right:0;top:-4px;font-family:var(--pro-serif);font-size:120px;line-height:.8;color:var(--pro-inset);pointer-events:none}
+.cap-title{font-size:clamp(44px,7vw,88px);max-width:900px}
+.cap-sub{color:var(--pro-soft);font-size:16px;line-height:1.5;max-width:780px;margin:16px 0 0}
+.sub-list{border-top:1px solid var(--pro-line-strong);margin:12px 0 28px}
+.sub-item{border-bottom:1px solid var(--pro-line)}
+.sub-toggle{width:100%;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:15px 0}
+.sub-toggle:hover .sub-name{color:var(--pro-accent)}
+.sub-arrow{width:9px;height:9px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(-45deg) translateY(-1px);color:var(--pro-faint);transition:transform .2s ease,color .2s ease}
+.sub-item.open .sub-arrow{transform:rotate(45deg) translateY(-3px);color:var(--proc-color,var(--pro-accent))}
+.sub-name{font-family:var(--pro-serif);font-size:25px;font-weight:500;line-height:1.1;transition:color .2s ease}
+.sub-desc{display:block;color:var(--pro-soft);font-size:13px;line-height:1.45;margin-top:5px;max-width:860px}
+.sub-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;color:var(--pro-faint);font-size:11px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.sub-panel{padding:8px 0 28px 30px}
+.detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.detail-head h2{font-family:var(--pro-serif);font-size:40px;font-weight:500;line-height:1.05;margin:0}
+.detail-head p{color:var(--pro-faint);margin:8px 0 0;line-height:1.45}
+.model-block{border-top:1px solid var(--pro-line);padding:18px 0}
+.model-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--model-color,#999);border:1px solid rgba(0,0,0,.25);flex:none;transform:translateY(-1px)}
+.model-head h3{font-family:var(--pro-serif);font-weight:500;font-size:22px;line-height:1.15;margin:0;flex:1}
+.model-head .cnt{color:var(--pro-faint);font-size:11px;font-variant-numeric:tabular-nums}
+.items{list-style:none;margin:0;padding:0}
+.tech{border-top:1px solid var(--pro-line);padding:0}
+.tech:first-child{border-top:0}
+.item-head{width:100%;border:0;background:transparent;color:inherit;cursor:pointer;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:10px 0}
+.badge{border:1px solid var(--pro-line);border-radius:999px;color:var(--pro-faint);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;min-width:25px;text-align:center}
+.item-title{font-size:14px;line-height:1.35}
+.code{color:var(--pro-faint);font-size:11px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:220px}
+.item-text{display:none;color:var(--pro-soft);line-height:1.55;margin:0 0 12px 35px;max-width:880px}
+.tech.open .item-text{display:block}
+.loading,.empty,.error{border:1px solid var(--pro-line);background:var(--pro-inset);border-radius:8px;padding:18px;color:var(--pro-soft);line-height:1.5}
+.error{color:#f0b7a8}
+#proPie{margin-top:70px;padding:16px 0 8px;border-top:1px solid var(--pro-line);font-size:11px;color:var(--pro-faint);letter-spacing:.04em;display:flex;flex-wrap:wrap;gap:4px 18px}
+@media (max-width:980px){
+  #proLayout{grid-template-columns:minmax(0,1fr);padding-top:66px}
+  #proToc{display:none}
+  #proContent{border-left:0;padding:24px 2px 80px}
+  #proBrand .kicker{display:none}
+  #proSearchWrap{width:min(320px,52vw)}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stat:last-child{grid-column:span 2}
+}
+@media (max-width:640px){
+  #proTopbar{padding:9px 12px}
+  #proBrand .title{font-size:18px}
+  #proSearchWrap{width:44vw}
+  .pro-btn span:not(.btn-ic){display:none}
+  #proLayout{padding-left:16px;padding-right:16px}
+  .hero h1{font-size:52px}
+  .lead{font-size:16px}
+  .stats{grid-template-columns:minmax(0,1fr)}
+  .stat:last-child{grid-column:auto}
+  .proc-entry{grid-template-columns:42px minmax(0,1fr);gap:12px}
+  .proc-count{grid-column:2;text-align:left}
+  .detail-head{display:block}
+  .sub-toggle{grid-template-columns:18px minmax(0,1fr)}
+  .sub-meta{grid-column:2;justify-content:flex-start}
+  .sub-panel{padding-left:0}
+  .item-head{grid-template-columns:auto minmax(0,1fr)}
+  .code{grid-column:2;max-width:100%}
+}
+</style>
+</head>
+<body>
+<div id="proGrain"></div>
+<div id="proVignette"></div>
+<header id="proTopbar">
+  <a id="proBrand" href="#portada">
+    <span class="kicker">Atlas de procesos · Psicoterapia</span>
+    <span class="title">Procesos de cambio</span>
+  </a>
+  <div id="proTools">
+    <div id="proSearchWrap">
+      <span class="search-ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></span>
+      <input id="proSearch" type="search" placeholder="Buscar proceso, modelo o técnica..." autocomplete="off" spellcheck="false">
+      <button id="proSearchClear" type="button" aria-label="Borrar búsqueda">×</button>
+      <div id="proSearchResults" role="listbox"></div>
+    </div>
+    <button class="pro-btn" id="proThemeBtn" type="button" aria-label="Cambiar tema">
+      <span class="btn-ic" id="proThemeIc"></span>
+    </button>
+  </div>
+</header>
+<div id="proLayout">
+  <nav id="proToc" aria-label="Sumario"></nav>
+  <main id="proContent">
+    <div class="loading">Cargando índice de procesos...</div>
+  </main>
+</div>
+
+<script>
+const HOST = location.hostname.toLowerCase();
+const IS_LOCAL_DEV = ['localhost','127.0.0.1','::1',''].includes(HOST);
+const LOCAL_API_BASE = (() => {
+  if (!IS_LOCAL_DEV) return location.origin;
+  const configured = localStorage.getItem('MODELOS_LOCAL_API_BASE');
+  if (configured) return configured.replace(/\/+$/, '');
+  return location.port && location.port !== '3000' ? 'http://127.0.0.1:3000' : '';
+})();
+const API_BASE = LOCAL_API_BASE;
+const SUPABASE_URL = 'https://yritadgaurvplltgubii.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm';
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth:{ persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, storageKey:'tmp-shared-auth-v1' }
+}) : null;
+
+const PROCESS_INFO = {
+  RF:{label:'Regulación fisiológica / corporal',short:'Regular cuerpo',color:'#88A6C6',desc:'Regulación del sistema corporal y autonómico para reducir hiperactivación, estabilizar y aumentar seguridad.'},
+  RE:{label:'Regulación emocional',short:'Regular emociones',color:'#F26B7A',desc:'Identificar, sostener y modular emociones sin evitación experiencial rígida.'},
+  AP:{label:'Acceso y procesamiento emocional',short:'Procesar experiencia emocional',color:'#B07AA1',desc:'Activar y procesar material emocional relevante para transformarlo e integrarlo clínicamente.'},
+  RI:{label:'Relación interna',short:'Transformar la relación con uno mismo',color:'#FF9DA7',desc:'Cómo la persona se habla, se observa y se trata internamente; autocrítica, compasión y partes.'},
+  N:{label:'Significado / narrativa / regulación cognitiva',short:'Construir significado',color:'#E15759',desc:'Construcción de marcos de significado, reatribución y flexibilidad cognitiva.'},
+  I:{label:'Identidad / Self',short:'Configurar identidad',color:'#4E79A7',desc:'Coherencia, continuidad e integración del self en el tiempo y en la relación con otros.'},
+  AG:{label:'Agencia y acción',short:'Ejercer agencia',color:'#d69640',desc:'Elegir, comprometerse y sostener conducta orientada a valores en lugar de alivio inmediato.'},
+  R:{label:'Relacional / interpersonal',short:'Transformar relaciones',color:'#F1CE63',desc:'Patrones vinculares, límites, apego, mentalización y ciclos relacionales.'},
+  ALI:{label:'Alianza terapéutica',short:'Construir alianza',color:'#74B7A0',desc:'Vínculo, objetivos, tareas, sintonía y reparación de la relación terapéutica.'},
+  ED:{label:'Elaboración del duelo',short:'Elaborar pérdidas',color:'#9C8CC9',desc:'Reconocimiento, oscilación, vínculo continuo, reinversión e integración de pérdidas.'},
+  VB:{label:'Vida básica y conducta de salud',short:'Sostener vida básica',color:'#A9C46C',desc:'Sueño, alimentación, sustancias, movimiento, entorno y hábitos conductuales de soporte.'},
+  TR:{label:'Trauma',short:'Elaborar trauma',color:'#C58B7B',desc:'Procesos específicamente orientados a elaboración e integración traumática.'}
+};
+const SUBPROCESS_INFO = {
+  RF_resp:{name:'Respiración y control autonómico',desc:'Técnicas que modifican el ritmo respiratorio para influir directamente en el sistema nervioso autónomo.'},
+  RF_ground:{name:'Grounding sensorial',desc:'Uso de los sentidos para anclar al presente y reducir disociación o hiperactivación.'},
+  RF_relax:{name:'Relajación muscular / somática',desc:'Liberar tensión muscular y generar descarga somática reguladora.'},
+  RF_intero:{name:'Interocepción y mindfulness corporal',desc:'Notar sensaciones internas sin evitación y aumentar conexión cuerpo-mente.'},
+  RF_crisis:{name:'Estabilización rápida (crisis)',desc:'Intervenciones breves para cortar picos de ansiedad o disociación y restaurar seguridad.'},
+  RF_expo:{name:'Exposición fisiológica',desc:'Acercamiento gradual a sensaciones corporales temidas para reducir reactividad.'},
+
+  RE_rotulacion:{name:'Rotulación y claridad emocional',desc:'Identificar y nombrar emociones con precisión.'},
+  RE_aceptacion:{name:'Aceptación emocional',desc:'Permitir la experiencia emocional sin lucha ni evitación.'},
+  RE_modulacion:{name:'Modulación y ventana de tolerancia',desc:'Ampliar la capacidad para sostener emociones intensas sin desbordarse.'},
+  RE_coregulacion:{name:'Regulación co-regulada',desc:'Usar la relación terapéutica o vínculos seguros para regular en conjunto.'},
+  RE_reapreciacion:{name:'Reapreciación emocional básica',desc:'Pequeños ajustes interpretativos que reducen la intensidad afectiva.'},
+  RE_prevEvitacion:{name:'Prevención de evitación emocional',desc:'Reducir estrategias de supresión o huida emocional.'},
+
+  AP_evocacion:{name:'Evocación emocional guiada',desc:'Activar deliberadamente la emoción relevante mediante memoria o imaginación.'},
+  AP_profundizacion:{name:'Profundización experiencial',desc:'Entrar plenamente en la emoción para permitir su despliegue completo.'},
+  AP_somaticoEsquematico:{name:'Procesamiento somático / esquemático',desc:'Acceso y reorganización de las sensaciones corporales asociadas a emociones implícitas y patrones esquemáticos. Se trabajan tensiones, impulsos motores bloqueados y micro-movimientos para desbloquear carga emocional no verbalizada.'},
+  AP_procesamiento:{name:'Procesamiento estructurado',desc:'Métodos como EFT, focusing o EMDR para transformar emociones.'},
+  AP_integracionMemorias:{name:'Integración de memorias emocionales',desc:'Reprocesar recuerdos cargados para integrarlos en la historia personal.'},
+  AP_trabajoCorrectivo:{name:'Trabajo emocional correctivo',desc:'Vivir experiencias emocionales nuevas dentro de un contexto seguro.'},
+  AP_resolucionConflictos:{name:'Resolución emocional de conflictos',desc:'Desbloquear dilemas afectivos internos para lograr claridad y cierre.'},
+  AP_exploracionExperiencial:{name:'Exploración experiencial',desc:'Atención sostenida y curiosa hacia sensaciones, emociones, imágenes, pensamientos o impulsos para comprenderlos con mayor claridad y permitir que se desplieguen gradualmente.'},
+
+  RI_dialogoFuncional:{name:'Diálogo interno funcional',desc:'Fomentar un diálogo interno claro y realista en lugar de caótico.'},
+  RI_criticoInterno:{name:'Crítico interno y vergüenza',desc:'Identificar y transformar la voz crítica generadora de culpa o autoexigencia.'},
+  RI_autocompasion:{name:'Autocompasión',desc:'Cultivar una relación interna amable y protectora.'},
+  RI_mindfulnessSelf:{name:'Mindfulness del self',desc:'Observar pensamientos y emociones con distancia y claridad.'},
+  RI_partesSubpersonalidades:{name:'Partes y subpersonalidades',desc:'Identificar, dialogar e integrar partes internas en conflicto.'},
+  RI_reparacionRepresentaciones:{name:'Reparación de representaciones internas',desc:'Modificar imágenes o voces internas rígidas derivadas de figuras tempranas.'},
+  RI_orientacionAtencional:{name:'Orientación y flexibilidad atencional',desc:'Capacidad para dirigir deliberadamente el foco de atención, ampliar o estrechar el campo atencional y desengancharse de estímulos internos o externos que capturan automáticamente la conciencia.'},
+
+  N_narrativaAutobiografica:{name:'Narrativa autobiográfica / reautoría',desc:'Reescribir la propia historia para generar coherencia y apertura.'},
+  N_marcosCognitivos:{name:'Marcos cognitivos y constructivistas',desc:'Explorar y flexibilizar las lentes interpretativas personales.'},
+  N_insightPsicodinamico:{name:'Interpretación / insight psicodinámico',desc:'Conectar experiencias pasadas con patrones actuales.'},
+  N_reformulacion:{name:'Reformulación / reatribución',desc:'Cambiar explicaciones rígidas por otras más ajustadas y funcionales.'},
+  N_metacognicion:{name:'Metacognición',desc:'Observar y comprender los propios procesos mentales.'},
+  N_construccionAlternativa:{name:'Construcción alternativa de sentido',desc:'Generar marcos interpretativos nuevos que amplíen agencia y coherencia.'},
+
+  I_coherenciaInterna:{name:'Coherencia interna / estructura del self',desc:'Sostener un sentido de unidad y estabilidad interna.'},
+  I_autoimagen:{name:'Autoimagen y autovaloración',desc:'Cómo la persona se ve y se evalúa a sí misma.'},
+  I_continuidadBiografica:{name:'Continuidad biográfica',desc:'Dar continuidad narrativa a la historia personal.'},
+  I_conflictosSelf:{name:'Conflictos del self e integración',desc:'Resolver tensiones internas entre partes o deseos incompatibles.'},
+  I_valoresAspiracionales:{name:'Valores nucleares e identidad aspiracional',desc:'Definir quién quiero ser y hacia dónde apunto.'},
+  I_selfFuturo:{name:'Self futuro / narrativa identitaria prospectiva',desc:'Construcción de una narrativa identitaria orientada al futuro: selves posibles deseados, temidos y probables. Integra valores, aspiraciones y dirección vital.'},
+  I_posicionRelacional:{name:'Posición del self en las relaciones',desc:'Cómo me ubico frente a los demás desde mi identidad.'},
+  I_fortalezasRecursos:{name:'Fortalezas y recursos',desc:'Cultivar capacidades personales que amplían resiliencia e identidad.'},
+
+  AG_necesidadesPropias:{name:'Discriminación de necesidades propias',desc:'Diferenciar deseos propios de expectativas externas.'},
+  AG_tomaDecisiones:{name:'Toma de decisiones / elección',desc:'Elegir activamente con claridad interna.'},
+  AG_motivacionInterna:{name:'Motivación interna y deseo',desc:'Conectar con impulsos y aspiraciones genuinas.'},
+  AG_autoriaResponsabilidad:{name:'Autoría y responsabilidad',desc:'Reconocer que los actos nacen de uno mismo.'},
+  AG_compromisoConductual:{name:'Compromiso conductual',desc:'Convertir intenciones en acciones sostenidas.'},
+  AG_ensayoConductual:{name:'Ensayo conductual',desc:'Practicar deliberadamente nuevas conductas en un contexto seguro para ampliar el repertorio de respuestas posibles, aumentar autoeficacia y corregir expectativas negativas.'},
+  AG_exposicionConductual:{name:'Exposición conductual',desc:'Acercamiento progresivo y sostenido a situaciones, estímulos o contextos evitados para modificar aprendizajes que mantienen miedo o evitación.'},
+  AG_desautomatizacionHabitos:{name:'Desautomatización de hábitos',desc:'Interrumpir patrones conductuales automáticos identificando disparadores, aumentando conciencia del impulso y sustituyendo la respuesta automática por una acción más deliberada y flexible.'},
+
+  R_estilosApego:{name:'Estilos de apego y patrones relacionales',desc:'Explorar y modificar la forma habitual de vincularse y cómo se activa en la vida actual.'},
+  R_comunicacionEmocional:{name:'Comunicación emocional',desc:'Expresar sentimientos, necesidades e intenciones con claridad, autenticidad y ajuste relacional.'},
+  R_limitesInterpersonales:{name:'Límites interpersonales',desc:'Percibir, declarar y sostener fronteras personales protegiendo la integridad emocional.'},
+  R_reparacionRelacional:{name:'Reparación relacional / experiencias correctivas',desc:'Crear nuevas experiencias vinculares que deshacen patrones disfuncionales aprendidos en relaciones previas.'},
+  R_mentalizacion:{name:'Mentalización interpersonal',desc:'Capacidad para comprender estados mentales propios y ajenos en un contexto relacional, manteniendo una posición mentalizadora incluso bajo estrés.'},
+  R_coregulacion:{name:'Co-regulación interpersonal',desc:'Regular la emoción junto a otro significativo en el aquí y ahora, compartiendo carga afectiva.'},
+  R_repertorioInterpersonal:{name:'Repertorio interpersonal',desc:'Ampliar conductas interpersonales como pedir, rechazar, negociar, reparar o colaborar para moverse con flexibilidad en distintos contextos.'},
+  R_valoresRelacionales:{name:'Valores relacionales y ética del vínculo',desc:'Elegir de forma consciente los principios que quiero que guíen mis vínculos, diferenciándolos de mandatos familiares automáticos.'},
+  R_sist_ciclos:{name:'Ciclos relacionales / retroalimentación',desc:'Identificar bucles circulares de acción-reacción que mantienen el problema.'},
+  R_sist_roles:{name:'Roles y reglas del sistema',desc:'Hacer explícitas reglas implícitas, posiciones y funciones en la organización del sistema.'},
+  R_sist_interaccion:{name:'Patrones de interacción',desc:'Modificar la danza relacional mediante enactments, interrupciones o tareas que rompen patrones rígidos.'},
+  R_sist_apoyo:{name:'Movilización de apoyo',desc:'Incorporar figuras relevantes o redes externas para redistribuir carga y sostener el cambio.'},
+  R_sist_triangulos:{name:'Triangulaciones y alianzas',desc:'Detectar y reorganizar coaliciones, lealtades invisibles y triangulaciones improductivas.'},
+  R_sist_guiones:{name:'Mandatos y guiones familiares',desc:'Identificar mandatos intergeneracionales y flexibilizar su influencia actual.'},
+  R_sist_contexto:{name:'Ajustes contextuales',desc:'Modificar elementos del contexto que sostienen dinámicas relacionales, como horarios, rutinas, distancias o reglas explícitas.'},
+
+  ALI_vinculo:{name:'Alianza - Vínculo afectivo / clima',desc:'Base emocional de la relación terapéutica que sostiene el trabajo clínico: calidez, respeto, aceptación, autenticidad y sensación estable de ser tenido en cuenta.'},
+  ALI_objetivos:{name:'Alianza - Acuerdo en objetivos',desc:'Proceso colaborativo mediante el cual paciente y terapeuta definen qué se quiere lograr en terapia y por qué es importante.'},
+  ALI_tareas:{name:'Alianza - Acuerdo en tareas',desc:'Grado en que el paciente percibe que las actividades terapéuticas tienen sentido y están conectadas con sus objetivos.'},
+  ALI_colaboracion:{name:'Alianza - Participación activa y colaboración',desc:'Sensación del paciente de formar parte del proceso terapéutico y tener un rol activo en la construcción del cambio.'},
+  ALI_sintonia:{name:'Alianza - Sintonía y responsividad',desc:'Capacidad del terapeuta para ajustarse al estado emocional, ritmo, lenguaje, nivel de activación y necesidades relacionales del paciente.'},
+  ALI_rupturaReparacion:{name:'Alianza - Rupturas y reparación',desc:'Identificación y reparación de desajustes en la relación terapéutica, como retiradas, confrontaciones, malentendidos o impasses.'},
+  ALI_monitorizacion:{name:'Alianza - Monitorización continua',desc:'Evaluación explícita o implícita del estado de la alianza a lo largo del proceso, detectando señales tempranas de distancia, incomodidad o duda.'},
+  ALI_contexto:{name:'Alianza - Sensibilidad al contexto',desc:'Consideración activa de factores culturales, sociales, históricos y situacionales que influyen en cómo el paciente vive la relación terapéutica.'},
+
+  VB_sueno:{name:'Sueño y ritmos',desc:'Estado y regularidad del sueño como modulador transversal de regulación emocional, atención, memoria y control inhibitorio.'},
+  VB_alimentacion:{name:'Alimentación y estabilidad metabólica',desc:'Patrones alimentarios que sostienen niveles básicos de energía, concentración y estabilidad afectiva.'},
+  VB_movimiento:{name:'Actividad física / movimiento',desc:'Nivel mínimo de movimiento corporal necesario para modular estrés, ánimo, sueño y sensación de agencia.'},
+  VB_sustancias:{name:'Consumo de sustancias',desc:'Uso de alcohol, cannabis, estimulantes o sedantes que altera sueño, memoria, motivación y regulación emocional.'},
+  VB_entorno:{name:'Estabilidad mínima del entorno vital',desc:'Condiciones básicas de seguridad, previsibilidad y recursos mínimos. Sin este suelo, el sistema permanece en modo supervivencia.'}
+};
+const ORDER = ['RF','RE','AP','RI','N','I','AG','R','ALI','ED','VB','TR'];
+const SCHOOL_COLORS = {
+  'Conductismo':'#6aa84f','Cognitivismo':'#4f81bd','Humanismo':'#d99694','Sistémica':'#f1c232',
+  'Psicoanálisis':'#8e7cc3','Psicodinámica':'#8e7cc3','Constructivismo':'#76a5af',
+  'Integrativa':'#c27ba0','Otros':'#999999'
+};
+
+const STATE = {
+  index:null,
+  groups:[],
+  active:'portada',
+  activeSub:'',
+  loaded:new Map(),
+  loading:new Map(),
+  type:'todos',
+  q:'',
+  searchResults:[]
+};
+
+const $ = (id) => document.getElementById(id);
+const content = $('proContent');
+const toc = $('proToc');
+const searchInput = $('proSearch');
+const searchPanel = $('proSearchResults');
+const searchClear = $('proSearchClear');
+
+function esc(value){
+  return String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmt(n){ return Number(n || 0).toLocaleString('es-ES'); }
+function norm(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function prefixOf(id){
+  const parts = String(id || '').split('_');
+  if (parts[0] === 'R' && parts[1] === 'sist') return 'R';
+  return parts[0] || 'OT';
+}
+function camelLabel(id){
+  const raw = String(id || '').replace(/^[A-Z]+_/, '').replace(/^sist_/, '');
+  const spaced = raw
+    .replace(/([a-záéíóúñ])([A-ZÁÉÍÓÚÑ])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .trim();
+  return spaced ? spaced.charAt(0).toUpperCase() + spaced.slice(1) : id;
+}
+function subLabel(item){
+  const canonical = SUBPROCESS_INFO[item?.subprocesoId];
+  if (canonical?.name) return canonical.name;
+  const info = PROCESS_INFO[prefixOf(item.subprocesoId)];
+  const id = item.subprocesoId;
+  const known = info?.subs?.find((s) => s.startsWith(id + ' — '));
+  return known ? known.split(' — ').slice(1).join(' — ') : camelLabel(id);
+}
+function subDescription(item){
+  return SUBPROCESS_INFO[item?.subprocesoId]?.desc || '';
+}
+function proxyDataUrl(path){
+  const clean = String(path || '').replace(/^\/+/, '').replace(/^data\//, '');
+  return `${API_BASE}/api/data?path=${encodeURIComponent(clean)}`;
+}
+function isProxyUrl(url){
+  try{
+    const parsed = new URL(url, location.href);
+    if (parsed.pathname !== '/api/data') return false;
+    return API_BASE ? parsed.origin === new URL(API_BASE, location.href).origin : parsed.origin === location.origin;
+  }catch(_){ return false; }
+}
+async function getToken(){
+  if (!supabaseClient) return '';
+  const { data } = await supabaseClient.auth.getSession();
+  return data?.session?.access_token || '';
+}
+async function privateFetch(url, options = {}){
+  if (!isProxyUrl(url)) return fetch(url, options);
+  const headers = new Headers(options.headers || {});
+  const token = await getToken();
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+  let res = await fetch(url, {...options, headers});
+  if (res.status !== 401 || !supabaseClient) return res;
+  const { data } = await supabaseClient.auth.refreshSession();
+  const retryToken = data?.session?.access_token || '';
+  if (!retryToken) return res;
+  headers.set('Authorization', `Bearer ${retryToken}`);
+  return fetch(url, {...options, headers});
+}
+async function fetchJson(path){
+  const res = await privateFetch(proxyDataUrl(path), {headers:{Accept:'application/json'}});
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  return res.json();
+}
+
+function buildGroups(index){
+  const byPrefix = new Map();
+  const items = Array.isArray(index?.items) ? index.items : [];
+  items.forEach((item) => {
+    const prefix = prefixOf(item.subprocesoId);
+    if (!byPrefix.has(prefix)) byPrefix.set(prefix, []);
+    byPrefix.get(prefix).push({...item, label:subLabel(item), prefix});
+  });
+  const prefixes = [...new Set([...ORDER, ...byPrefix.keys()])].filter((p) => byPrefix.has(p));
+  return prefixes.map((prefix, i) => {
+    const info = PROCESS_INFO[prefix] || {label:prefix, short:prefix, color:'#999', desc:'Subprocesos del índice privado.'};
+    const subs = byPrefix.get(prefix).sort((a,b) => (b.totalModelos || 0) - (a.totalModelos || 0) || a.label.localeCompare(b.label, 'es'));
+    return {prefix, num:i + 1, info, subs, totalModelos:subs.reduce((a,s) => a + Number(s.totalModelos || 0), 0)};
+  });
+}
+function mergeDirectoryFiles(index, listing){
+  const base = Array.isArray(index?.items) ? [...index.items] : [];
+  const seen = new Set(base.map((item) => item.file || `indices/subprocesos/${item.subprocesoId}.json`));
+  const files = Array.isArray(listing) ? listing : [];
+  files.forEach((entry) => {
+    const path = String(entry?.path || '');
+    const name = String(entry?.name || '');
+    if (!path || !name.endsWith('.json') || name === 'index.json' || seen.has(path)) return;
+    base.push({
+      subprocesoId:name.replace(/\.json$/i, ''),
+      totalModelos:0,
+      file:path,
+      discovered:true
+    });
+    seen.add(path);
+  });
+  return {...index, items:base};
+}
+function totals(){
+  const subs = STATE.groups.flatMap((g) => g.subs);
+  const loadedModels = new Set();
+  let tech = 0, proc = 0, micro = 0;
+  STATE.loaded.forEach((data) => {
+    (data.modelos || []).forEach((m) => {
+      loadedModels.add(m.modelId);
+      (m.items || []).forEach((it) => {
+        tech += 1;
+        if (it.tipo === 'procedimiento') proc += 1;
+        if (it.tipo === 'micro') micro += 1;
+      });
+    });
+  });
+  return {processes:STATE.groups.length, subs:subs.length, refs:subs.reduce((a,s) => a + Number(s.totalModelos || 0), 0), models:loadedModels.size, tech, proc, micro};
+}
+function pie(){
+  const date = STATE.index?.updatedAt ? new Date(STATE.index.updatedAt).toLocaleDateString('es-ES') : '';
+  return `<footer id="proPie"><span>Índice privado: indices/subprocesos</span><span>${esc(date)}</span><span>P = procedimiento · M = microintervención</span></footer>`;
+}
+function renderToc(){
+  let h = '<p class="toc-title">Sumario</p>';
+  h += '<button class="toc-item" type="button" data-view="portada"><span class="n">·</span><span>Portada</span></button><hr class="toc-sep">';
+  STATE.groups.forEach((g) => {
+    h += `<button class="toc-item" type="button" data-view="${esc(g.prefix)}"><span class="n">${String(g.num).padStart(2,'0')}</span><span>${esc(g.info.short || g.info.label)}</span></button>`;
+  });
+  toc.innerHTML = h;
+  markToc();
+}
+function markToc(){
+  toc.querySelectorAll('.toc-item').forEach((b) => b.classList.toggle('active', b.dataset.view === STATE.active));
+}
+function renderHome(){
+  const t = totals();
+  let h = `<section class="hero">
+    <p class="hero-kicker">Repositorio privado · técnicas tageadas por procesos</p>
+    <h1>Técnicas por <em>procesos</em></h1>
+    <p class="lead">Un atlas operativo de procedimientos y microintervenciones ordenado por los procesos de cambio a los que apunta cada técnica.</p>
+    <p class="note">Los subprocesos se cargan desde <code>indices/subprocesos</code> al abrirlos. El contador de técnicas se actualiza con los bloques ya consultados.</p>
+  </section>
+  <div class="stats">
+    <div class="stat"><div class="v">${fmt(t.processes)}</div><div class="k">Procesos</div></div>
+    <div class="stat"><div class="v">${fmt(t.subs)}</div><div class="k">Subprocesos</div></div>
+    <div class="stat"><div class="v">${fmt(t.refs)}</div><div class="k">Modelos etiquetados</div></div>
+    <div class="stat"><div class="v">${fmt(t.tech)}</div><div class="k">Técnicas cargadas</div></div>
+    <div class="stat"><div class="v">${fmt(t.models)}</div><div class="k">Modelos vistos</div></div>
+  </div>
+  <div class="process-list">`;
+  STATE.groups.forEach((g) => {
+    h += `<button class="proc-entry" type="button" data-view="${esc(g.prefix)}" style="--proc-color:${esc(g.info.color)}">
+      <span class="proc-code">${esc(g.prefix)}</span>
+      <span><h2 class="proc-name">${esc(g.info.label)}</h2><p class="proc-desc">${esc(g.info.desc)}</p></span>
+      <span class="proc-count">${fmt(g.subs.length)} subprocesos<br>${fmt(g.totalModelos)} modelos</span>
+    </button>`;
+  });
+  h += '</div>' + pie();
+  content.innerHTML = h;
+}
+function renderProcess(prefix, selectedSub){
+  const group = STATE.groups.find((g) => g.prefix === prefix) || STATE.groups[0];
+  if (!group){ renderHome(); return; }
+  STATE.active = group.prefix;
+  const requestedSub = selectedSub || STATE.activeSub || '';
+  const hasRequestedSub = group.subs.some((sub) => sub.subprocesoId === requestedSub);
+  STATE.activeSub = hasRequestedSub ? requestedSub : '';
+  const loaded = STATE.activeSub ? STATE.loaded.get(STATE.activeSub) : null;
+  let h = `<section class="cap-head" style="--proc-color:${esc(group.info.color)}">
+    <div class="cap-ghost">${esc(group.prefix)}</div>
+    <p class="cap-kicker">Proceso ${String(group.num).padStart(2,'0')} / ${STATE.groups.length}</p>
+    <h1 class="cap-title">${esc(group.info.label)}</h1>
+    <p class="cap-sub">${esc(group.info.desc)} ${fmt(group.subs.length)} subprocesos · ${fmt(group.totalModelos)} referencias modelo-subproceso.</p>
+  </section>
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Tipo de técnica">
+      ${['todos','procedimiento','micro'].map((type) => `<button type="button" data-type="${type}" class="${STATE.type === type ? 'active' : ''}">${type === 'todos' ? 'Todo' : type === 'micro' ? 'Micro' : 'Procedimientos'}</button>`).join('')}
+    </div>
+    <button class="pro-btn" type="button" data-reload-index><span class="btn-ic"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.5 9a9 9 0 0 1 14.9-3.4L23 10"/><path d="M20.5 15a9 9 0 0 1-14.9 3.4L1 14"/></svg></span><span>Actualizar</span></button>
+  </div>
+  <div class="sub-list">`;
+  group.subs.forEach((sub) => {
+    const desc = subDescription(sub);
+    const open = sub.subprocesoId === STATE.activeSub;
+    const subLoaded = STATE.loaded.get(sub.subprocesoId);
+    h += `<section class="sub-item ${open ? 'open' : ''}" style="--proc-color:${esc(group.info.color)}">
+      <button class="sub-toggle" type="button" data-sub="${esc(sub.subprocesoId)}" aria-expanded="${open ? 'true' : 'false'}">
+        <span class="sub-arrow" aria-hidden="true"></span>
+        <span>
+          <span class="sub-name">${esc(sub.label)}</span>
+          ${desc ? `<span class="sub-desc">${esc(desc)}</span>` : ''}
+        </span>
+        <span class="sub-meta"><span>${esc(sub.subprocesoId)}</span><span>${fmt(sub.totalModelos)} modelos</span>${STATE.loaded.has(sub.subprocesoId) ? '<span>cargado</span>' : ''}</span>
+      </button>`;
+    if (open){
+      h += '<div class="sub-panel">';
+      if (STATE.loading.has(sub.subprocesoId)) h += '<div class="loading">Cargando subproceso...</div>';
+      else if (subLoaded) h += renderSubprocess(subLoaded, group);
+      else h += '<div class="loading">Cargando subproceso...</div>';
+      h += '</div>';
+    }
+    h += '</section>';
+  });
+  if (!group.subs.length) h += '<div class="empty">No hay subprocesos en este proceso.</div>';
+  h += '</div>' + pie();
+  content.innerHTML = h;
+  markToc();
+  if (STATE.activeSub && !loaded && !STATE.loading.has(STATE.activeSub)) loadSubprocess(STATE.activeSub);
+}
+function filteredItems(items){
+  const q = norm(STATE.q);
+  return (items || []).filter((it) => {
+    if (STATE.type !== 'todos' && it.tipo !== STATE.type) return false;
+    if (!q) return true;
+    return norm(`${it.nombre} ${it.texto} ${it.codigo}`).includes(q);
+  });
+}
+function renderSubprocess(data, group){
+  const models = (data.modelos || []).map((m) => ({...m, shown:filteredItems(m.items)})).filter((m) => m.shown.length);
+  const tech = models.reduce((a,m) => a + m.shown.length, 0);
+  const proc = models.reduce((a,m) => a + m.shown.filter((it) => it.tipo === 'procedimiento').length, 0);
+  const micro = models.reduce((a,m) => a + m.shown.filter((it) => it.tipo === 'micro').length, 0);
+  let h = `<div class="detail-head" style="--proc-color:${esc(group.info.color)}">
+    <div><h2>${esc(subLabel({subprocesoId:data.subprocesoId}))}</h2><p>${subDescription({subprocesoId:data.subprocesoId}) ? `${esc(subDescription({subprocesoId:data.subprocesoId}))}<br>` : ''}${esc(data.subprocesoId)} · ${fmt(models.length)} modelos visibles · ${fmt(tech)} técnicas (${fmt(proc)} P, ${fmt(micro)} M)</p></div>
+    <a class="pro-btn" href="${esc(proxyDataUrl(`indices/subprocesos/${data.subprocesoId}.json`))}" target="_blank" rel="noopener">JSON</a>
+  </div>`;
+  if (!models.length) return h + '<div class="empty">No hay técnicas que coincidan con el filtro actual.</div>';
+  models.forEach((model) => {
+    const color = SCHOOL_COLORS[model.modelGrupo] || SCHOOL_COLORS.Otros;
+    h += `<article class="model-block" style="--model-color:${esc(color)}">
+      <div class="model-head"><span class="dot"></span><h3>${esc(model.modelLabel)}${model.modelYear ? ` <span style="color:var(--pro-faint);font-size:15px">(${esc(model.modelYear)})</span>` : ''}</h3><span class="cnt">${fmt(model.shown.length)}</span></div>
+      <ul class="items">`;
+    model.shown.forEach((it) => {
+      h += `<li class="tech">
+        <button class="item-head" type="button" aria-expanded="false">
+          <span class="badge">${it.tipo === 'procedimiento' ? 'P' : 'M'}</span>
+          <span class="item-title">${esc(it.nombre)}</span>
+          <span class="code">${esc(it.codigo)}</span>
+        </button>
+        <p class="item-text">${esc(it.texto || '')}</p>
+      </li>`;
+    });
+    h += '</ul></article>';
+  });
+  return h;
+}
+async function loadSubprocess(id){
+  const item = STATE.groups.flatMap((g) => g.subs).find((s) => s.subprocesoId === id);
+  if (!item || STATE.loaded.has(id) || STATE.loading.has(id)) return;
+  const promise = fetchJson(item.file || `indices/subprocesos/${id}.json`);
+  STATE.loading.set(id, promise);
+  renderCurrent();
+  try{
+    const data = await promise;
+    STATE.loaded.set(id, data);
+  }catch(err){
+    STATE.loaded.set(id, {subprocesoId:id, modelos:[], error:err.message || String(err)});
+  }finally{
+    STATE.loading.delete(id);
+    renderCurrent();
+  }
+}
+function renderCurrent(){
+  if (STATE.active === 'portada') renderHome();
+  else renderProcess(STATE.active, STATE.activeSub);
+}
+function go(view, sub){
+  STATE.active = view || 'portada';
+  if (sub) STATE.activeSub = sub;
+  const hash = STATE.active === 'portada' ? '#portada' : `#${STATE.active}${STATE.activeSub ? '/' + STATE.activeSub : ''}`;
+  if (location.hash !== hash) history.replaceState(null, '', hash);
+  renderCurrent();
+  window.scrollTo({top:0});
+}
+function routeFromHash(){
+  const raw = decodeURIComponent(location.hash.replace(/^#/, '')) || 'portada';
+  const [view, sub] = raw.split('/');
+  STATE.active = view || 'portada';
+  STATE.activeSub = sub || '';
+  renderCurrent();
+}
+function runSearch(q){
+  const nq = norm(q);
+  if (nq.length < 2){ closeSearch(); return; }
+  const results = [];
+  for (const g of STATE.groups){
+    if (norm(`${g.prefix} ${g.info.label} ${g.info.short} ${g.info.desc}`).includes(nq)){
+      results.push({kind:'Proceso', title:g.info.label, route:g.prefix, view:g.prefix});
+    }
+    for (const sub of g.subs){
+      if (norm(`${sub.subprocesoId} ${sub.label} ${subDescription(sub)}`).includes(nq)){
+        results.push({kind:'Subproceso', title:sub.label, route:`${g.info.short} · ${sub.subprocesoId}`, view:g.prefix, sub:sub.subprocesoId});
+      }
+    }
+  }
+  STATE.loaded.forEach((data) => {
+    const prefix = prefixOf(data.subprocesoId);
+    (data.modelos || []).forEach((m) => {
+      if (norm(`${m.modelLabel} ${m.modelAutores} ${m.modelGrupo}`).includes(nq)){
+        results.push({kind:'Modelo cargado', title:m.modelLabel, route:data.subprocesoId, view:prefix, sub:data.subprocesoId});
+      }
+      (m.items || []).forEach((it) => {
+        if (norm(`${it.nombre} ${it.codigo} ${it.texto}`).includes(nq)){
+          results.push({kind:it.tipo === 'procedimiento' ? 'Procedimiento cargado' : 'Micro cargada', title:it.nombre, route:`${m.modelLabel} · ${data.subprocesoId}`, view:prefix, sub:data.subprocesoId});
+        }
+      });
+    });
+  });
+  STATE.searchResults = results.slice(0, 60);
+  if (!STATE.searchResults.length){
+    searchPanel.innerHTML = `<div class="sr-empty">Sin resultados para «${esc(q)}»</div>`;
+  }else{
+    searchPanel.innerHTML = '<div class="sr-title">Resultados</div>' + STATE.searchResults.map((r,i) =>
+      `<button class="sr-item" type="button" data-result="${i}">${esc(r.title)}<small>${esc(r.kind)} · ${esc(r.route)}</small></button>`
+    ).join('');
+  }
+  searchPanel.classList.add('open');
+}
+function closeSearch(){
+  searchPanel.classList.remove('open');
+  searchPanel.innerHTML = '';
+  STATE.searchResults = [];
+}
+function setThemeIcon(){
+  const light = document.documentElement.dataset.proTheme === 'light';
+  $('proThemeIc').innerHTML = light
+    ? '<svg viewBox="0 0 24 24"><path d="M12 3v2"/><path d="M12 19v2"/><path d="M3 12h2"/><path d="M19 12h2"/><circle cx="12" cy="12" r="4"/><path d="m5 5 1.5 1.5"/><path d="m17.5 17.5 1.5 1.5"/><path d="m19 5-1.5 1.5"/><path d="m6.5 17.5-1.5 1.5"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path d="M21 13a8 8 0 1 1-10-10 7 7 0 0 0 10 10z"/></svg>';
+}
+document.addEventListener('click', (ev) => {
+  const view = ev.target.closest('[data-view]');
+  if (view){ go(view.dataset.view); return; }
+  const sub = ev.target.closest('[data-sub]');
+  if (sub){
+    const nextSub = STATE.activeSub === sub.dataset.sub ? '' : sub.dataset.sub;
+    STATE.activeSub = nextSub;
+    go(STATE.active, nextSub);
+    return;
+  }
+  const type = ev.target.closest('[data-type]');
+  if (type){ STATE.type = type.dataset.type; renderCurrent(); return; }
+  if (ev.target.closest('[data-reload-index]')){ init(true); return; }
+  const head = ev.target.closest('.item-head');
+  if (head){
+    const row = head.closest('.tech');
+    row.classList.toggle('open');
+    head.setAttribute('aria-expanded', row.classList.contains('open') ? 'true' : 'false');
+    return;
+  }
+  const result = ev.target.closest('[data-result]');
+  if (result){
+    const r = STATE.searchResults[Number(result.dataset.result)];
+    closeSearch();
+    searchInput.blur();
+    if (r) go(r.view, r.sub || '');
+    return;
+  }
+  if (!ev.target.closest('#proSearchWrap')) closeSearch();
+});
+$('proBrand').addEventListener('click', (ev) => { ev.preventDefault(); go('portada'); });
+$('proThemeBtn').addEventListener('click', () => {
+  const next = document.documentElement.dataset.proTheme === 'light' ? 'dark' : 'light';
+  document.documentElement.dataset.proTheme = next;
+  localStorage.setItem('PROCESOS_THEME', next);
+  setThemeIcon();
+});
+let searchTimer = 0;
+searchInput.addEventListener('input', () => {
+  STATE.q = searchInput.value.trim();
+  searchClear.style.display = STATE.q ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    runSearch(STATE.q);
+    if (STATE.active !== 'portada') renderCurrent();
+  }, 140);
+});
+searchInput.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape'){ closeSearch(); searchInput.blur(); }
+  if (ev.key === 'Enter' && STATE.searchResults[0]){
+    ev.preventDefault();
+    const r = STATE.searchResults[0];
+    closeSearch();
+    go(r.view, r.sub || '');
+  }
+});
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  STATE.q = '';
+  searchClear.style.display = 'none';
+  closeSearch();
+  renderCurrent();
+  searchInput.focus();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === '/' && document.activeElement !== searchInput){
+    ev.preventDefault();
+    searchInput.focus();
+  }
+});
+window.addEventListener('hashchange', routeFromHash);
+
+async function init(force){
+  const savedTheme = localStorage.getItem('PROCESOS_THEME');
+  if (savedTheme) document.documentElement.dataset.proTheme = savedTheme;
+  setThemeIcon();
+  content.innerHTML = '<div class="loading">Cargando índice de procesos...</div>';
+  try{
+    if (force || !STATE.index){
+      const baseIndex = await fetchJson('indices/subprocesos/index.json');
+      try{
+        const listing = await fetchJson('indices/subprocesos');
+        STATE.index = mergeDirectoryFiles(baseIndex, listing);
+      }catch(_){
+        STATE.index = baseIndex;
+      }
+      STATE.groups = buildGroups(STATE.index);
+      STATE.loaded.clear();
+      STATE.loading.clear();
+    }
+    renderToc();
+    routeFromHash();
+  }catch(err){
+    content.innerHTML = `<div class="error"><strong>No se pudo cargar el índice privado.</strong><br>${esc(err.message || err)}<br><br>Comprueba que has iniciado sesión con acceso activo y que el proxy de Vercel puede leer <code>indices/subprocesos/index.json</code>.</div>`;
+  }
+}
+init(false);
+</script>
+</body>
+</html>
