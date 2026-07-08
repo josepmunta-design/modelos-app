@@ -87,7 +87,12 @@ const ALLOWED_EXTENSIONS = [
 ];
 
 const ALLOWED_DIRECTORY_PATHS = [
-  'Core/imagenes/vida/landing'
+  'Core/imagenes/vida/landing',
+  'Core/imagenes/localizacion'
+];
+
+const PRIVATE_ROOT_DIRECTORY_PATHS = [
+  'indices/subprocesos'
 ];
 
 function getContentTypeFromPath(path) {
@@ -104,6 +109,12 @@ function getContentTypeFromPath(path) {
 }
 
 function isAllowedDirectoryPath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  return ALLOWED_DIRECTORY_PATHS.includes(value)
+    || PRIVATE_ROOT_DIRECTORY_PATHS.includes(value);
+}
+
+function isPublicDirectoryPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   return ALLOWED_DIRECTORY_PATHS.includes(value);
 }
@@ -133,7 +144,7 @@ function isAllowedPath(path) {
 function isPublicLandingAssetPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();
-  return isAllowedDirectoryPath(value)
+  return isPublicDirectoryPath(value)
     || (
       lowerPath.startsWith('core/imagenes/vida/landing/')
       && ALLOWED_EXTENSIONS.some((ext) => lowerPath.endsWith(ext))
@@ -149,6 +160,7 @@ function isPublicModelImagePath(path) {
   return isImage && (
     lowerPath.startsWith('core/fotos/')
     || lowerPath.startsWith('core/imagenes/vida/')
+    || lowerPath.startsWith('core/imagenes/localizacion/')
   );
 }
 
@@ -166,6 +178,18 @@ function isPublicModelDataPath(path) {
     || lowerPath === 'core/escuelas/index.json'
     || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
     || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
+}
+
+function isPrivateRootIndexPath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  const lowerPath = value.toLowerCase();
+  return lowerPath === 'indices/subprocesos'
+    || /^indices\/subprocesos\/[a-z0-9_-]+\.json$/i.test(value)
+    || lowerPath === 'indices/subprocesos/index.json'
+    || /^indices\/isomorfismos\/[a-z0-9_-]+\.json$/i.test(value)
+    || lowerPath === 'indices/isomorfismos/iso_lista.json'
+    || lowerPath === 'indices/isomorfismos/iso_lookup.json'
+    || lowerPath === 'indices/isomorfismos/isomorfismos-links-modeloid-tecnicaid-repo.json';
 }
 
 function cleanRequestedPath(rawPath) {
@@ -295,7 +319,10 @@ export default async function handler(req, res) {
     .map(encodeURIComponent)
     .join('/');
 
-  const ghUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/data/${encodedPath}`;
+  const repoPath = isPrivateRootIndexPath(filePath)
+    ? encodedPath
+    : `data/${encodedPath}`;
+  const ghUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${repoPath}`;
 
   try {
     const directoryRequest = isAllowedDirectoryPath(filePath);
