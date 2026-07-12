@@ -1,0 +1,3031 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Genealogía de la psicoterapia — Escuelas y linajes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171c; --ink:#e8e3d8; --ink-soft:#b4aea0; --ink-mute:#7d786c;
+    --gold:#d4a24e; --gold-bright:#e0b867; --line:rgba(232,227,216,.14); --panel:#1b2027; --mast-h:64px;
+    --glass-bg:rgba(24,28,35,.86); --glass-line:rgba(232,227,216,.14); --pill-bg:rgba(127,127,127,.08);
+    --surface-solid:#1b2027; --line-strong:rgba(232,227,216,.26);
+    --shadow:0 18px 50px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.35);
+    --shadow-soft:0 8px 28px rgba(0,0,0,.35); --focus:0 0 0 2px rgba(212,162,78,.65);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,'Segoe UI',sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;overflow:hidden}
+  body.node-view-active{overflow:hidden}
+  .wrap{max-width:1300px;margin:0 auto;padding:0 28px}
+
+  header{padding:58px 0 30px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:'Archivo',sans-serif;font-weight:600;font-size:.72rem;
+    letter-spacing:.42em;text-transform:uppercase;color:var(--gold);
+    display:flex;align-items:center;gap:18px}
+  .eyebrow::before{content:"";width:46px;height:1px;background:var(--gold)}
+  h1{font-weight:500;font-size:clamp(2.6rem,7vw,5.4rem);line-height:.96;
+    letter-spacing:-.02em;margin:.3em 0 .26em}
+  h1 em{font-style:italic;color:var(--gold-bright);font-weight:400}
+  .standfirst{max-width:66ch;font-size:clamp(1rem,2vw,1.16rem);color:var(--ink-soft);font-weight:300}
+  .meta-row{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px 34px;
+    font-family:'Archivo',sans-serif;font-size:.74rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-mute)}
+  .meta-row b{color:var(--ink);font-weight:600}
+
+  .compact-header{position:sticky;top:0;z-index:50;height:var(--mast-h);padding:0;
+    background:var(--glass-bg);backdrop-filter:blur(20px) saturate(140%);
+    -webkit-backdrop-filter:blur(20px) saturate(140%);
+    border-bottom:1px solid var(--glass-line);box-shadow:var(--shadow-soft)}
+  .compact-header::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.05),transparent 60%);mix-blend-mode:screen}
+  .compact-header .wrap{position:relative;height:100%;display:flex;align-items:center;gap:28px;overflow:hidden}
+  .compact-title{display:flex;align-items:center;gap:11px;flex:none;padding-right:27px;
+    border-right:1px solid var(--glass-line);font-family:'Instrument Serif',Georgia,serif;
+    font-size:1.34rem;font-weight:400;line-height:1;letter-spacing:0;white-space:nowrap}
+  .compact-title::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 0 4px rgba(199,146,72,.14)}
+  .compact-title em{font-style:italic;font-weight:400;color:var(--gold-bright)}
+  .compact-header .meta-row{margin:0;flex:1;flex-wrap:nowrap;gap:12px 28px;min-width:0;
+    overflow-x:auto;scrollbar-width:none;font-family:'Space Grotesk',monospace;
+    font-size:.62rem;letter-spacing:.13em}
+  .compact-header .meta-row::-webkit-scrollbar{display:none}
+  .shared-auth{display:flex;align-items:center;gap:8px;flex:none;font-family:'Hanken Grotesk',sans-serif}
+  .appsHomeLink{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;
+    padding:7px 12px;border:1px solid var(--glass-line);border-radius:999px;
+    background:var(--pill-bg);color:rgba(241,236,226,.78);text-decoration:none;
+    font:700 .68rem/1 'Hanken Grotesk',sans-serif;letter-spacing:.01em;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:background .16s,border-color .16s,color .16s,transform .16s}
+  .appsHomeLink:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2);color:#fff}
+  .appsHomeLink:active{transform:translateY(1px)}
+  .appsHomeLink:focus-visible{outline:none;border-color:rgba(217,170,63,.50);box-shadow:0 0 0 3px rgba(217,170,63,.14)}
+  .appsHomeLink svg{width:14px;height:14px;flex:none}
+  .shared-auth-email{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    color:var(--ink-soft);font-size:.68rem;font-family:'Hanken Grotesk',sans-serif}
+  .shared-auth-btn{border:1px solid var(--glass-line);border-radius:999px;background:var(--pill-bg);
+    color:rgba(241,236,226,.7);padding:7px 14px;font:700 .64rem/1 'Hanken Grotesk',sans-serif;
+    letter-spacing:.03em;text-transform:none;cursor:pointer;transition:.18s}
+  .shared-auth-btn:hover{border-color:var(--gold);color:var(--gold-bright);background:rgba(199,146,72,.1)}
+  .shared-auth-btn[hidden],.shared-auth-email[hidden]{display:none}
+
+  .auth-modal{position:fixed;inset:0;z-index:1000;display:none;place-items:center;padding:22px;
+    background:rgba(5,5,4,.82);backdrop-filter:blur(14px)}
+  .auth-modal.open{display:grid}
+  .auth-card{position:relative;width:min(430px,100%);padding:28px;border:1px solid rgba(227,181,107,.24);
+    border-radius:9px;background:linear-gradient(155deg,#1a1713,#0e0d0b);box-shadow:0 30px 100px rgba(0,0,0,.72)}
+  .auth-card::before{content:'';position:absolute;inset:0 0 auto;height:3px;border-radius:9px 9px 0 0;
+    background:linear-gradient(90deg,var(--gold-bright),transparent 70%)}
+  .auth-head{display:flex;justify-content:space-between;gap:18px;margin-bottom:20px}
+  .auth-kicker{font:600 .65rem/1 'Archivo',sans-serif;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+  .auth-card h2{font-size:2rem;font-weight:500;line-height:1;margin-bottom:9px}
+  .auth-copy{color:var(--ink-soft);font-size:.94rem}
+  .auth-close{width:36px;height:36px;border:1px solid var(--line);border-radius:50%;background:transparent;
+    color:var(--ink-soft);font-size:1.25rem;cursor:pointer}
+  .auth-form{display:grid;gap:14px}
+  .auth-field{display:grid;gap:7px;font:600 .66rem/1 'Archivo',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-bright)}
+  .auth-field input{width:100%;min-height:46px;border:1px solid var(--line);border-radius:6px;padding:11px 12px;
+    background:#0b0a09;color:var(--ink);font:400 .96rem 'Archivo',sans-serif;outline:none}
+  .auth-field input:focus{border-color:var(--gold)}
+  .auth-submit{min-height:46px;border:1px solid var(--gold);border-radius:6px;background:var(--gold);color:#0d0c0b;
+    font:700 .72rem 'Archivo',sans-serif;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+  .auth-submit:disabled{opacity:.55;cursor:wait}
+  .auth-links{display:flex;flex-wrap:wrap;gap:8px 16px}
+  .auth-link{border:0;padding:0;background:none;color:var(--ink-soft);font:500 .78rem 'Archivo',sans-serif;cursor:pointer}
+  .auth-link:hover{color:var(--gold-bright);text-decoration:underline}
+  .auth-message{display:none;margin-top:15px;padding:10px 12px;border-left:2px solid #d66;color:#efb2aa;
+    background:rgba(150,40,30,.12);font:500 .8rem/1.45 'Archivo',sans-serif}
+  .auth-message.show{display:block}.auth-message.ok{border-color:#72ad91;color:#a8d8c0;background:rgba(40,120,80,.12)}
+  .auth-hidden{display:none!important}
+
+  .subscription-gate{position:fixed;inset:0;z-index:960;display:none;place-items:center;padding:24px;
+    background:rgba(10,9,12,.6);backdrop-filter:blur(9px) saturate(1.05);
+    -webkit-backdrop-filter:blur(9px) saturate(1.05)}
+  .subscription-gate.open{display:grid}
+  .subscription-card{position:relative;width:min(760px,100%);display:grid;grid-template-columns:minmax(0,.92fr) minmax(230px,.58fr);
+    overflow:hidden;border:1px solid rgba(227,181,107,.22);border-radius:16px;
+    background:linear-gradient(160deg,rgba(22,18,22,.96),rgba(11,10,12,.94));
+    box-shadow:0 34px 120px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,255,255,.03)}
+  .subscription-card::before{content:'';position:absolute;inset:0 0 auto;z-index:1;height:3px;
+    background:linear-gradient(90deg,transparent,var(--gold) 32%,var(--gold-bright) 50%,var(--gold) 68%,transparent)}
+  .subscription-main{padding:clamp(28px,5vw,42px)}
+  .subscription-lock{width:38px;height:38px;margin-bottom:16px;display:grid;place-items:center;
+    border:1px solid rgba(227,181,107,.32);border-radius:50%;
+    background:radial-gradient(circle at 50% 30%,rgba(212,162,78,.22),rgba(212,162,78,.06));color:var(--gold-bright)}
+  .subscription-lock svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round}
+  .subscription-eyebrow{margin:0 0 10px;color:var(--gold);font:600 .66rem/1 'Archivo',sans-serif;letter-spacing:.2em;text-transform:uppercase}
+  .subscription-title{margin:0;color:rgba(255,255,255,.94);font:400 clamp(2rem,5vw,2.9rem)/1.02 'Instrument Serif',Georgia,serif;letter-spacing:-.01em}
+  .subscription-title em{color:var(--gold-bright);font-style:italic}
+  .subscription-text{margin:14px 0 22px;color:rgba(241,236,226,.66);font:400 14px/1.58 'Archivo',sans-serif;max-width:46ch}
+  .subscription-actions{display:flex;flex-wrap:wrap;gap:10px}
+  .subscription-button{min-height:44px;padding:0 18px;border:1px solid var(--gold);border-radius:7px;
+    background:var(--gold);color:#130e08;font:800 12px/1 'Archivo',sans-serif;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .subscription-button.secondary{border-color:rgba(241,236,226,.18);background:rgba(255,255,255,.045);color:var(--ink)}
+  .subscription-button:hover{filter:brightness(1.08)}.subscription-button:disabled{opacity:.55;cursor:wait}
+  .subscription-status{min-height:20px;margin:14px 0 0;color:#efb2aa;font:500 12px/1.45 'Archivo',sans-serif}
+  .subscription-aside{position:relative;min-height:330px;border-left:1px solid rgba(241,236,226,.1);
+    background:radial-gradient(circle at 50% 30%,rgba(199,146,72,.24),transparent 42%),linear-gradient(145deg,rgba(199,146,72,.08),rgba(13,12,11,.25))}
+  .subscription-aside::before{content:'GENEALOGÍA';position:absolute;inset:0;display:grid;place-items:center;
+    color:rgba(227,181,107,.72);font:600 12px/1 'Archivo',sans-serif;letter-spacing:.28em;writing-mode:vertical-rl}
+  .subscription-plan{position:absolute;left:24px;right:24px;bottom:25px;padding-top:16px;border-top:1px solid rgba(241,236,226,.15);
+    color:rgba(241,236,226,.72);font:600 13px/1.45 'Archivo',sans-serif}
+  .subscription-plan strong{display:block;color:var(--gold-bright);font-size:1.45rem}.subscription-plan small{display:block;color:rgba(241,236,226,.42)}
+  .subscription-close{position:absolute;top:12px;right:12px;z-index:2;width:34px;height:34px;
+    display:grid;place-items:center;border:1px solid rgba(241,236,226,.2);border-radius:50%;
+    background:rgba(11,10,12,.55);color:rgba(241,236,226,.75);font-size:19px;line-height:1;cursor:pointer}
+  .subscription-close:hover{border-color:var(--gold);color:var(--gold-bright)}
+
+  /* school nav */
+  .schoolnav{position:sticky;top:var(--mast-h);z-index:40;background:rgba(10,8,11,.86);
+    backdrop-filter:blur(16px) saturate(130%);border-bottom:1px solid rgba(241,236,226,.08)}
+  .schoolnav-shell{max-width:1300px;margin:0 auto;padding:10px 28px;display:flex;align-items:center;gap:6px}
+  .schoolnav-viewport{flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;
+    overscroll-behavior-x:contain;scroll-behavior:smooth;touch-action:pan-x}
+  .schoolnav-viewport::-webkit-scrollbar{display:none}
+  #snav{display:flex;align-items:center;gap:6px;min-width:max-content}
+  .snav{font-family:'Hanken Grotesk',sans-serif;font-size:.66rem;font-weight:700;letter-spacing:.01em;
+    text-transform:none;padding:6px 11px;border:1px solid transparent;border-radius:999px;
+    cursor:pointer;color:rgba(241,236,226,.6);display:flex;align-items:center;gap:7px;white-space:nowrap;
+    background:var(--pill-bg);transition:.18s}
+  .snav:hover{background:rgba(255,255,255,.08);border-color:rgba(241,236,226,.16);color:var(--ink)}
+  .snav .sw{width:7px;height:7px;border-radius:50%;flex:none}
+  .schoolnav-arrow{display:none;place-items:center;flex:0 0 26px;width:26px;height:26px;
+    border:1px solid var(--glass-line);border-radius:50%;background:transparent;color:var(--ink-soft);
+    font:400 1rem/1 'Hanken Grotesk',sans-serif;cursor:pointer;transition:.18s}
+  .schoolnav-shell.can-scroll .schoolnav-arrow{display:grid}
+  .schoolnav-arrow:hover:not(:disabled){border-color:var(--gold);color:var(--gold-bright)}
+  .schoolnav-arrow:disabled{opacity:.22;cursor:default}
+
+  .view-tabs{height:42px;position:sticky;top:calc(var(--mast-h) + 47px);z-index:46;
+    max-width:1300px;margin:0 auto;padding:0 28px;display:flex;align-items:flex-end;
+    justify-content:flex-end;gap:8px;pointer-events:none}
+  .node-search{position:relative;width:min(230px,32vw);opacity:0;transform:translateY(5px);
+    pointer-events:none;transition:opacity .18s ease,transform .22s ease}
+  .view-tabs.node-mode .node-search{opacity:1;transform:translateY(0);pointer-events:auto}
+  .node-search input{display:block;width:100%;height:34px;padding:0 12px 0 35px;
+    border:1px solid var(--glass-line);border-radius:999px;background:var(--pill-bg);color:var(--ink);
+    font-family:'Hanken Grotesk',sans-serif;font-size:.82rem;outline:none;transition:border-color .18s}
+  .node-search input:focus{border-color:var(--gold)}
+  .node-search input::placeholder{color:var(--ink-mute)}
+  .node-search svg{position:absolute;left:13px;top:50%;width:13px;height:13px;
+    transform:translateY(-50%);fill:none;stroke:var(--ink-mute);stroke-width:2;pointer-events:none}
+  .view-mode-switch{display:flex;align-items:center;gap:8px;padding:5px 6px 5px 13px;
+    border:1px solid var(--glass-line);border-radius:999px;
+    background:var(--pill-bg);transform:none;pointer-events:auto}
+  .view-mode-title{font-family:'Space Grotesk',monospace;font-size:.56rem;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--ink-mute);padding-right:10px;
+    border-right:1px solid var(--glass-line)}
+  .view-mode-buttons{display:flex;gap:2px}
+  .view-tab{font-family:'Hanken Grotesk',sans-serif;font-size:.66rem;font-weight:700;
+    letter-spacing:.01em;text-transform:none;color:rgba(241,236,226,.58);background:transparent;
+    border:0;border-radius:999px;padding:6px 12px;cursor:pointer;transition:.18s}
+  .view-tab:hover{color:var(--ink)}
+  .view-tab.active{color:#0d0c0b;background:var(--gold)}
+
+  /* horizontal atlas: one continuous world, without separate containers */
+  #main{display:block;width:100%;height:calc(100vh - var(--mast-h));
+    height:calc(100dvh - var(--mast-h));
+    overflow:auto;cursor:grab;scrollbar-width:none;overscroll-behavior:auto;touch-action:none;
+    padding:46px max(28px,calc((100vw - 1300px)/2)) 30px}
+  .atlas-world{display:flex;align-items:flex-start;gap:240px;width:max-content;min-height:100%;
+    transform-origin:top left}
+  #main::-webkit-scrollbar{display:none}
+  #main.panning{cursor:grabbing;user-select:none}
+  .atlas-shell{position:relative;height:calc(100vh - var(--mast-h));
+    height:calc(100dvh - var(--mast-h))}
+  .atlas-shell #main{height:100%}
+  .axis-viewport{position:absolute;inset:0;z-index:30;overflow:hidden;pointer-events:none}
+  .global-year-axis{position:absolute;left:10px;top:196px;overflow:visible;
+    filter:drop-shadow(0 2px 5px var(--bg))}
+  .minimap-wrap{position:absolute;right:18px;bottom:18px;z-index:45;
+    width:min(300px,calc(100vw - 36px));height:168px;border:1px solid var(--glass-line);
+    border-radius:14px;background:var(--glass-bg);box-shadow:var(--shadow);
+    overflow:hidden;cursor:crosshair;backdrop-filter:blur(14px) saturate(1.1);
+    -webkit-backdrop-filter:blur(14px) saturate(1.1);
+    transition:border-color .2s ease,box-shadow .2s ease}
+  .minimap-wrap:hover{border-color:var(--line-strong)}
+  .minimap-wrap::before{content:'Minimapa';position:absolute;top:0;left:0;right:0;z-index:2;
+    height:26px;display:flex;align-items:center;padding:0 11px;
+    font-family:'Inter',sans-serif;font-size:8.5px;font-weight:600;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-mute);pointer-events:none;
+    background:linear-gradient(180deg,rgba(20,23,28,.92),rgba(20,23,28,0));
+    border-bottom:0}
+  .minimap-wrap::after{content:'';position:absolute;inset:0;z-index:3;pointer-events:none;
+    border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -18px 22px -18px rgba(0,0,0,.55)}
+  .minimap{display:block;width:100%;height:100%;touch-action:none}
+  .minimap-viewport{fill:rgba(212,162,78,.08);stroke:var(--gold);stroke-width:1.4;
+    vector-effect:non-scaling-stroke;pointer-events:none}
+  .atlas-zoom{position:absolute;right:18px;top:50%;z-index:59;transform:translateY(-50%);
+    display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--glass-line);
+    border-radius:12px;background:var(--pill-bg);box-shadow:none}
+  .atlas-zoom button{width:40px;height:40px;display:grid;place-items:center;border:0;
+    background:none;color:var(--ink-soft);font:400 19px/1 'Instrument Serif',Georgia,serif;
+    cursor:pointer;transition:color .25s ease,background .25s ease}
+  .atlas-zoom button+button{border-top:1px solid var(--glass-line)}
+  .atlas-zoom button:hover{color:var(--ink);background:rgba(127,127,127,.1)}
+  .atlas-zoom button:focus-visible{outline:none;box-shadow:inset var(--focus)}
+  .node-view-overlay{position:absolute;inset:0;z-index:70;background:var(--bg);
+    opacity:0;transform:translateY(10px);pointer-events:none;
+    transition:opacity .24s ease,transform .3s cubic-bezier(.22,.8,.24,1)}
+  .node-view-overlay.open{opacity:1;transform:translateY(0);pointer-events:auto}
+  .node-view-frame{display:block;width:100%;height:100%;border:0;background:var(--bg);
+    opacity:0;transition:opacity .2s ease}
+  .node-view-frame.ready{opacity:1}
+  .school{position:relative;flex:none;padding:0;scroll-margin-left:40px;overflow:visible}
+  .school.cross-active{z-index:20}
+  .school-copy{height:150px}
+  .shead{display:flex;align-items:baseline;gap:16px;margin-bottom:6px}
+  .shead .num{font-family:'Archivo',sans-serif;font-weight:700;font-size:.82rem;letter-spacing:.1em}
+  .shead h2{font-weight:500;font-size:clamp(1.7rem,4vw,2.5rem);letter-spacing:-.01em;flex:1}
+  .shead .cnt{font-family:'Archivo',sans-serif;font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-mute);white-space:nowrap}
+  .sdesc{color:var(--ink-soft);font-weight:300;font-size:.98rem;max-width:74ch;margin:6px 0 8px}
+  .syears{font-family:'Archivo',sans-serif;font-size:.72rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-mute);margin-bottom:14px}
+
+  .diagram-plane{width:100%;padding:0 28px}
+  .treebox{position:relative;width:100%;overflow:visible}
+  .treebox svg{display:block;overflow:visible}
+  .tnode{cursor:pointer;transition:opacity .18s}
+  .tnode rect{transition:.18s}
+  .tnode .node-card{transition:width .34s cubic-bezier(.22,.8,.24,1);
+    filter:drop-shadow(0 3px 7px rgba(0,0,0,.32))}
+  .tnode .tlabel{transition:opacity .16s ease}
+  .tnode:hover .node-card{stroke-opacity:.95;filter:drop-shadow(0 5px 12px rgba(0,0,0,.42)) brightness(1.12)}
+  .tlabel{font-family:'Spectral',serif;fill:var(--ink);pointer-events:none}
+  .tsub{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;fill:var(--ink-mute);
+    pointer-events:none;letter-spacing:.01em}
+  .tsub .tsub-year{font-weight:600}
+  .tyear{font-family:'Archivo',sans-serif;font-weight:600;fill:var(--bg);pointer-events:none}
+  .tedge{fill:none;stroke-opacity:.55;stroke-width:1.4;transition:stroke-opacity .18s,opacity .18s}
+  .tedge.sec{stroke-opacity:.24;stroke-width:1;stroke-dasharray:3 4}
+  .tnode.dim{opacity:.14}
+  .tedge.dim{opacity:.04}
+  .tedge.lit{stroke-opacity:.95;stroke-width:2;stroke-dasharray:none;opacity:1}
+  .tnode.lit{opacity:1}
+  .tnode.lit rect{stroke:#fff;stroke-width:2}
+  .cross-layer{pointer-events:none}
+  .cross-link{fill:none;stroke-width:1.7;stroke-opacity:.82;stroke-dasharray:5 4}
+  .cross-card{filter:drop-shadow(0 7px 12px rgba(0,0,0,.4));
+    transition:transform .34s cubic-bezier(.22,.8,.24,1)}
+  .cross-card-bg{transition:width .34s cubic-bezier(.22,.8,.24,1)}
+  .cross-layer.pinned-cross .cross-card{pointer-events:auto;cursor:pointer}
+  .cross-kicker{font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;fill:var(--ink-soft)}
+  .cross-label{font-family:'Spectral',serif;font-size:10.5px;fill:var(--ink);
+    transition:opacity .16s ease}
+
+  .hint{font-family:'Archivo',sans-serif;font-size:.7rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-mute);margin:10px 2px 0}
+
+  /* detail — panel lateral de modelo (mismo lenguaje que el atlas Mapamundi) */
+  .scrim{position:fixed;inset:0;background:rgba(8,7,6,.6);z-index:55;opacity:0;
+    pointer-events:none;transition:.3s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .detail{position:fixed;top:calc(var(--mast-h) + 10px);bottom:14px;right:14px;
+    width:min(400px,calc(100vw - 28px));z-index:60;
+    display:flex;flex-direction:column;overflow:hidden;
+    border:1px solid var(--glass-line);border-radius:16px;background:var(--glass-bg);
+    box-shadow:var(--shadow);backdrop-filter:blur(16px) saturate(1.15);
+    -webkit-backdrop-filter:blur(16px) saturate(1.15);
+    transform:translateX(calc(100% + 34px));
+    transition:transform .5s cubic-bezier(.32,.9,.25,1)}
+  .detail.open{transform:translateX(0)}
+  body.node-view-active .scrim{z-index:85}
+  body.node-view-active .detail{z-index:90}
+  .detail-bar{height:1px;flex:none;background:var(--glass-line)}
+  .detail-scroll{flex:1;overflow-y:auto;padding:20px 24px 24px;scrollbar-width:thin;
+    scrollbar-color:var(--line) transparent}
+  .detail .close{position:absolute;top:14px;right:14px;z-index:2;width:32px;height:32px;
+    display:grid;place-items:center;border:1px solid var(--glass-line);border-radius:50%;
+    background:var(--pill-bg);color:var(--ink-soft);font-size:1.15rem;line-height:1;
+    cursor:pointer;transition:.18s}
+  .detail .close:hover{border-color:var(--gold);color:var(--gold-bright)}
+  .dhero{position:relative;min-height:270px;margin:-20px -24px 0;padding:28px 24px 22px;
+    display:flex;align-items:flex-end;overflow:hidden;background:#181c23;border-bottom:1px solid var(--line)}
+  .dhero-bg{position:absolute;inset:0;opacity:0;transition:opacity .35s ease}
+  .dhero.has-photo .dhero-bg{opacity:1}
+  .dhero-bg img{width:100%;height:100%;object-fit:cover;object-position:68% 28%;
+    filter:saturate(.92) contrast(1.04) brightness(.9)}
+  .dhero::after{content:"";position:absolute;inset:0;pointer-events:none;background:
+    linear-gradient(90deg,rgba(24,28,35,.99) 0%,rgba(24,28,35,.94) 35%,rgba(24,28,35,.56) 58%,rgba(24,28,35,.08) 82%,transparent 100%),
+    linear-gradient(0deg,rgba(24,28,35,.82) 0%,rgba(24,28,35,.12) 48%,rgba(24,28,35,.08) 100%)}
+  .dhero-content{position:relative;z-index:1;width:72%;text-shadow:0 2px 16px rgba(0,0,0,.85)}
+  .dhero .dfam{margin-bottom:12px;color:var(--school-accent)}
+  .dhero .dfam .sw{display:none}
+  .dtitle-accent{color:var(--school-accent);font-style:italic}
+  .dhero .dauthors{color:rgba(255,255,255,.76)}
+  .dhero .dmeta-row{gap:8px 14px;margin-top:16px;border-color:rgba(255,255,255,.16)}
+  .dhero .dmeta-cell span{color:#f4f0e8}
+  .dfam{font-family:'Inter',sans-serif;font-size:.62rem;font-weight:500;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--ink-mute);
+    display:flex;align-items:center;gap:8px;margin-bottom:11px}
+  .dfam .sw{width:8px;height:8px;border-radius:50%}
+  .detail h3{font-weight:500;font-size:1.55rem;line-height:1.15;margin-bottom:0;
+    letter-spacing:.005em;padding-right:26px}
+  .dauthors{margin:8px 0 0;font-family:'Instrument Serif',Georgia,serif;font-style:italic;
+    font-size:.94rem;color:var(--ink-soft);line-height:1.4}
+  .dmeta-row{display:flex;flex-wrap:wrap;gap:7px 18px;margin:15px 0 0;padding:12px 0;
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .dmeta-cell{min-width:64px}
+  .dmeta-cell b{display:block;font-size:.6rem;font-weight:500;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink-mute);margin-bottom:2px}
+  .dmeta-cell span{font-family:'Instrument Serif',Georgia,serif;font-size:.96rem;color:var(--ink)}
+  .dfrase{margin:16px 0 0;font-family:'Inter',-apple-system,'Segoe UI',sans-serif;
+    font-size:.92rem;font-weight:500;line-height:1.6;color:var(--gold-bright)}
+  .ddesc{margin:13px 0 0;font-size:.84rem;line-height:1.65;color:var(--ink-soft);
+    white-space:pre-line}
+  .dstatus{margin:14px 0 0;font-family:'Instrument Serif',Georgia,serif;font-style:italic;
+    font-size:.86rem;color:var(--ink-mute)}
+  .dactions{margin-top:20px;display:flex;flex-direction:column;gap:8px}
+  .dficha-btn{border:none;border-radius:10px;background:var(--gold);color:#14120c;
+    font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.04em;
+    padding:12px 16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    gap:8px;transition:filter .25s ease,transform .18s ease}
+  .dficha-btn:hover{filter:brightness(1.08)}
+  .dficha-btn:active{transform:scale(.985)}
+  .dficha-btn:focus-visible{outline:none;box-shadow:var(--focus)}
+  .dficha-btn svg{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;
+    stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .dexternal{border:none;background:none;cursor:pointer;color:var(--ink-mute);
+    font-family:'Inter',sans-serif;font-size:.7rem;letter-spacing:.04em;padding:4px;
+    text-decoration:underline;text-underline-offset:3px;transition:color .25s ease}
+  .dexternal:hover{color:var(--ink)}
+  /* candado + aviso de suscripción: visibles mientras no haya acceso confirmado
+     (body.sub-locked); solo bloquean la ficha completa, el resto queda en abierto */
+  .dficha-lock{display:none}
+  body.sub-locked .dficha-lock{display:inline-block}
+  body.sub-locked .dficha-book{display:none}
+  .dsub-note{display:none;margin:0;font-family:'Inter',sans-serif;font-size:.72rem;
+    letter-spacing:.02em;color:var(--ink-mute);align-items:center;justify-content:center;
+    gap:5px;flex-wrap:wrap;text-align:center}
+  body.sub-locked .dsub-note{display:flex}
+  .dsub-link{border:0;padding:0;background:none;color:var(--gold-bright);font:inherit;
+    font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .dsub-link:hover{color:var(--gold)}
+  .dmeta{font-family:'Archivo',sans-serif;font-size:.78rem;letter-spacing:.04em;color:var(--ink-soft);
+    margin-bottom:4px}
+  .dmeta b{color:var(--gold)}
+  .dgroup{margin-top:22px}
+  .dgroup h4{font-family:'Inter',sans-serif;font-weight:600;font-size:.62rem;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--ink-mute);margin-bottom:9px;display:flex;align-items:center;gap:9px}
+  .dgroup h4::after{content:"";flex:1;height:1px;background:var(--line)}
+  .dlist{list-style:none;display:flex;flex-direction:column;gap:2px}
+  .dlist li{font-size:.86rem;color:var(--ink-soft);padding:7px 10px;border-radius:8px;cursor:pointer;
+    transition:.15s;display:flex;align-items:center;gap:9px}
+  .dlist li:hover{background:var(--pill-bg);color:var(--ink)}
+  .dlist li .sw{width:8px;height:8px;border-radius:50%;flex:none}
+  .dempty{font-style:italic;color:var(--ink-mute);font-size:.84rem}
+
+  /* ficha completa del modelo — modal a pantalla grande (como en Mapamundi) */
+  .ficha-modal{position:fixed;inset:0;z-index:950;display:none;align-items:center;
+    justify-content:center;padding:clamp(8px,2.5vw,34px);
+    background:rgba(10,12,16,.66);backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .4s ease}
+  .ficha-modal.open{display:flex}
+  .ficha-modal.visible{opacity:1}
+  .ficha-shell{position:relative;width:min(1180px,100%);height:100%;border-radius:16px;
+    overflow:hidden;display:flex;flex-direction:column;background:var(--surface-solid);
+    border:1px solid var(--line-strong);box-shadow:var(--shadow);
+    transform:translateY(16px) scale(.985);
+    transition:transform .45s cubic-bezier(.32,.9,.25,1)}
+  .ficha-modal.visible .ficha-shell{transform:translateY(0) scale(1)}
+  .ficha-head{flex:none;display:flex;align-items:center;justify-content:space-between;
+    gap:12px;padding:10px 12px 10px 20px;border-bottom:1px solid var(--line)}
+  .ficha-title{font-family:'Instrument Serif',Georgia,serif;font-size:.96rem;font-weight:500;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  .ficha-btns{display:flex;gap:8px;flex:none}
+  .ficha-btn{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:6px 11px;
+    border:1px solid var(--glass-line);border-radius:9px;background:var(--pill-bg);
+    color:var(--ink-soft);font:500 .72rem/1 'Inter',sans-serif;letter-spacing:.02em;
+    cursor:pointer;transition:.18s}
+  .ficha-btn:hover{border-color:var(--line-strong);background:rgba(127,127,127,.13);color:var(--ink)}
+  .ficha-btn:focus-visible{outline:none;box-shadow:var(--focus)}
+  .ficha-btn svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;
+    stroke-linecap:round;stroke-linejoin:round}
+  .ficha-body{flex:1;position:relative;background:var(--bg)}
+  .ficha-frame{position:absolute;inset:0;display:block;width:100%;height:100%;border:0;
+    background:var(--bg)}
+  .ficha-loading{position:absolute;inset:0;display:grid;place-items:center;
+    background:var(--surface-solid);color:var(--ink-mute);
+    font-family:'Instrument Serif',Georgia,serif;font-style:italic;font-size:.9rem;
+    transition:opacity .4s ease}
+
+  footer{border-top:1px solid var(--line);padding:12px 0 20px;font-family:'Archivo',sans-serif;
+    font-size:.72rem;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  .atlas-footer{position:sticky;left:0;width:100%;margin-top:20px}
+
+  /* Lenguaje visual compartido con Mapamundi */
+  h1,.compact-title,.shead h2,.detail h3,.auth-card h2,.subscription-title{
+    font-family:'Instrument Serif',Georgia,'Times New Roman',serif;font-weight:400}
+  .eyebrow,.meta-row,.shared-auth,.appsHomeLink,.shared-auth-btn,.auth-kicker,
+  .auth-field,.auth-field input,.auth-submit,.auth-link,.auth-message,
+  .subscription-eyebrow,.subscription-text,.subscription-button,.subscription-status,
+  .subscription-plan,.snav,.schoolnav-arrow,.node-search input,.view-mode-title,.view-tab,
+  .minimap-wrap::before,.shead .num,.shead .cnt,.syears,.tyear,.cross-kicker,.hint,
+  .dfam,.dmeta,.dgroup h4,.ficha-open-btn,footer{
+    font-family:'Inter',-apple-system,'Segoe UI',sans-serif}
+  .tlabel,.cross-label{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;font-weight:500}
+  body{
+    background-color:var(--bg);
+    background-image:radial-gradient(ellipse 120% 105% at 50% 42%,transparent 55%,rgba(0,0,0,.16) 100%)}
+  .compact-header,.schoolnav{
+    background:var(--glass-bg);backdrop-filter:blur(14px) saturate(1.1);
+    -webkit-backdrop-filter:blur(14px) saturate(1.1)}
+  .schoolnav{border-bottom-color:var(--glass-line)}
+  .appsHomeLink,.shared-auth-btn,.snav,.schoolnav-arrow,.node-search input,
+  .view-mode-switch,.view-tab,.ficha-open-btn,.subscription-button{
+    border-radius:10px}
+  .appsHomeLink,.shared-auth-btn,.snav,.node-search input,.view-mode-switch,
+  .ficha-open-btn{background:rgba(127,127,127,.08)}
+  .appsHomeLink:hover,.shared-auth-btn:hover,.snav:hover{
+    background:rgba(127,127,127,.12);border-color:var(--line-strong);color:var(--ink)}
+  .view-tab.active{
+    color:#14171c;background:var(--gold);
+    box-shadow:0 0 0 1px rgba(224,184,103,.28),0 4px 14px rgba(212,162,78,.2)}
+  .appsHomeLink:focus-visible,.shared-auth-btn:focus-visible,.snav:focus-visible,
+  .schoolnav-arrow:focus-visible,.node-search input:focus-visible,.view-tab:focus-visible,
+  .auth-close:focus-visible,.subscription-button:focus-visible{
+    outline:none;box-shadow:var(--focus)}
+  .minimap-wrap,.auth-card,.subscription-card{
+    border-color:var(--glass-line);border-radius:14px;background:var(--glass-bg);
+    box-shadow:var(--shadow);backdrop-filter:blur(14px) saturate(1.1)}
+  .auth-field input{background:var(--bg);border-color:var(--glass-line);border-radius:10px}
+  .auth-submit,.subscription-button:not(.secondary){background:var(--gold);color:#14171c;border-color:var(--gold)}
+  .subscription-gate{background:rgba(13,16,20,.55);backdrop-filter:blur(9px) saturate(1.05)}
+  .subscription-aside{background:radial-gradient(circle at 50% 30%,rgba(212,162,78,.2),transparent 48%),var(--bg)}
+  .global-year-axis{filter:drop-shadow(0 2px 5px var(--bg))}
+
+  /* Barra superior inspirada en genealogia_new; solo presentacion. */
+  :root{--mast-h:76px}
+  .compact-header{
+    position:sticky;top:0;z-index:70;height:var(--mast-h);padding:10px 14px;
+    border:0;background:transparent;box-shadow:none;backdrop-filter:none;
+    -webkit-backdrop-filter:none;pointer-events:none
+  }
+  .compact-header::after{display:none}
+  .compact-header .wrap{
+    width:100%;max-width:none;height:56px;padding:0;gap:10px;overflow:visible;
+    pointer-events:auto
+  }
+  .compact-title{
+    height:56px;min-width:max-content;padding:0 18px;gap:9px;border:1px solid var(--glass-line);
+    border-radius:14px;background:var(--glass-bg);box-shadow:var(--shadow-soft);
+    backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);
+    font-size:1.28rem
+  }
+  .compact-title::before{display:none}
+  .compact-header .meta-row{
+    align-self:stretch;flex:0 1 auto;max-width:390px;margin:0;padding:0 14px;gap:14px;
+    border:1px solid var(--glass-line);border-radius:14px;background:var(--glass-bg);
+    box-shadow:var(--shadow-soft);backdrop-filter:blur(14px) saturate(1.1);
+    -webkit-backdrop-filter:blur(14px) saturate(1.1)
+  }
+  .genealogy-toolbar{
+    min-width:0;margin-left:auto;display:flex;align-items:center;gap:10px
+  }
+  .compact-header .view-tabs{
+    position:static;z-index:auto;width:auto;max-width:none;height:auto;margin:0;padding:0;
+    display:flex;align-items:center;justify-content:flex-end;gap:8px;pointer-events:auto
+  }
+  .compact-header .node-search{width:min(220px,20vw)}
+  .compact-header .node-search input{
+    height:38px;padding-left:36px;border-radius:10px;background:var(--glass-bg);
+    box-shadow:var(--shadow-soft)
+  }
+  .compact-header .view-mode-switch{
+    height:40px;padding:3px;border-radius:10px;background:var(--glass-bg);
+    box-shadow:var(--shadow-soft);gap:0
+  }
+  .compact-header .view-mode-title{display:none}
+  .compact-header .view-mode-buttons{height:100%;gap:0}
+  .compact-header .view-tab{
+    min-height:32px;padding:7px 12px;border-radius:8px;font-size:.76rem;font-weight:500
+  }
+  .compact-header .view-tab.active{
+    color:#14171c;background:var(--gold);box-shadow:none
+  }
+  .shared-auth{
+    height:40px;padding:3px;border:1px solid var(--glass-line);border-radius:10px;
+    background:var(--glass-bg);box-shadow:var(--shadow-soft);gap:3px
+  }
+  .appsHomeLink,.shared-auth-btn{
+    min-height:32px;padding:7px 10px;border:0;border-radius:8px;background:transparent;
+    color:var(--ink-soft);font:500 .76rem/1 'Inter',sans-serif;letter-spacing:.02em;
+    box-shadow:none
+  }
+  .appsHomeLink:hover,.shared-auth-btn:hover{
+    border:0;background:rgba(127,127,127,.12);color:var(--ink)
+  }
+  .appsHomeLink svg{width:15px;height:15px}
+  .shared-auth-email{max-width:150px;padding:0 8px;font:500 .72rem/1 'Inter',sans-serif}
+  .schoolnav{top:var(--mast-h);z-index:60;background:var(--glass-bg)}
+
+  @media(max-width:1100px){
+    .compact-header .meta-row{display:none}
+    .compact-header .node-search{width:min(190px,22vw)}
+  }
+  @media(max-width:760px){
+    :root{--mast-h:66px}
+    .compact-header{height:var(--mast-h);padding:7px}
+    .compact-header .wrap{height:52px;gap:7px}
+    .compact-title{height:52px;padding:0 13px;font-size:1.05rem}
+    .genealogy-toolbar{gap:6px}
+    .compact-header .node-search{display:none}
+    .compact-header .view-tabs{display:flex}
+    .compact-header .view-tab{padding:7px 9px;font-size:.68rem}
+    .shared-auth{height:38px}
+    .appsHomeLink,.shared-auth-btn{min-height:30px;padding:6px 8px;font-size:.68rem}
+    .appsHomeLink span{display:none}
+    .shared-auth-email{display:none!important}
+  }
+  @media(max-width:520px){
+    .compact-title{font-size:.96rem}
+    .compact-header .view-tab{padding:7px 8px}
+    .shared-auth-btn{padding-inline:7px}
+  }
+  @media(max-width:680px){
+    .compact-header{padding:7px}
+    .compact-header .wrap{padding:0;gap:7px}
+    .compact-title{font-size:1.05rem;padding:0 13px}
+    .compact-header .meta-row{gap:18px;font-size:.59rem}
+    .shared-auth-email{display:none}.shared-auth-btn{padding:7px 9px}
+    .schoolnav-shell{padding:9px 12px;gap:5px}
+    .snav{font-size:.58rem;padding:6px 9px}
+    .compact-header .view-tabs{display:flex}
+    /* el minimapa, centrado en vez de anclado a la derecha */
+    .minimap-wrap{left:50%;right:auto;transform:translateX(-50%)}
+    /* la ficha del modelo, a pantalla completa */
+    .ficha-modal{padding:0}
+    .ficha-shell{border-radius:0;border:none}
+    /* el panel de detalle ocupa el ancho disponible */
+    .detail{right:7px;left:7px;width:auto;top:auto;bottom:7px;max-height:72vh}
+    .dhero{min-height:245px}.dhero-content{width:78%}
+    .subscription-card{grid-template-columns:1fr}.subscription-aside{display:none}
+  }
+
+  /* Composicion final: dos bloques flotantes como genealogia_new. */
+  :root{--mast-h:110px}
+  .compact-header{
+    position:relative;height:var(--mast-h);padding:10px 14px;background:transparent
+  }
+  .compact-header .wrap{
+    height:90px;align-items:flex-start
+  }
+  .genealogy-brand{
+    width:400px;min-height:84px;padding:12px 18px 13px;border:1px solid var(--glass-line);
+    border-radius:14px;background:var(--glass-bg);box-shadow:var(--shadow-soft);
+    backdrop-filter:blur(14px) saturate(1.1);-webkit-backdrop-filter:blur(14px) saturate(1.1);
+    opacity:1;visibility:visible;transition:opacity .18s ease,visibility 0s linear 0s
+  }
+  .genealogy-brand .compact-title{
+    height:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;
+    font-size:1.35rem;line-height:1.15
+  }
+  .genealogy-brand .meta-row{
+    display:block;max-width:none;height:auto;margin:7px 0 0;padding:0;border:0;border-radius:0;
+    background:transparent;box-shadow:none;color:var(--ink-soft);font-size:.68rem;
+    letter-spacing:.08em;line-height:1.35;white-space:normal
+  }
+  .genealogy-brand .meta-row b{font-weight:500;color:var(--ink-soft)}
+  .genealogy-toolbar{
+    width:min(1460px,calc(100vw - 440px));display:grid;
+    grid-template-columns:minmax(180px,1fr) auto auto;grid-template-rows:42px 40px;
+    justify-items:end;gap:6px 8px
+  }
+  .compact-header .view-tabs{
+    display:contents
+  }
+  .compact-header .node-search{
+    display:block;grid-column:1 / -1;grid-row:1;width:340px;max-width:100%;justify-self:end;
+    opacity:1;transform:none;pointer-events:auto
+  }
+  .compact-header .node-search input{height:42px;background:var(--glass-bg)}
+  .compact-header .view-mode-switch{
+    grid-column:2;grid-row:2;height:40px;justify-self:end
+  }
+  .genealogy-toolbar .shared-auth{
+    position:static;grid-column:3;grid-row:2;height:40px;transform:none
+  }
+  .schoolnav{
+    position:static;grid-column:1;grid-row:2;z-index:auto;width:100%;min-width:0;margin:0;
+    border:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none
+  }
+  .schoolnav-shell{width:100%;max-width:none;height:40px;padding:3px;justify-content:flex-start;
+    border:1px solid var(--glass-line);border-radius:10px;background:var(--glass-bg);box-shadow:var(--shadow-soft)}
+  .schoolnav-viewport{flex:1 1 auto;max-width:none;min-width:0}
+  .schoolnav #snav{height:32px;gap:3px}
+  .schoolnav .snav{height:32px;padding:6px 9px;border-radius:8px;font-size:.62rem}
+  .schoolnav .schoolnav-arrow{flex-basis:28px;width:28px;height:28px;border-radius:8px}
+
+  /* En modo Red manda el iframe: la cabecera exterior queda por debajo para
+     no cubrir su lienzo, su toolbar ni las fichas que este abre. */
+  body.node-view-active .compact-header,
+  body.node-view-active .schoolnav{
+    z-index:30
+  }
+  body.node-view-active .node-view-overlay{
+    z-index:80
+  }
+  body.node-view-active .atlas-zoom{z-index:85}
+
+  @media(max-width:1050px){
+    :root{--mast-h:104px}
+    .genealogy-brand{width:330px}
+    .genealogy-toolbar{width:calc(100vw - 370px);grid-template-columns:minmax(100px,1fr) auto auto}
+  }
+  @media(max-width:760px){
+    :root{--mast-h:98px}
+    .compact-header{height:var(--mast-h);padding:7px}
+    .compact-header .wrap{height:84px}
+    .genealogy-brand{width:min(46vw,300px);min-height:72px;padding:11px 13px}
+    .genealogy-brand .compact-title{font-size:1.02rem}
+    .genealogy-brand .meta-row{font-size:.57rem}
+    .genealogy-toolbar{width:calc(54vw - 21px)}
+    .compact-header .view-tabs{display:contents}
+    .compact-header .node-search{display:none}
+    .compact-header .view-mode-switch{height:38px}
+    .genealogy-toolbar .shared-auth{
+      position:static;height:38px;transform:none
+    }
+    .schoolnav-shell{height:38px}
+    .schoolnav #snav{height:30px}
+    .schoolnav .snav{height:30px;padding:5px 8px}
+  }
+  @media(max-width:520px){
+    .genealogy-brand{width:42vw}
+    .genealogy-brand .meta-row{display:none}
+    .genealogy-toolbar{width:calc(58vw - 21px)}
+    .shared-auth .appsHomeLink{display:none}
+  }
+</style>
+</head>
+<body class="sub-locked">
+<section class="subscription-gate" id="subscriptionGate" role="dialog" aria-modal="true" aria-labelledby="subscriptionTitle" aria-hidden="true">
+  <div class="subscription-card">
+    <button class="subscription-close" id="subscriptionClose" type="button" aria-label="Cerrar">×</button>
+    <div class="subscription-main">
+      <div class="subscription-lock" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>
+      </div>
+      <p class="subscription-eyebrow">Biblioteca clínica</p>
+      <h1 class="subscription-title" id="subscriptionTitle">Fichas <em>completas</em></h1>
+      <p class="subscription-text" id="subscriptionText">Las fichas completas de los modelos son contenido para suscriptores.</p>
+      <div class="subscription-actions">
+        <button class="subscription-button" id="subscriptionLoginButton" type="button" hidden>Entrar</button>
+        <button class="subscription-button" id="subscriptionCheckoutButton" type="button" hidden>Suscribirse</button>
+        <button class="subscription-button secondary" id="subscriptionBack" type="button">Volver a la genealogía</button>
+      </div>
+      <p class="subscription-status" id="subscriptionStatus" role="alert" aria-live="polite"></p>
+    </div>
+    <div class="subscription-aside" aria-hidden="true">
+      <div class="subscription-plan"><strong>9,95 €/mes</strong><small>Acceso compartido · Cancela cuando quieras</small></div>
+    </div>
+  </div>
+</section>
+<header class="compact-header"><div class="wrap">
+  <div class="genealogy-brand">
+    <div class="compact-title">Genealogía de la <em>Psicoterapia</em></div>
+    <div class="meta-row">
+      <span id="brandStats"><b>Modelos y vínculos</b> · cargando…</span>
+    </div>
+  </div>
+  <div class="genealogy-toolbar">
+    <div class="view-tabs">
+      <label class="node-search" for="nodeSearchInput">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input id="nodeSearchInput" type="search" placeholder="Buscar modelo…" aria-label="Buscar modelo en vista nodos" autocomplete="off">
+      </label>
+      <div class="view-mode-switch" role="group" aria-label="Visualización">
+        <span class="view-mode-title">Modo</span>
+        <div class="view-mode-buttons">
+          <button class="view-tab active" id="genealogyViewOpen" type="button" aria-pressed="true">Genealogía</button>
+          <button class="view-tab" id="nodeViewOpen" type="button" aria-pressed="false">Red</button>
+        </div>
+      </div>
+    </div>
+    <nav class="schoolnav" aria-label="Escuelas de psicoterapia">
+      <div class="schoolnav-shell" id="schoolnavShell">
+        <button class="schoolnav-arrow" id="schoolnavPrev" type="button" aria-label="Ver escuelas anteriores">‹</button>
+        <div class="schoolnav-viewport" id="schoolnavViewport"><div id="snav"></div></div>
+        <button class="schoolnav-arrow" id="schoolnavNext" type="button" aria-label="Ver escuelas siguientes">›</button>
+      </div>
+    </nav>
+    <div class="shared-auth" aria-label="Cuenta">
+      <a class="appsHomeLink" href="https://apps.tumentorpsicologia.com/" aria-label="Ir a Home">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 11.5 12 4l8 7.5M6 10v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>Home</span>
+      </a>
+      <span class="shared-auth-email" id="sharedAuthEmail" hidden></span>
+      <button class="shared-auth-btn" id="sharedLoginButton" type="button">Entrar</button>
+      <button class="shared-auth-btn" id="sharedLogoutButton" type="button" hidden>Salir</button>
+    </div>
+  </div>
+</div></header>
+<div class="atlas-shell">
+  <main id="main">
+    <div class="atlas-world" id="atlasWorld"></div>
+    <footer class="atlas-footer"><div class="wrap" style="display:flex;justify-content:space-between;width:100%;flex-wrap:wrap;gap:14px">
+      <span>Mentor · Psicología</span><span>Genealogía de modelos — Árboles por escuela</span>
+    </div></footer>
+  </main>
+  <div class="axis-viewport" aria-hidden="true"><svg class="global-year-axis" id="globalYearAxis"></svg></div>
+  <div class="minimap-wrap" aria-label="Minimapa del atlas">
+    <svg class="minimap" id="minimap" preserveAspectRatio="none"></svg>
+  </div>
+  <nav class="atlas-zoom" aria-label="Controles de zoom">
+    <button id="atlasZoomIn" type="button" aria-label="Acercar">+</button>
+    <button id="atlasZoomOut" type="button" aria-label="Alejar">−</button>
+  </nav>
+  <section class="node-view-overlay" id="nodeViewOverlay" aria-hidden="true" aria-label="Vista global de nodos">
+    <iframe class="node-view-frame" id="nodeViewFrame" title="Atlas global de nodos" ></iframe>
+<template id="atlasDocumentTemplate">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas global de la psicoterapia — Escuelas, años e influencias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171c; --ink:#e8e3d8; --ink-soft:#b4aea0; --ink-mute:#7d786c;
+    --gold:#d4a24e; --gold-bright:#e0b867; --line:rgba(232,227,216,.14); --panel:#1b2027;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:'Inter',-apple-system,'Segoe UI',sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1320px;margin:0 auto;padding:0 28px}
+
+  header{padding:54px 0 26px;border-bottom:1px solid var(--line)}
+  .eyebrow{font-family:'Archivo',sans-serif;font-weight:600;font-size:.72rem;
+    letter-spacing:.42em;text-transform:uppercase;color:var(--gold);
+    display:flex;align-items:center;gap:18px}
+  .eyebrow::before{content:"";width:46px;height:1px;background:var(--gold)}
+  h1{font-weight:500;font-size:clamp(2.5rem,6.5vw,5rem);line-height:.96;
+    letter-spacing:-.02em;margin:.3em 0 .24em}
+  h1 em{font-style:italic;color:var(--gold-bright);font-weight:400}
+  .standfirst{max-width:70ch;font-size:clamp(1rem,2vw,1.14rem);color:var(--ink-soft);font-weight:300}
+  .meta-row{margin-top:22px;display:flex;flex-wrap:wrap;gap:12px 34px;
+    font-family:'Archivo',sans-serif;font-size:.72rem;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--ink-mute)}
+  .meta-row b{color:var(--ink);font-weight:600}
+
+  .schoolbar-sentinel{height:1px;margin-bottom:-1px;pointer-events:none}
+  .schoolbar{position:sticky;top:0;z-index:45;background:rgba(13,12,11,.96);
+    border-bottom:1px solid var(--line);backdrop-filter:blur(12px);transition:box-shadow .2s}
+  .schoolbar.is-stuck{box-shadow:0 12px 28px rgba(0,0,0,.38)}
+  .toolbar{display:flex;gap:10px 18px;align-items:center;padding:16px 0;min-width:0}
+  .legend{display:flex;flex-wrap:nowrap;gap:7px;min-width:0;overflow-x:auto;
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+  .legend::-webkit-scrollbar{height:3px}
+  .legend::-webkit-scrollbar-thumb{background:var(--line)}
+  .lg{font-family:'Archivo',sans-serif;font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;
+    padding:6px 11px;border:1px solid var(--line);border-radius:18px;cursor:pointer;color:var(--ink-soft);
+    display:flex;align-items:center;gap:7px;white-space:nowrap;background:none;transition:.16s;user-select:none}
+  .lg .sw{width:9px;height:9px;border-radius:50%}
+  .lg[aria-pressed="false"]{opacity:.34}
+  .spacer{flex:1;min-width:0}
+  .search{position:relative;flex:0 0 auto;width:0;opacity:0;overflow:hidden;
+    pointer-events:none;transition:width .22s ease,opacity .18s ease}
+  .schoolbar.is-stuck .search{width:42px;opacity:1;pointer-events:auto}
+  .schoolbar.is-stuck .search:focus-within{width:230px}
+  .search input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);
+    font-family:'Spectral',serif;font-size:.95rem;padding:9px 12px 9px 40px;border-radius:2px;outline:none;
+    height:40px;cursor:pointer}
+  .search input::placeholder{color:transparent}
+  .search:focus-within input{cursor:text}
+  .search:focus-within input::placeholder{color:var(--ink-mute)}
+  .search input:focus{border-color:var(--gold)}
+  .search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;
+    stroke:var(--ink-mute);fill:none;stroke-width:2;pointer-events:none}
+
+  .graphwrap{position:relative;border-bottom:1px solid var(--line)}
+  #graph{display:block;width:100%;touch-action:pan-y;cursor:default}
+  .ghint{padding:10px 0 0;font-family:'Archivo',sans-serif;font-size:.7rem;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--ink-mute)}
+
+  .edge{fill:none;transition:stroke-opacity .2s, stroke-width .2s}
+  .edge.cross{stroke-dasharray:none}
+  .edge.faded{stroke-opacity:.05 !important}
+  .edge.lit{stroke-width:1.8 !important;stroke-opacity:.92 !important}
+
+  .gnode{cursor:pointer;outline:none}
+  .gnode:focus,.gnode:focus-visible{outline:none}
+  .gnode circle{transform-box:fill-box;transform-origin:center;
+    transition:transform .25s cubic-bezier(.34,1.4,.5,1),filter .3s ease,stroke .2s ease}
+  .gnode .node-halo{fill:none;stroke:rgba(255,255,255,.14);stroke-width:3.5;pointer-events:none}
+  .gnode .node-dot{stroke:rgba(10,12,15,.85);stroke-width:1.5;
+    filter:drop-shadow(0 0 4px var(--node-color)) drop-shadow(0 2px 2px rgba(0,0,0,.4))}
+  .gnode:hover circle,.gnode:focus-visible circle{transform:scale(1.35)}
+  .gnode:hover .node-halo,.gnode:focus-visible .node-halo{stroke:rgba(255,255,255,.35);stroke-width:4}
+  .gnode:hover .node-dot,.gnode:focus-visible .node-dot{
+    filter:drop-shadow(0 0 7px var(--node-color)) drop-shadow(0 3px 3px rgba(0,0,0,.45))}
+  .gnode.faded{opacity:.16}
+  .gnode.lit .node-halo{stroke:rgba(255,255,255,.72);stroke-width:4}
+  .gnode.lit .node-dot{stroke:rgba(255,255,255,.92);stroke-width:1.5}
+  .nlabel{font-family:'Spectral',serif;font-size:11px;fill:var(--ink);opacity:0;
+    pointer-events:none;transition:opacity .15s}
+  .gnode.lit .nlabel, .gnode.showlabel .nlabel{opacity:1}
+  .colhead{font-family:'Archivo',sans-serif;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+  .axis-line{stroke:var(--line);stroke-width:1}
+  .axis-label{font-family:'Archivo',sans-serif;font-size:10px;letter-spacing:.06em;fill:var(--ink-mute)}
+
+  /* detail panel */
+  .scrim{position:fixed;inset:0;background:rgba(8,7,6,.6);z-index:55;opacity:0;pointer-events:none;transition:.3s}
+  .scrim.show{opacity:1;pointer-events:auto}
+  .detail{position:fixed;top:0;right:0;height:100%;width:min(430px,93vw);background:var(--panel);
+    border-left:1px solid var(--line);z-index:60;transform:translateX(100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:30px 28px 60px;
+    box-shadow:-20px 0 60px rgba(0,0,0,.5)}
+  .detail.open{transform:translateX(0)}
+  .detail .close{position:absolute;top:16px;right:20px;font-size:1.5rem;color:var(--ink-mute);cursor:pointer;background:none;border:none}
+  .dfam{font-family:'Archivo',sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;
+    display:flex;align-items:center;gap:9px;margin-bottom:14px}
+  .dfam .sw{width:12px;height:12px;border-radius:50%}
+  .detail h3{font-weight:500;font-size:1.55rem;line-height:1.14;margin-bottom:6px}
+  .dmeta{font-family:'Archivo',sans-serif;font-size:.78rem;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:4px}
+  .dmeta b{color:var(--gold)}
+  .dgroup{margin-top:22px}
+  .dgroup h4{font-family:'Archivo',sans-serif;font-weight:600;font-size:.68rem;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--ink-mute);margin-bottom:11px;display:flex;align-items:center;gap:9px}
+  .dgroup h4::after{content:"";flex:1;height:1px;background:var(--line)}
+  .dlist{list-style:none;display:flex;flex-direction:column;gap:2px}
+  .dlist li{font-size:.97rem;color:var(--ink-soft);padding:7px 10px;border-radius:3px;cursor:pointer;
+    border-left:2px solid transparent;transition:.15s;display:flex;align-items:center;gap:9px}
+  .dlist li:hover{background:var(--bg);color:var(--ink)}
+  .dlist li .sw{width:8px;height:8px;border-radius:50%;flex:none}
+  .dempty{font-style:italic;color:var(--ink-mute);font-size:.92rem}
+
+  footer{border-top:1px solid var(--line);padding:28px 0 70px;font-family:'Archivo',sans-serif;
+    font-size:.72rem;letter-spacing:.1em;color:var(--ink-mute);text-transform:uppercase;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  h1,.detail h3{font-family:'Instrument Serif',Georgia,'Times New Roman',serif;font-weight:400}
+  .eyebrow,.meta-row,.lg,.search input,.ghint,.colhead,.axis-label,.dfam,.dmeta,.dgroup h4,footer{
+    font-family:'Inter',-apple-system,'Segoe UI',sans-serif}
+  .nlabel{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;font-weight:500}
+  body{background-color:var(--bg);background-image:radial-gradient(ellipse 120% 105% at 50% 42%,transparent 55%,rgba(0,0,0,.16) 100%)}
+  .schoolbar{background:rgba(24,28,35,.86);border-color:var(--line);backdrop-filter:blur(14px) saturate(1.1)}
+  .lg,.search input{border-radius:10px}
+  .search input{background:rgba(24,28,35,.86);border-color:var(--line)}
+  .search input:focus{box-shadow:0 0 0 2px rgba(212,162,78,.65)}
+  .detail{background:var(--panel);border-color:var(--line);box-shadow:-18px 0 50px rgba(0,0,0,.45)}
+  @media(max-width:680px){
+    header{padding:38px 0 22px}
+    .wrap{padding-left:16px;padding-right:16px}
+    .toolbar{gap:8px;padding:11px 0}
+    .schoolbar.is-stuck .search:focus-within{width:min(210px,52vw)}
+  }
+</style>
+
+<header><div class="wrap">
+  <div class="eyebrow">Atlas global · Escuelas de la psicoterapia</div>
+  <h1>Un siglo de <em>influencias</em></h1>
+  <p class="standfirst">Las diez escuelas en un mismo lienzo: cada columna es una escuela con su color, la altura marca el año, y cada línea es una influencia declarada entre dos modelos. Las que se quedan dentro de una columna son linajes internos; las que cruzan de una columna a otra son los préstamos entre tradiciones. Toca un nodo para encender sus influencias.</p>
+  <div class="meta-row">
+    <span><b id="tmModels">—</b> modelos</span><span><b id="tmSchools">—</b> escuelas</span>
+    <span><b id="tmEdges">—</b> influencias</span><span id="tmYears">—</span>
+  </div>
+</div></header>
+
+<div class="schoolbar-sentinel" id="schoolbar-sentinel" aria-hidden="true"></div>
+<div class="schoolbar" id="schoolbar">
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="legend" id="legend"></div>
+      <div class="spacer"></div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        <input id="q" type="search" placeholder="Buscar modelo…" aria-label="Buscar modelo" autocomplete="off">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="graphwrap"><div class="wrap" style="max-width:none;padding:0">
+  <div style="overflow-x:auto;overflow-y:hidden">
+    <svg id="graph"></svg>
+  </div>
+</div></div>
+<div class="wrap"><div class="ghint" id="ghint">Tamaño del nodo = nº de influencias que ejerce · líneas dentro de una columna = linaje interno · arcos entre columnas = influencia entre escuelas · pasa o toca un nodo para aislarlo</div></div>
+
+<footer><div class="wrap" style="display:flex;justify-content:space-between;width:100%;flex-wrap:wrap;gap:14px">
+  <span>Mentor · Psicología</span><span>Atlas global — Escuelas, años e influencias</span>
+</div></footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="detail" id="detail" aria-hidden="true">
+  <button class="close" id="dclose" aria-label="Cerrar">×</button>
+  <div id="dbody"></div>
+</aside>
+
+<script id="data" type="application/json">__GENEALOGY_DATA__</script>
+<script>
+
+const D=JSON.parse(document.getElementById('data').textContent);
+{
+  const totalModels=D.schools.reduce((a,s)=>a+s.nodes.length,0);
+  const years=D.schools.flatMap(s=>s.nodes.map(n=>n.year).filter(Boolean));
+  document.getElementById('tmModels').textContent=totalModels;
+  document.getElementById('tmSchools').textContent=D.schools.length;
+  document.getElementById('tmEdges').textContent=D.edges.length;
+  document.getElementById('tmYears').innerHTML='<b>'+(Math.floor(Math.min(...years)/10)*10)+'</b>–'+Math.max(...years);
+}
+const FALLBACK=D.fallback;
+const SCHOOLS=D.schools;
+const EDGES=D.edges||[];
+const colorOf={}; SCHOOLS.forEach(s=>colorOf[s.id]=s.color||FALLBACK);
+const labelOf={}; SCHOOLS.forEach(s=>labelOf[s.id]=s.label);
+const ALL={}; SCHOOLS.forEach(s=>s.nodes.forEach(n=>{n._school=s.id; ALL[n.id]=n;}));
+
+/* out-degree = número de influencias salientes (descendientes), intra + cruzadas */
+const outDeg={}; Object.keys(ALL).forEach(id=>outDeg[id]=0);
+EDGES.forEach(e=>{ if(outDeg[e.from]!==undefined) outDeg[e.from]++; });
+let maxOut=0; Object.values(outDeg).forEach(v=>maxOut=Math.max(maxOut,v));
+// radio: escala con raíz cuadrada para que los hubs no dominen en exceso
+const R_MIN=3, R_MAX=13;
+function radiusOf(id){
+  const d=outDeg[id]||0;
+  if(maxOut===0) return R_MIN;
+  return R_MIN + (R_MAX-R_MIN)*Math.sqrt(d/maxOut);
+}
+
+/* ---------- geometry ---------- */
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('graph');
+const COLW=176, PADL=64, PADT=80, PADB=40;
+const yMin=1890, yMax=2022, PXY=12;            // px per year
+const yToPx=y=>PADT+((y||yMin)-yMin)*PXY;
+const Hsvg=PADT+(yMax-yMin)*PXY+PADB;
+const Wsvg=PADL+SCHOOLS.length*COLW+40;
+svg.setAttribute('viewBox',`0 0 ${Wsvg} ${Hsvg}`);
+svg.setAttribute('width',Wsvg); svg.setAttribute('height',Hsvg);
+
+// x center of each school column
+const colX={}; SCHOOLS.forEach((s,i)=>colX[s.id]=PADL+i*COLW+COLW/2);
+
+/* place nodes: x spread across the lane by vertical proximity, y = year */
+SCHOOLS.forEach(s=>{
+  const LANE=COLW-22;                 // usable horizontal width inside the column
+  const cx=colX[s.id];
+  s.nodes.forEach(n=>{ n._r=radiusOf(n.id); });   // precompute radii for spacing
+  // sort by year so we can detect vertically-close clusters
+  const sorted=[...s.nodes].sort((a,b)=>(a.year||0)-(b.year||0));
+  sorted.forEach(n=>{ n._y=yToPx(n.year); });
+  // cluster nodes that are vertically close enough to risk overlap (radius-aware)
+  let i=0;
+  while(i<sorted.length){
+    let j=i+1;
+    while(j<sorted.length){
+      const need=sorted[j-1]._r+sorted[j]._r+4;     // min vertical gap to not touch
+      if((sorted[j]._y - sorted[j-1]._y) < need) j++; else break;
+    }
+    const cluster=sorted.slice(i,j);
+    const m=cluster.length;
+    if(m===1){
+      cluster[0]._x=cx;
+    }else{
+      // step must clear the two largest neighbouring radii
+      const maxR=Math.max(...cluster.map(n=>n._r));
+      const step=Math.min(2*maxR+6, LANE/(m-1));
+      const totalW=step*(m-1);
+      cluster.forEach((n,k)=>{ n._x=cx - totalW/2 + k*step; });
+    }
+    i=j;
+  }
+});
+
+/* ---------- axis + headers ---------- */
+const gAxis=document.createElementNS(NS,'g'); svg.appendChild(gAxis);
+for(let y=1890;y<=2020;y+=10){
+  const py=yToPx(y);
+  const ln=document.createElementNS(NS,'line');
+  ln.setAttribute('x1',PADL-14); ln.setAttribute('x2',Wsvg-10);
+  ln.setAttribute('y1',py); ln.setAttribute('y2',py);
+  ln.setAttribute('class','axis-line'); gAxis.appendChild(ln);
+  const t=document.createElementNS(NS,'text');
+  t.setAttribute('x',PADL-18); t.setAttribute('y',py+3.5); t.setAttribute('text-anchor','end');
+  t.setAttribute('class','axis-label'); t.textContent=y; gAxis.appendChild(t);
+}
+// column headers + faint lane separators
+SCHOOLS.forEach((s,i)=>{
+  const x=colX[s.id];
+  const sep=document.createElementNS(NS,'line');
+  sep.setAttribute('x1',PADL+i*COLW); sep.setAttribute('x2',PADL+i*COLW);
+  sep.setAttribute('y1',PADT-30); sep.setAttribute('y2',Hsvg-PADB+10);
+  sep.setAttribute('stroke','var(--line)'); sep.setAttribute('stroke-width','1'); sep.setAttribute('opacity','.5');
+  gAxis.appendChild(sep);
+  const head=document.createElementNS(NS,'text');
+  head.setAttribute('x',x); head.setAttribute('y',PADT-46); head.setAttribute('text-anchor','middle');
+  head.setAttribute('class','colhead'); head.setAttribute('fill',s.color||FALLBACK);
+  head.setAttribute('font-size','12.5'); head.textContent=s.label.toUpperCase();
+  gAxis.appendChild(head);
+  const cnt=document.createElementNS(NS,'text');
+  cnt.setAttribute('x',x); cnt.setAttribute('y',PADT-30); cnt.setAttribute('text-anchor','middle');
+  cnt.setAttribute('class','axis-label'); cnt.textContent=s.nodes.length+' modelos';
+  gAxis.appendChild(cnt);
+});
+
+/* ---------- edges ---------- */
+const gEdges=document.createElementNS(NS,'g'); svg.appendChild(gEdges);
+const edgeEls=[];
+function edgePath(a,b){
+  const x1=a._x,y1=a._y,x2=b._x,y2=b._y;
+  if(a._school===b._school){
+    // gentle vertical curve within a lane
+    const mx=(x1+x2)/2+ (Math.abs(x1-x2)<2? 22:0);
+    return `M ${x1} ${y1} C ${mx} ${(y1+y2)/2}, ${mx} ${(y1+y2)/2}, ${x2} ${y2}`;
+  }
+  // cross-school: bow outward between columns
+  const my=(y1+y2)/2;
+  const dx=(x2-x1);
+  const cx1=x1+dx*0.18, cx2=x2-dx*0.18;
+  return `M ${x1} ${y1} C ${cx1} ${my}, ${cx2} ${my}, ${x2} ${y2}`;
+}
+EDGES.forEach(e=>{
+  const a=ALL[e.from], b=ALL[e.to]; if(!a||!b) return;
+  const cross=(e.fromS!==e.toS);
+  const p=document.createElementNS(NS,'path');
+  p.setAttribute('d',edgePath(a,b));
+  p.setAttribute('class','edge'+(cross?' cross':''));
+  p.setAttribute('stroke', cross? 'var(--ink-mute)' : colorOf[e.fromS]);
+  p.setAttribute('stroke-width', cross? .7 : .9);
+  p.setAttribute('stroke-opacity', cross? .16 : .34);
+  p.dataset.from=e.from; p.dataset.to=e.to; p.dataset.cross=cross?'1':'0';
+  gEdges.appendChild(p); edgeEls.push(p);
+});
+
+/* ---------- nodes ---------- */
+const gNodes=document.createElementNS(NS,'g'); svg.appendChild(gNodes);
+const nodeEls={};
+SCHOOLS.forEach(s=>s.nodes.forEach(n=>{
+  const g=document.createElementNS(NS,'g'); g.setAttribute('class','gnode'); g.dataset.id=n.id;
+  g.setAttribute('tabindex','0'); g.setAttribute('role','button');
+  g.setAttribute('aria-label',`${n.label}${n.year?` · ${n.year}`:''}`);
+  const r=radiusOf(n.id);
+  n._r=r;
+  const halo=document.createElementNS(NS,'circle');
+  halo.setAttribute('class','node-halo');
+  halo.setAttribute('cx',n._x); halo.setAttribute('cy',n._y); halo.setAttribute('r',r);
+  g.appendChild(halo);
+  const c=document.createElementNS(NS,'circle');
+  c.setAttribute('class','node-dot');
+  c.setAttribute('cx',n._x); c.setAttribute('cy',n._y); c.setAttribute('r',r);
+  c.setAttribute('fill', colorOf[s.id]); c.style.setProperty('--node-color',colorOf[s.id]);
+  g.appendChild(c);
+  const t=document.createElementNS(NS,'text');
+  const onRight = colX[s.id] < (PADL+SCHOOLS.length*COLW/ -1 + Wsvg); // always place to right except last cols
+  const lastCols = SCHOOLS.slice(-2).map(x=>x.id);
+  const left = lastCols.includes(s.id);
+  t.setAttribute('x', n._x+(left?-(r+5):(r+5))); t.setAttribute('y', n._y+3.5);
+  t.setAttribute('text-anchor', left?'end':'start');
+  t.setAttribute('class','nlabel'); t.textContent=(n.tl||n.label);
+  g.appendChild(t);
+  g.addEventListener('mouseenter',()=>focusNode(n.id,false));
+  g.addEventListener('mouseleave',()=>{ if(!pinned) clearFocus(); });
+  g.addEventListener('click',()=>{ pinned=n.id; focusNode(n.id,true); openDetail(n.id); });
+  g.addEventListener('keydown',event=>{
+    if(event.key!=='Enter'&&event.key!==' ') return;
+    event.preventDefault(); pinned=n.id; focusNode(n.id,true); openDetail(n.id);
+  });
+  gNodes.appendChild(g); nodeEls[n.id]=g;
+}));
+
+/* ---------- focus / highlight ---------- */
+let pinned=null;
+function focusNode(id,pin){
+  const near=new Set([id]);
+  edgeEls.forEach(p=>{
+    const hit=(p.dataset.from===id||p.dataset.to===id);
+    p.classList.toggle('lit',hit);
+    p.classList.toggle('faded',!hit);
+    if(hit){ near.add(p.dataset.from); near.add(p.dataset.to); }
+  });
+  Object.entries(nodeEls).forEach(([nid,g])=>{
+    const on=near.has(nid);
+    g.classList.toggle('faded',!on);
+    g.classList.toggle('lit',nid===id);
+    g.classList.toggle('showlabel',on);
+  });
+}
+function clearFocus(){
+  edgeEls.forEach(p=>p.classList.remove('lit','faded'));
+  Object.values(nodeEls).forEach(g=>g.classList.remove('faded','lit','showlabel'));
+}
+
+/* ---------- legend toggles (filter schools) ---------- */
+const active=new Set(SCHOOLS.map(s=>s.id));
+const legend=document.getElementById('legend');
+SCHOOLS.forEach(s=>{
+  const b=document.createElement('button'); b.className='lg'; b.setAttribute('aria-pressed','true');
+  b.innerHTML=`<span class="sw" style="background:${s.color||FALLBACK}"></span>${s.label}`;
+  b.onclick=()=>{
+    if(active.has(s.id)) active.delete(s.id); else active.add(s.id);
+    if(active.size===0) SCHOOLS.forEach(x=>active.add(x.id));
+    b.setAttribute('aria-pressed', active.has(s.id)?'true':'false');
+    applyFilter();
+  };
+  legend.appendChild(b);
+});
+function applyFilter(){
+  Object.entries(nodeEls).forEach(([id,g])=>{
+    g.style.display = active.has(ALL[id]._school)?'':'none';
+  });
+  edgeEls.forEach(p=>{
+    const show=active.has(ALL[p.dataset.from]._school)&&active.has(ALL[p.dataset.to]._school);
+    p.style.display=show?'':'none';
+  });
+}
+
+/* ---------- search ---------- */
+const schoolbar=document.getElementById('schoolbar');
+const schoolbarSentinel=document.getElementById('schoolbar-sentinel');
+const stickyObserver=new IntersectionObserver(([entry])=>{
+  schoolbar.classList.toggle('is-stuck',!entry.isIntersecting);
+},{threshold:0,rootMargin:'-1px 0px 0px 0px'});
+stickyObserver.observe(schoolbarSentinel);
+
+const q=document.getElementById('q');
+q.addEventListener('input',()=>{
+  const v=q.value.trim().toLowerCase();
+  if(!v){ clearFocus(); pinned=null; return; }
+  let first=null;
+  Object.entries(nodeEls).forEach(([id,g])=>{
+    const hit=ALL[id].label.toLowerCase().includes(v);
+    g.classList.toggle('faded',!hit);
+    g.classList.toggle('showlabel',hit);
+    if(hit&&!first)first=id;
+  });
+  edgeEls.forEach(p=>p.classList.add('faded'));
+});
+
+/* ---------- detail panel ---------- */
+const detail=document.getElementById('detail'), scrim=document.getElementById('scrim');
+function relativesOf(id){
+  const n=ALL[id];
+  const inAsc=EDGES.filter(e=>e.to===id), outDesc=EDGES.filter(e=>e.from===id);
+  const uniq=a=>[...new Set(a)];
+  return {
+    heredaDe:uniq(inAsc.filter(e=>e.fromS===n._school).map(e=>e.from)),
+    daOrigen:uniq(outDesc.filter(e=>e.toS===n._school).map(e=>e.to)),
+    inbound:uniq(inAsc.filter(e=>e.fromS!==n._school).map(e=>e.from)),
+    outbound:uniq(outDesc.filter(e=>e.toS!==n._school).map(e=>e.to))
+  };
+}
+function li(id){ const m=ALL[id]; if(!m)return '';
+  return `<li data-go="${id}"><span class="sw" style="background:${colorOf[m._school]}"></span>${m.label}${m.year?` · ${m.year}`:''}</li>`; }
+function listOr(a){ return a.length? '<ul class="dlist">'+a.map(li).join('')+'</ul>':'<p class="dempty">Sin enlaces registrados.</p>'; }
+ function openDetail(id){
+  if(window.parent!==window){
+    window.parent.postMessage({type:'genealogy:open-detail',id},'*');
+    return;
+  }
+  const n=ALL[id], col=colorOf[n._school], R=relativesOf(id);
+  document.getElementById('dbody').innerHTML=`
+    <div class="dfam"><span class="sw" style="background:${col}"></span>${labelOf[n._school]}</div>
+    <h3>${n.label}</h3>
+    <div class="dmeta"><b>${n.year||'s. f.'}</b>${n.aut?' · '+n.aut:''}</div>
+    ${n.pais?`<div class="dmeta">${n.pais}</div>`:''}
+    <div class="dgroup"><h4>Hereda de · ${R.heredaDe.length}</h4>${listOr(R.heredaDe)}</div>
+    <div class="dgroup"><h4>Da origen a · ${R.daOrigen.length}</h4>${listOr(R.daOrigen)}</div>
+    <div class="dgroup"><h4>Influido por otras escuelas · ${R.inbound.length}</h4>${listOr(R.inbound)}</div>
+    <div class="dgroup"><h4>Influye en otras escuelas · ${R.outbound.length}</h4>${listOr(R.outbound)}</div>`;
+  document.querySelectorAll('#dbody [data-go]').forEach(el=>el.onclick=()=>{ pinned=el.dataset.go; focusNode(el.dataset.go,true); openDetail(el.dataset.go);
+    const g=nodeEls[el.dataset.go]; if(g) g.scrollIntoView({block:'center',inline:'center',behavior:'smooth'}); });
+  detail.classList.add('open'); detail.setAttribute('aria-hidden','false'); scrim.classList.add('show');
+}
+ function closeDetail(){
+  if(window.parent!==window){
+    window.parent.postMessage({type:'genealogy:close-detail'},'*');
+    return;
+  }
+  detail.classList.remove('open'); scrim.classList.remove('show');
+  detail.setAttribute('aria-hidden','true'); pinned=null; clearFocus(); }
+document.getElementById('dclose').onclick=closeDetail;
+scrim.onclick=closeDetail;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDetail();});
+svg.addEventListener('click',e=>{ if(e.target===svg||e.target.closest('.gnode')===null){ if(pinned){pinned=null;clearFocus();} }});
+
+</script>
+</template>
+  </section>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="detail" id="detail" role="dialog" aria-modal="false" aria-label="Detalle del modelo" aria-hidden="true">
+  <div class="detail-bar" id="detailBar"></div>
+  <button class="close" id="dclose" aria-label="Cerrar">×</button>
+  <div class="detail-scroll" id="detailScroll"><div id="dbody"></div></div>
+</aside>
+
+<div class="ficha-modal" id="fichaPanel" role="dialog" aria-modal="true" aria-label="Ficha completa del modelo" aria-hidden="true">
+  <div class="ficha-shell">
+    <div class="ficha-head">
+      <span class="ficha-title" id="fichaTitle"></span>
+      <div class="ficha-btns">
+        <button class="ficha-btn" id="fichaExternal" type="button" title="Abrir en pestaña nueva">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg>
+          <span>Pestaña nueva</span>
+        </button>
+        <button class="ficha-btn" id="fichaClose" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          <span>Cerrar</span>
+        </button>
+      </div>
+    </div>
+    <div class="ficha-body">
+      <iframe class="ficha-frame" id="fichaFrame" title="Ficha del modelo"></iframe>
+      <div class="ficha-loading" id="fichaLoading">Abriendo ficha…</div>
+    </div>
+  </div>
+</div>
+
+<div class="auth-modal" id="sharedAuthModal" role="dialog" aria-modal="true" aria-labelledby="sharedAuthTitle" aria-hidden="true">
+  <section class="auth-card">
+    <div class="auth-head">
+      <div>
+        <p class="auth-kicker">Área privada</p>
+        <h2 id="sharedAuthTitle">Acceso</h2>
+        <p class="auth-copy" id="sharedAuthCopy">El acceso se comparte entre las apps de Tu Mentor Psicología.</p>
+      </div>
+      <button class="auth-close" id="sharedAuthClose" type="button" aria-label="Cerrar">×</button>
+    </div>
+    <form class="auth-form" id="sharedAuthForm">
+      <label class="auth-field" id="sharedEmailField">Email
+        <input id="sharedAuthEmailInput" name="email" type="email" autocomplete="email" required>
+      </label>
+      <label class="auth-field" id="sharedPasswordField"><span id="sharedPasswordLabel">Contraseña</span>
+        <input id="sharedAuthPassword" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <label class="auth-field auth-hidden" id="sharedPasswordRepeatField">Repetir nueva contraseña
+        <input id="sharedAuthPasswordRepeat" name="password_repeat" type="password" autocomplete="new-password">
+      </label>
+      <button class="auth-submit" id="sharedAuthSubmit" type="submit">Entrar</button>
+      <div class="auth-links">
+        <button class="auth-link" id="sharedCreateAccount" type="button">Crear cuenta</button>
+        <button class="auth-link" id="sharedForgotPassword" type="button">¿Has olvidado tu contraseña?</button>
+        <button class="auth-link auth-hidden" id="sharedBackToLogin" type="button">Volver al inicio de sesión</button>
+      </div>
+    </form>
+    <div class="auth-message" id="sharedAuthMessage" role="alert"></div>
+  </section>
+</div>
+
+<script id="genealogy-config" type="application/json">{
+ "fallback": "#D9AA3F",
+ "minYear": 1890,
+ "schools": [
+  {
+   "id": "psicoanalisis",
+   "label": "Psicoanálisis",
+   "color": "#4E79A7"
+  },
+  {
+   "id": "conductismo",
+   "label": "Conductismo",
+   "color": "#d69640"
+  },
+  {
+   "id": "cognitivo",
+   "label": "Cognitivo",
+   "color": "#E15759"
+  },
+  {
+   "id": "humanista",
+   "label": "Humanista",
+   "color": "#76B7B2"
+  },
+  {
+   "id": "sistemico",
+   "label": "Sistémico",
+   "color": "#F1CE63"
+  },
+  {
+   "id": "constructivista",
+   "label": "Constructivista",
+   "color": "#B07AA1"
+  },
+  {
+   "id": "integrativo",
+   "label": "Integrativo",
+   "color": "#FF9DA7"
+  },
+  {
+   "id": "transversal",
+   "label": "Transversal",
+   "color": "#5F7F78"
+  },
+  {
+   "id": "fronteras",
+   "label": "Fronteras",
+   "color": "#8D6E63"
+  },
+  {
+   "id": "otros",
+   "label": "Otros",
+   "color": "#f2f2f2"
+  }
+ ],
+ "abreviaturas": {
+  "aba-analisis-conducta-aplicado-1968": "ABA",
+  "terapia-pareja-conductual-tradicional-1979": "TBCT",
+  "pe-prolonged-exposure-1986": "PE",
+  "one-session-treatment-ost-1989": "OST",
+  "manejo-contingencias-adicciones-1994": "CM (adicciones)",
+  "activacion-conductual-jacobson-1996": "BA",
+  "rebt-terapia-racional-emotiva-ellis": "REBT",
+  "cbti-insomnio-cronico": "CBT-I",
+  "pst-solucion-problemas-dzurilla-goldfried-1971": "PST",
+  "sit-inoculacion-estres-meichenbaum-1977": "SIT",
+  "terapia-cognitivo-conductual-estandar-1980": "CBT",
+  "inteligencia-emocional-salovey-mayer-1990": "Inteligencia emocional",
+  "terapia-metacognitiva-wells-1990": "MCT",
+  "functional-analytic-psychotherapy-fap-1991": "FAP",
+  "cognitive-processing-therapy-resick-1992": "CPT",
+  "terapia-dialectico-conductual-linehan-1993": "DBT",
+  "terapia-cognitiva-para-psicosis-cbtp-1994": "CBT-P",
+  "act-hayes-strosahl-wilson-1999": "ACT",
+  "cognitive-therapy-ptsd-ehlers-clark-2000": "C-PTSD",
+  "teoria-marcos-relacionales-rft-hayes-barnesholmes-roche-2001": "RFT",
+  "mbct-segal-williams-teasdale-2002": "MBCT",
+  "preventive-cognitive-therapy-bockting-2005": "PCT",
+  "abbt-roemer-orsillo-2007": "ABBT",
+  "cft-gilbert-2009": "CFT",
+  "inference-based-cbt-aardema-2010": "I-CBT",
+  "unified-protocol-up-barlow-2011": "UP",
+  "rumination-focused-cbt-watkins-2011": "RFCBT",
+  "ruler-yale-emotional-intelligence-2012": "RULER",
+  "ert-mennin-fresco-2013": "ERT",
+  "cbt-inhibicion-miedo-craske-2014": "IL-CBT",
+  "process-based-therapy-hayes-hofmann-2020": "PBT",
+  "h10dasein1943": "Daseinsanalyse",
+  "h19ta64": "TA",
+  "terapia-existencial-humanista-bugental": "Terapia Existencial-Humanista",
+  "terapia-de-la-realidad-1965": "Terapia de la Realidad",
+  "entrevista-motivacional-1983": "Entrevista Motivacional",
+  "eft-greenberg-1990": "EFT",
+  "s13eftp1999": "EFT-C",
+  "aedp-2000": "AEDP",
+  "emotion-focused-skills-training-efst-2016": "EFST",
+  "construccionismo-social-gergen-1985": "Construccionismo social",
+  "modelo-significado-post-trauma-janoff-bulman-1992": "Shattered Assumptions Theory",
+  "polaridades-semanticas": "Polaridades semánticas",
+  "psicoterapia-constructos-personales-integrativa-feixas-villegas-2000": "PCP Integrativa",
+  "terapia-dialogica": "Open Dialogue",
+  "terapia-metacognitiva-interpersonal-mit": "MIT",
+  "modelo-momentos-innovadores-goncalves-2009": "Momentos Innovadores"
+ },
+ "fundacionales": [
+  "condicionamiento-operante-skinner-1938",
+  "programas-refuerzo-ferster-skinner-1957",
+  "principio-premack-1959",
+  "cibernetica-teoria-comunicacion-1956"
+ ]
+}</script>
+<script>
+const INFLUENCE_DATA_PATH='Core/Influencias/modelos_influencias.json';
+const SUPABASE_URL='https://yritadgaurvplltgubii.supabase.co';
+const SUPABASE_ANON_KEY='sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm';
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'tmp-shared-auth-v1'}});
+function proxyDataUrl(filePath){
+  const clean=String(filePath||'').replace(/^\/+/, '').replace(/^data\//, '');
+  return '/api/data?path='+encodeURIComponent(clean);
+}
+async function getSupabaseAccessToken(){
+  const {data}=await supabaseClient.auth.getSession();
+  return data?.session?.access_token||'';
+}
+async function privateProxyFetch(url,options={}){
+  const withToken=async token=>{
+    const headers=new Headers(options.headers||{});
+    if(token) headers.set('Authorization','Bearer '+token);
+    return fetch(url,{...options,headers});
+  };
+  let response=await withToken(await getSupabaseAccessToken());
+  if(response.status!==401) return response;
+  const {data}=await supabaseClient.auth.refreshSession();
+  return data?.session?.access_token?withToken(data.session.access_token):response;
+}
+function influenceId(value){
+  if(value==null) return '';
+  if(typeof value==='string'||typeof value==='number') return String(value).trim();
+  return String(value.id||value.modeloId||value.modelo_id||value.slug||'').trim();
+}
+function influenceList(entry,names){
+  for(const name of names){
+    const value=entry?.[name];
+    if(Array.isArray(value)) return value.map(influenceId).filter(Boolean);
+  }
+  return [];
+}
+/* Si el nombre termina en un paréntesis con pinta de sigla (corto y dominado
+   por mayúsculas: «(DBT)», «(CBT-I)», «(STAIR / ESTAIR)»), se toma como
+   abreviatura del nombre para las etiquetas plegadas. Los paréntesis de autor
+   o de matiz («(Freud)», «(depresión)», «(Open Dialogue)») no cuentan. */
+function abbrevFromLabel(label){
+  const m=/\(([^()]+)\)\s*$/.exec(String(label||''));
+  if(!m)return null;
+  const token=m[1].trim();
+  if(!token||token.length>14)return null;
+  const letters=(token.match(/\p{L}/gu)||[]).length;
+  const uppers=(token.match(/\p{Lu}/gu)||[]).length;
+  return uppers>=2&&letters>0&&uppers/letters>=.6?token:null;
+}
+function normalizeGenealogyData(remote,catalog){
+  if(!Array.isArray(remote)) throw new Error('El JSON de influencias no contiene una lista.');
+  const schools=catalog.schools.map(s=>({...s,nodes:s.nodes.map(n=>({...n}))}));
+  const nodes=new Map(),schoolByNode=new Map();
+  schools.forEach(s=>s.nodes.forEach(n=>{nodes.set(n.id,n);schoolByNode.set(n.id,s.id);}));
+  const records=new Map(remote.map(entry=>[influenceId(entry),entry]).filter(([id])=>id));
+  const relations=new Map();
+  const addRelation=(from,to)=>{
+    if(!from||!to||from===to||!nodes.has(from)||!nodes.has(to)) return;
+    relations.set(from+'__'+to,{from,to,fromS:schoolByNode.get(from),toS:schoolByNode.get(to)});
+  };
+  records.forEach((entry,id)=>{
+    influenceList(entry,['influenciasAscendentes','influencias_ascendentes','ascendentes','influidoPor','antecedentes']).forEach(from=>addRelation(from,id));
+    influenceList(entry,['influenciasDescendentes','influencias_descendentes','descendentes','influyeEn','posteriores']).forEach(to=>addRelation(id,to));
+  });
+  const incoming=new Map();
+  relations.forEach(edge=>{if(!incoming.has(edge.to)) incoming.set(edge.to,[]);incoming.get(edge.to).push(edge.from);});
+  nodes.forEach((node,id)=>{
+    const entry=records.get(id);
+    if(entry?.nombre) node.label=entry.nombre;
+    // sin abreviatura curada en genealogy-config, se intenta derivar del nombre
+    if(!node.tl) node.tl=abbrevFromLabel(node.label);
+    node.asc=incoming.get(id)||[];
+    node.parent=node.asc.find(from=>schoolByNode.get(from)===schoolByNode.get(id))||null;
+  });
+  // Años faltantes en el repo: se infieren de la media de los vecinos; si ningún
+  // vecino tiene año, el nodo se retira del lienzo (la altura codifica el año).
+  const sinAno=[...nodes.values()].filter(n=>!n.year);
+  if(sinAno.length){
+    sinAno.forEach(n=>{
+      const ys=[];
+      relations.forEach(e=>{
+        if(e.from===n.id){const t=nodes.get(e.to);if(t?.year)ys.push(t.year);}
+        if(e.to===n.id){const f=nodes.get(e.from);if(f?.year)ys.push(f.year);}
+      });
+      if(ys.length)n.year=Math.round(ys.reduce((a,b)=>a+b,0)/ys.length);
+    });
+    const dropped=new Set(sinAno.filter(n=>!n.year).map(n=>n.id));
+    if(dropped.size){
+      schools.forEach(s=>{s.nodes=s.nodes.filter(n=>!dropped.has(n.id));});
+      [...relations].forEach(([key,e])=>{if(dropped.has(e.from)||dropped.has(e.to))relations.delete(key);});
+    }
+  }
+  return {fallback:catalog.fallback,schools,edges:[...relations.values()]};
+}
+async function fetchRepoJson(path){
+  const response=await privateProxyFetch(proxyDataUrl(path),{cache:'no-store'});
+  if(!response.ok){
+    const error=new Error('No se pudo cargar '+path+' ('+response.status+').');
+    error.status=response.status;
+    throw error;
+  }
+  return response.json();
+}
+/* El catálogo ya no va incrustado: se reconstruye en cada carga desde
+   Core/escuelas/<id>.json del repo. En el HTML solo queda configuración curada
+   (genealogy-config): orden y colores de escuelas, abreviaturas de nombres de
+   modelos (tl), marcas fundacionales y el corte histórico de 1890. */
+async function buildGenealogyCatalog(){
+  const config=JSON.parse(document.getElementById('genealogy-config').textContent);
+  const files=await Promise.all(config.schools.map(s=>fetchRepoJson('Core/escuelas/'+s.id+'.json')));
+  const fund=new Set(config.fundacionales||[]);
+  const abrev=config.abreviaturas||{};
+  const schools=config.schools.map((s,i)=>({
+    ...s,
+    nodes:(Array.isArray(files[i]?.modelos)?files[i].modelos:[])
+      .filter(m=>m?.id&&(m.year==null||m.year>=config.minYear))
+      .map(m=>({
+        id:String(m.id),
+        label:String(m.label||m.id),
+        tl:abrev[m.id]||null,
+        year:m.year??null,
+        imp:m.importance??2,
+        aut:String(m.autores||''),
+        pais:String(m.pais||''),
+        // sin "tipo" en el repo se asume "modelo": la ficha nunca lo muestra vacío
+        tipo:String(m.tipo||'modelo'),
+        fund:fund.has(m.id)
+      }))
+  }));
+  return {fallback:config.fallback,schools};
+}
+async function loadGenealogyData(){
+  const [remote,catalog]=await Promise.all([
+    fetchRepoJson(INFLUENCE_DATA_PATH),
+    buildGenealogyCatalog()
+  ]);
+  return normalizeGenealogyData(remote,catalog);
+}
+
+const sharedAuthModal=document.getElementById('sharedAuthModal');
+const sharedAuthForm=document.getElementById('sharedAuthForm');
+const sharedAuthTitle=document.getElementById('sharedAuthTitle');
+const sharedAuthCopy=document.getElementById('sharedAuthCopy');
+const sharedEmailField=document.getElementById('sharedEmailField');
+const sharedPasswordField=document.getElementById('sharedPasswordField');
+const sharedPasswordRepeatField=document.getElementById('sharedPasswordRepeatField');
+const sharedPasswordLabel=document.getElementById('sharedPasswordLabel');
+const sharedEmailInput=document.getElementById('sharedAuthEmailInput');
+const sharedPasswordInput=document.getElementById('sharedAuthPassword');
+const sharedPasswordRepeat=document.getElementById('sharedAuthPasswordRepeat');
+const sharedAuthSubmit=document.getElementById('sharedAuthSubmit');
+const sharedCreateAccount=document.getElementById('sharedCreateAccount');
+const sharedForgotPassword=document.getElementById('sharedForgotPassword');
+const sharedBackToLogin=document.getElementById('sharedBackToLogin');
+const sharedAuthMessage=document.getElementById('sharedAuthMessage');
+const sharedLoginButton=document.getElementById('sharedLoginButton');
+const sharedLogoutButton=document.getElementById('sharedLogoutButton');
+const sharedAuthEmail=document.getElementById('sharedAuthEmail');
+const subscriptionGate=document.getElementById('subscriptionGate');
+const subscriptionClose=document.getElementById('subscriptionClose');
+const subscriptionTitle=document.getElementById('subscriptionTitle');
+const subscriptionText=document.getElementById('subscriptionText');
+const subscriptionLoginButton=document.getElementById('subscriptionLoginButton');
+const subscriptionCheckoutButton=document.getElementById('subscriptionCheckoutButton');
+const subscriptionStatus=document.getElementById('subscriptionStatus');
+const GENEALOGY_LOCAL_FULL_ACCESS=['localhost','127.0.0.1','::1',''].includes(location.hostname.toLowerCase());
+let sharedAuthMode='login';
+let subscriptionCheckVersion=0;
+
+/* La suscripción solo limita las fichas completas de los modelos (el iframe de
+   /modelos): el grafo, el detalle y la vista de nodos quedan en abierto.
+   setSubscriptionState actualiza el estado (candados vía body.sub-locked) sin
+   abrir el modal; openSubscriptionGate lo muestra al pedir una ficha sin acceso. */
+function setSubscriptionState(mode='checking',message=''){
+  document.body.classList.toggle('sub-locked',mode!=='active');
+  subscriptionLoginButton.hidden=mode!=='login';
+  subscriptionCheckoutButton.hidden=mode!=='subscribe';
+  subscriptionTitle.innerHTML=mode==='subscribe'?'Acceso <em>premium</em>':'Fichas <em>completas</em>';
+  subscriptionText.textContent=mode==='subscribe'
+    ?'Tu sesión está activa, pero las fichas completas de los modelos requieren suscripción. Actívala para abrirlas.'
+    :mode==='login'?'Las fichas completas de los modelos son contenido para suscriptores. Inicia sesión con tu cuenta de Tu Mentor Psicología para comprobar tu suscripción.'
+    :mode==='checking'?'Comprobando tu acceso a las fichas completas…':'';
+  subscriptionStatus.textContent=message||'';
+  window.HAS_SUBSCRIPTION_ACCESS=mode==='active';
+  if(mode==='active')closeSubscriptionGate();
+  document.dispatchEvent(new CustomEvent('genealogy:subscription',{detail:{mode}}));
+}
+function openSubscriptionGate(){
+  subscriptionGate.classList.add('open');subscriptionGate.setAttribute('aria-hidden','false');
+}
+function closeSubscriptionGate(){
+  subscriptionGate.classList.remove('open');subscriptionGate.setAttribute('aria-hidden','true');
+}
+function showSubscriptionGate(mode='checking',message=''){
+  setSubscriptionState(mode,message);
+  if(mode!=='active')openSubscriptionGate();
+}
+async function getGenealogyBillingStatus(session){
+  if(GENEALOGY_LOCAL_FULL_ACCESS)return {active:true,status:'local_dev'};
+  if(!session?.access_token)return {active:false,status:'no_session'};
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),6500);
+  try{
+    const response=await fetch('/api/billing-status',{headers:{Authorization:'Bearer '+session.access_token},signal:controller.signal});
+    if(!response.ok)return {active:false,status:'inactive'};
+    return response.json();
+  }finally{clearTimeout(timeout);}
+}
+async function applyGenealogySubscription(session){
+  const version=++subscriptionCheckVersion;
+  renderSharedAuth(session);
+  if(GENEALOGY_LOCAL_FULL_ACCESS){setSubscriptionState('active');return;}
+  if(!session){setSubscriptionState('login');return;}
+  // si ya teníamos acceso confirmado, revalida en segundo plano sin tapar la pantalla
+  // (evita el parpadeo del overlay "Comprobando tu acceso…" en cada revalidación de
+  // sesión espuria, p. ej. la que dispara el cliente Supabase del iframe de /modelos,
+  // que comparte storageKey y por tanto localStorage con esta página)
+  const alreadyActive=window.HAS_SUBSCRIPTION_ACCESS===true;
+  if(!alreadyActive) setSubscriptionState('checking');
+  try{
+    const billing=await getGenealogyBillingStatus(session);
+    if(version!==subscriptionCheckVersion)return;
+    setSubscriptionState(billing?.active?'active':'subscribe');
+  }catch(error){
+    if(version!==subscriptionCheckVersion)return;
+    if(alreadyActive)return; // revalidación fallida en segundo plano: no expulsar al usuario
+    setSubscriptionState('subscribe','No se pudo comprobar la suscripción. Inténtalo de nuevo.');
+  }
+}
+async function startGenealogyCheckout(){
+  subscriptionCheckoutButton.disabled=true;subscriptionStatus.textContent='Abriendo Stripe…';
+  try{
+    const {data}=await supabaseClient.auth.getSession();const token=data?.session?.access_token||'';
+    if(!token){setSubscriptionState('login');openGenealogyLogin('login','Inicia sesión para suscribirte.');return;}
+    const response=await fetch('/api/create-checkout-session',{method:'POST',headers:{Authorization:'Bearer '+token}});
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok||!payload.url)throw new Error(payload.error||'No se pudo abrir Stripe Checkout.');
+    location.href=payload.url;
+  }catch(error){subscriptionStatus.textContent=error?.message||'No se pudo abrir Stripe Checkout.';}
+  finally{subscriptionCheckoutButton.disabled=false;}
+}
+
+function sharedResetUrl(){
+  const url=new URL(location.href);url.search='';url.hash='';url.searchParams.set('reset_password','1');return url.href;
+}
+function sharedHasResetParam(){return new URLSearchParams(location.search).get('reset_password')==='1';}
+function setSharedAuthMessage(message='',ok=false){
+  sharedAuthMessage.textContent=message;
+  sharedAuthMessage.classList.toggle('show',!!message);
+  sharedAuthMessage.classList.toggle('ok',!!message&&ok);
+}
+function setSharedAuthMode(mode='login'){
+  sharedAuthMode=mode;setSharedAuthMessage();
+  const recover=mode==='recover',reset=mode==='reset',signup=mode==='signup';
+  sharedAuthTitle.textContent=recover?'Recuperar contraseña':reset?'Crear nueva contraseña':signup?'Crear cuenta':'Acceso';
+  sharedAuthCopy.textContent=recover?'Introduce tu email y recibirás un enlace para crear una nueva contraseña.':
+    reset?'Elige una nueva contraseña para tu cuenta.':'El acceso se comparte entre las apps de Tu Mentor Psicología.';
+  sharedEmailField.classList.toggle('auth-hidden',reset);
+  sharedPasswordField.classList.toggle('auth-hidden',recover);
+  sharedPasswordRepeatField.classList.toggle('auth-hidden',!reset);
+  sharedEmailInput.required=!reset;sharedPasswordInput.required=!recover;sharedPasswordRepeat.required=reset;
+  sharedPasswordInput.autocomplete=reset||signup?'new-password':'current-password';
+  sharedPasswordLabel.textContent=reset?'Nueva contraseña':'Contraseña';
+  sharedAuthSubmit.textContent=recover?'Enviar enlace':reset?'Guardar nueva contraseña':signup?'Crear cuenta':'Entrar';
+  sharedCreateAccount.classList.toggle('auth-hidden',mode!=='login');
+  sharedForgotPassword.classList.toggle('auth-hidden',mode!=='login');
+  sharedBackToLogin.classList.toggle('auth-hidden',mode==='login');
+}
+function openGenealogyLogin(mode='login',message=''){
+  setSharedAuthMode(mode);if(message)setSharedAuthMessage(message);
+  sharedAuthModal.classList.add('open');sharedAuthModal.setAttribute('aria-hidden','false');
+  setTimeout(()=>{(mode==='reset'?sharedPasswordInput:sharedEmailInput).focus();},30);
+}
+function closeGenealogyLogin(){sharedAuthModal.classList.remove('open');sharedAuthModal.setAttribute('aria-hidden','true');}
+window.openGenealogyLogin=openGenealogyLogin;
+function renderSharedAuth(session){
+  const email=session?.user?.email||'';
+  sharedAuthEmail.textContent=email;sharedAuthEmail.hidden=!email;
+  sharedLoginButton.hidden=!!session;sharedLogoutButton.hidden=!session;
+  if(session&&!sharedHasResetParam())closeGenealogyLogin();
+}
+sharedLoginButton.addEventListener('click',()=>openGenealogyLogin());
+subscriptionLoginButton.addEventListener('click',()=>openGenealogyLogin('login'));
+subscriptionCheckoutButton.addEventListener('click',startGenealogyCheckout);
+subscriptionClose.addEventListener('click',closeSubscriptionGate);
+document.getElementById('subscriptionBack').addEventListener('click',closeSubscriptionGate);
+subscriptionGate.addEventListener('click',event=>{if(event.target===subscriptionGate)closeSubscriptionGate();});
+sharedLogoutButton.addEventListener('click',async()=>{sharedLogoutButton.disabled=true;await supabaseClient.auth.signOut();location.reload();});
+document.getElementById('sharedAuthClose').addEventListener('click',closeGenealogyLogin);
+sharedAuthModal.addEventListener('click',event=>{if(event.target===sharedAuthModal)closeGenealogyLogin();});
+sharedCreateAccount.addEventListener('click',()=>setSharedAuthMode('signup'));
+sharedForgotPassword.addEventListener('click',()=>setSharedAuthMode('recover'));
+sharedBackToLogin.addEventListener('click',()=>setSharedAuthMode('login'));
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){closeGenealogyLogin();closeSubscriptionGate();}});
+sharedAuthForm.addEventListener('submit',async event=>{
+  event.preventDefault();setSharedAuthMessage();sharedAuthSubmit.disabled=true;
+  const email=sharedEmailInput.value.trim(),password=sharedPasswordInput.value;
+  try{
+    if(sharedAuthMode==='recover'){
+      const {error}=await supabaseClient.auth.resetPasswordForEmail(email,{redirectTo:sharedResetUrl()});
+      if(error)throw error;
+      setSharedAuthMessage('Si existe una cuenta asociada, recibirás un enlace para restablecer la contraseña.',true);
+      return;
+    }
+    if(sharedAuthMode==='reset'){
+      if(password.length<8)throw new Error('La contraseña debe tener al menos 8 caracteres.');
+      if(password!==sharedPasswordRepeat.value)throw new Error('Las contraseñas no coinciden.');
+      const {error}=await supabaseClient.auth.updateUser({password});if(error)throw error;
+      const url=new URL(location.href);url.searchParams.delete('reset_password');history.replaceState(null,'',url.pathname+url.search+url.hash);
+      setSharedAuthMode('login');setSharedAuthMessage('Contraseña actualizada correctamente.',true);return;
+    }
+    if(sharedAuthMode==='signup'){
+      const {data,error}=await supabaseClient.auth.signUp({email,password});if(error)throw error;
+      if(!data?.session){setSharedAuthMessage('Cuenta creada. Revisa tu email para confirmar el acceso.',true);return;}
+    }else{
+      const {error}=await supabaseClient.auth.signInWithPassword({email,password});if(error)throw error;
+    }
+    location.reload();
+  }catch(error){setSharedAuthMessage(error?.message||'No se ha podido completar el acceso.');}
+  finally{sharedAuthSubmit.disabled=false;}
+});
+supabaseClient.auth.getSession().then(({data})=>{
+  applyGenealogySubscription(data?.session||null);
+  if(sharedHasResetParam())openGenealogyLogin(data?.session?'reset':'recover',data?.session?'':'Solicita un nuevo enlace de recuperación.');
+});
+supabaseClient.auth.onAuthStateChange((event,session)=>{
+  applyGenealogySubscription(session);
+  if(event==='PASSWORD_RECOVERY')openGenealogyLogin('reset');
+});
+</script>
+<script type="module">
+
+let D;
+try{
+  D=await loadGenealogyData();
+}catch(error){
+  console.error(error);
+  document.getElementById('main').innerHTML='<p class="data-error">'+error.message+' Inicia sesión y vuelve a intentarlo.</p>';
+  if(error?.status===401)showSubscriptionGate('login');
+  if(error?.status===403){
+    const token=await getSupabaseAccessToken();
+    showSubscriptionGate(token?'subscribe':'login');
+  }
+  throw error;
+}
+const FALLBACK=D.fallback;
+const SCHOOLS=D.schools;
+const colorOf={}; SCHOOLS.forEach(s=>colorOf[s.id]=s.color||FALLBACK);
+const schoolLabel={}; SCHOOLS.forEach(s=>schoolLabel[s.id]=s.label);
+const ALL_YEARS=SCHOOLS.flatMap(s=>s.nodes.map(n=>n.year).filter(Boolean));
+const GLOBAL_YMIN=Math.floor(Math.min(...ALL_YEARS)/10)*10;
+const GLOBAL_YMAX=Math.ceil(Math.max(...ALL_YEARS)/10)*10;
+document.getElementById('brandStats').innerHTML=
+  '<b>'+SCHOOLS.reduce((a,s)=>a+s.nodes.length,0)+' modelos</b> · '
+  +D.edges.length+' vínculos de influencia · '+GLOBAL_YMIN+'–'+Math.max(...ALL_YEARS);
+const GLOBAL_PXY=26, GLOBAL_PADY=40;
+const GLOBAL_CANVAS_H=GLOBAL_PADY*2+(GLOBAL_YMAX-GLOBAL_YMIN)*GLOBAL_PXY+34;
+let pinnedNodeId=null;
+let expandedContext=null;
+let expandedSameSchoolContext=null;
+const NODE_CONTEXTS={};
+
+const DESC={
+ psicoanalisis:"Del tronco freudiano brotan el yo, las relaciones objetales, lo interpersonal y lo relacional. La cura por la palabra y el inconsciente como herencia común.",
+ conductismo:"De la ley del efecto y el condicionamiento nacen la exposición, el refuerzo y el análisis funcional. La conducta observable como único terreno firme.",
+ cognitivo:"De la revolución cognitiva surgen la terapia de Beck, la REBT y toda la familia de la TCC, hasta los protocolos transdiagnósticos contemporáneos.",
+ humanista:"El crecimiento frente a la pulsión y el estímulo: Rogers, Gestalt, lo existencial y lo experiencial, con la emoción como vía de acceso.",
+ sistemico:"El foco pasa del individuo a la relación. De la cibernética de Bateson nacen Palo Alto, lo estructural, lo estratégico y Milán.",
+ constructivista:"La realidad no se descubre, se construye. Constructos personales, narrativa y procesos de cambio en el significado.",
+ integrativo:"Escuelas que tejen varias tradiciones: lo asimilativo, lo multimodal, el trauma y el duelo, con la alianza terapéutica en el centro.",
+ transversal:"Marcos que cruzan todas las escuelas: mindfulness, el modelo transteórico del cambio, la regulación emocional, lo comunitario.",
+ fronteras:"El borde del campo: prácticas controvertidas, pseudocientíficas o de eficacia disputada, situadas con cautela en su contexto histórico.",
+ otros:"Tradiciones culturales y no occidentales: Morita, Naikan, Ubuntu, enfoques contemplativos y modelos de bienestar indígenas."
+};
+
+/* ---------- build a tree layout per school ---------- */
+function layout(school){
+  const byid={}; school.nodes.forEach(n=>byid[n.id]=n);
+  const children={}; school.nodes.forEach(n=>children[n.id]=[]);
+  const roots=[];
+  school.nodes.forEach(n=>{
+    if(n.parent && byid[n.parent]) children[n.parent].push(n.id);
+    else roots.push(n.id);
+  });
+  const byYear=(a,b)=>((byid[a].year||9999)-(byid[b].year||9999))||byid[a].label.localeCompare(byid[b].label);
+  roots.sort(byYear);
+  Object.values(children).forEach(arr=>arr.sort(byYear));
+
+  const PADY=GLOBAL_PADY, CARDH=46, MINGAP=12, STEP=CARDW+20; // STEP = separación lateral entre tarjetas que coinciden en altura
+
+  // --- Y = año real en escala temporal compartida ---
+  const yMin=GLOBAL_YMIN, yMax=GLOBAL_YMAX;
+  const span=Math.max(1,yMax-yMin);
+  const PXY=GLOBAL_PXY;
+  const yToPx=yr=>PADY+((yr||yMin)-yMin)*PXY;
+
+  // Y de cada nodo = su año (no se mueve verticalmente)
+  const sorted=[...school.nodes].sort((a,b)=>(a.year||9999)-(b.year||9999)||a.label.localeCompare(b.label));
+  sorted.forEach(n=>{ n._y=yToPx(n.year); });
+
+  // --- agrupar nodos cuyas tarjetas se solaparían verticalmente y repartirlos en X simétricamente ---
+  let maxLanes=1;
+  let i=0;
+  const bands=[];
+  while(i<sorted.length){
+    let j=i+1;
+    // un nodo entra en la banda si su Y queda a menos de (CARDH+MINGAP) del último de la banda
+    while(j<sorted.length && (sorted[j]._y - sorted[j-1]._y) < (CARDH+MINGAP)) j++;
+    bands.push(sorted.slice(i,j));
+    i=j;
+  }
+  bands.forEach(band=>{
+    const m=band.length;
+    maxLanes=Math.max(maxLanes,m);
+    // repartir simétricamente alrededor de 0: m=1 -> [0]; m=2 -> [-.5,.5]; m=3 -> [-1,0,1]
+    band.forEach((n,k)=>{ n._lane = k-(m-1)/2; });
+  });
+
+  // X: centro del lienzo + desplazamiento de carril
+  const halfWidth = (maxLanes-1)/2 * STEP + CARDW/2;
+  const CENTER = Math.max(halfWidth + 30, 700);  // aire lateral para navegar y mostrar cruces
+  school.nodes.forEach(n=>{ n._cx = CENTER + (n._lane||0)*STEP; n._x = n._cx - CARDW/2; });
+
+  const W = CENTER*2;                       // simétrico respecto al centro
+  let maxY=0; school.nodes.forEach(n=>maxY=Math.max(maxY,n._y+CARDH));
+  const H=Math.max(GLOBAL_CANVAS_H, maxY+PADY);
+
+  // year gridlines (every 10 years)
+  const grid=[];
+  const startDecade=Math.ceil(yMin/10)*10;
+  for(let y=startDecade;y<=yMax;y+=10) grid.push({year:y,py:yToPx(y)});
+  return {W,H,byid,children,roots,CARDH,yMin,yMax,grid,axisX:24,center:CENTER};
+}
+
+/* ---------- render one school ---------- */
+function renderSchool(school){
+  const L=layout(school);
+  const col=school.color||FALLBACK;
+  const sec=document.createElement('section');
+  sec.className='school'; sec.id='s-'+school.id;
+  sec.style.width=(L.W+56)+'px';
+  sec.dataset.focusX=L.center+28;
+  const idx=SCHOOLS.indexOf(school)+1;
+  const years=school.nodes.map(n=>n.year).filter(Boolean);
+  sec.innerHTML=`
+    <div class="wrap school-copy">
+      <div class="shead">
+        <span class="num" style="color:${col}">${String(idx).padStart(2,'0')}</span>
+        <h2>${school.label}</h2>
+        <span class="cnt">${school.nodes.length} modelos · ${L.roots.length} raíces</span>
+      </div>
+      <p class="sdesc">${DESC[school.id]||''}</p>
+      <div class="syears">${Math.min(...years)} — ${Math.max(...years)}</div>
+    </div>`;
+  // each tree lives in the same horizontal world; this wrapper has no visual box
+  const boxWrap=document.createElement('div'); boxWrap.className='diagram-plane';
+  const box=document.createElement('div'); box.className='treebox';
+  const NS='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox',`0 0 ${L.W} ${L.H}`);
+  svg.setAttribute('width',L.W); svg.setAttribute('height',Math.min(L.H, L.H));
+  svg.style.maxWidth='none';
+  // --- shared chronology: only gridlines live in each school ---
+  const gAxis=document.createElementNS(NS,'g'); svg.appendChild(gAxis);
+  L.grid.forEach(g=>{
+    const ln=document.createElementNS(NS,'line');
+    ln.setAttribute('x1',L.axisX+4); ln.setAttribute('x2',L.W-4);
+    ln.setAttribute('y1',g.py); ln.setAttribute('y2',g.py);
+    ln.setAttribute('stroke','var(--line)'); ln.setAttribute('stroke-width','1');
+    gAxis.appendChild(ln);
+  });
+  // edges — cascada: salen del CENTRO de la tarjeta (inferior del padre → superior del hijo)
+  const gE=document.createElementNS(NS,'g'); svg.appendChild(gE);
+  const CX=n=>n._x+CARDW/2;            // centro horizontal de la tarjeta
+  function cascade(x1,y1,x2,y2){
+    const dy=Math.abs(y2-y1);
+    if(dy<24){
+      // alturas parecidas: conectar con una curva lateral suave (no vertical)
+      const mx=(x1+x2)/2;
+      return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+    }
+    // caída vertical tipo cascada
+    const d=(y2-y1);
+    const c1y=y1+d*0.45, c2y=y2-d*0.45;
+    return `M ${x1} ${y1} C ${x1} ${c1y}, ${x2} ${c2y}, ${x2} ${y2}`;
+  }
+  school.nodes.forEach(n=>{
+    (n.asc||[]).forEach(aid=>{
+      const p=L.byid[aid]; if(!p) return;           // only same-school ascendants live in L.byid
+      const isParent = (n.parent===aid);
+      const dy=Math.abs(n._y-p._y);
+      let x1,y1,x2,y2;
+      if(dy<24){
+        // alturas parecidas → conectar por los laterales
+        if(p._cx<=n._cx){ x1=p._cx+CARDW/2; x2=n._cx-CARDW/2; }
+        else { x1=p._cx-CARDW/2; x2=n._cx+CARDW/2; }
+        y1=p._y; y2=n._y;
+      } else {
+        // cascada vertical desde el centro de la tarjeta
+        x1=p._cx; x2=n._cx;
+        if(p._y<=n._y){ y1=p._y+L.CARDH/2; y2=n._y-L.CARDH/2; }
+        else { y1=p._y-L.CARDH/2; y2=n._y+L.CARDH/2; }
+      }
+      const path=document.createElementNS(NS,'path');
+      path.setAttribute('d',cascade(x1,y1,x2,y2));
+      path.setAttribute('class','tedge'+(isParent?'':' sec'));
+      path.setAttribute('stroke',col);
+      path.dataset.child=n.id; path.dataset.parent=aid;
+      gE.appendChild(path);
+    });
+  });
+  // nodes
+  const gN=document.createElementNS(NS,'g'); svg.appendChild(gN);
+  school.nodes.forEach(n=>{
+    const g=document.createElementNS(NS,'g'); g.setAttribute('class','tnode'); g.dataset.id=n.id;
+    const h=L.CARDH;
+    const cardX=n._x;                  // left edge of card (centro = cardX + CARDW/2)
+    const rect=document.createElementNS(NS,'rect');
+    rect.setAttribute('class','node-card');
+    rect.setAttribute('x',cardX); rect.setAttribute('y',n._y-h/2);
+    rect.setAttribute('width',CARDW); rect.setAttribute('height',h);
+    rect.style.width=CARDW+'px';
+    rect.setAttribute('rx',11);
+    rect.setAttribute('fill','#191e25');
+    rect.setAttribute('stroke',col);
+    rect.setAttribute('stroke-opacity','.4');
+    rect.setAttribute('stroke-width','1');
+    g.appendChild(rect);
+    // punto de escuela junto al título
+    const dot=document.createElementNS(NS,'circle');
+    dot.setAttribute('cx',cardX+14); dot.setAttribute('cy',n._y-6.5);
+    dot.setAttribute('r','3'); dot.setAttribute('fill',col);
+    g.appendChild(dot);
+    // título (truncado al ancho de la tarjeta)
+    const t=document.createElementNS(NS,'text');
+    t.setAttribute('class','tlabel'); t.setAttribute('x',cardX+23);
+    t.setAttribute('y',n._y-2.5); t.setAttribute('font-size','12');
+    t.setAttribute('fill','var(--ink)');
+    let lab=n.tl||n.label;
+    const maxc=Math.floor((CARDW-31)/6.3);
+    if(lab.length>maxc) lab=lab.slice(0,maxc-1)+'…';
+    t.textContent=lab;
+    t.dataset.shortLabel=lab;
+    t.dataset.fullLabel=n.label;
+    g.appendChild(t);
+    // línea secundaria: año (en color de escuela) · primer autor
+    const sub=document.createElementNS(NS,'text');
+    sub.setAttribute('class','tsub'); sub.setAttribute('x',cardX+23);
+    sub.setAttribute('y',n._y+13); sub.setAttribute('font-size','9.5');
+    sub.dataset.year=n.year?String(n.year):'';
+    sub.dataset.rest=String(n.aut||n.tipo||'').split(';')[0].trim();
+    sub.dataset.col=col;
+    buildSubContent(sub,Math.floor((CARDW-31)/5.4));
+    g.appendChild(sub);
+    const hoverContext={svg,L,node:n,school,box,g};
+    NODE_CONTEXTS[n.id]=hoverContext;
+    g.addEventListener('click',e=>{
+      if(main._suppressClick) return;
+      e.stopPropagation();
+      pinHover(n.id,hoverContext);
+      openDetail(n.id);
+    });
+    g.addEventListener('mouseenter',()=>{
+      if(!pinnedNodeId){
+        expandPinnedNode(hoverContext,false);
+        hoverNode(n.id,hoverContext);
+      }
+      else if(n.id!==pinnedNodeId && isSameSchoolInfluence(pinnedNodeId,n.id)){
+        expandSameSchoolInfluence(hoverContext);
+      }
+    });
+    g.addEventListener('mouseleave',()=>{
+      if(!pinnedNodeId && !detail.classList.contains('open')){
+        clearHover();
+        if(expandedContext===hoverContext) collapseExpandedNode();
+      }
+      else if(expandedSameSchoolContext===hoverContext) collapseSameSchoolInfluence();
+    });
+    gN.appendChild(g);
+  });
+  box.appendChild(svg); boxWrap.appendChild(box);
+  sec.appendChild(boxWrap);
+  const hint=document.createElement('div'); hint.className='wrap';
+  hint.innerHTML='<div class="hint">Eje vertical = año · arrastra el fondo para explorar · haz clic en un nodo para abrir su panel y fijar sus influencias · haz clic fuera para liberar la vista</div>';
+  sec.appendChild(hint);
+  return sec;
+}
+/* ---------- pan libre sobre el atlas completo: ratón, lápiz o tacto ---------- */
+function enableMapPan(box){
+  let panning=false, moved=false, sx=0, sy=0, sl=0, st=0;
+  box.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse' && e.button!==0 && e.button!==1) return;
+    if(e.button===1) e.preventDefault();
+    panning=true; moved=false; box._suppressClick=false; box.classList.add('panning');
+    sx=e.clientX; sy=e.clientY; sl=box.scrollLeft; st=box.scrollTop;
+  });
+  box.addEventListener('pointermove',e=>{
+    if(!panning) return;
+    if(!moved && Math.hypot(e.clientX-sx,e.clientY-sy)>5){
+      moved=true;
+      box.setPointerCapture(e.pointerId);
+    }
+    if(!moved) return;
+    e.preventDefault();
+    box.scrollLeft=sl-(e.clientX-sx);
+    box.scrollTop =st-(e.clientY-sy);
+  });
+  const end=e=>{ if(panning){ panning=false; box._suppressClick=moved; box.classList.remove('panning');
+    if(moved) setTimeout(()=>{box._suppressClick=false},0);
+    try{box.releasePointerCapture(e.pointerId);}catch(_){}} };
+  box.addEventListener('pointerup',end);
+  box.addEventListener('pointercancel',end);
+  // evitar el icono de autoscroll del navegador al pulsar el botón central
+  box.addEventListener('auxclick',e=>{ if(e.button===1) e.preventDefault(); });
+  box.addEventListener('mousedown',e=>{ if(e.button===1) e.preventDefault(); });
+}
+const CARDW=168;
+
+/* Línea secundaria de la tarjeta: "año · autor", truncada al ancho dado. */
+function buildSubContent(subEl,maxChars){
+  const NS='http://www.w3.org/2000/svg';
+  const year=subEl.dataset.year||'';
+  const rest=subEl.dataset.rest||'';
+  const avail=Math.max(0,maxChars-(year?year.length+3:0));
+  let restTxt=rest;
+  if(restTxt.length>avail) restTxt=avail>1?restTxt.slice(0,avail-1)+'…':'';
+  subEl.textContent='';
+  if(year){
+    const ts=document.createElementNS(NS,'tspan');
+    ts.setAttribute('class','tsub-year');
+    ts.setAttribute('fill',subEl.dataset.col||'currentColor');
+    ts.textContent=year;
+    subEl.appendChild(ts);
+    if(restTxt) subEl.appendChild(document.createTextNode(' · '+restTxt));
+  }else{
+    subEl.textContent=restTxt||'';
+  }
+}
+function setSubWidth(g,width){
+  const sub=g.querySelector('.tsub');
+  if(!sub) return;
+  buildSubContent(sub,Math.floor((width-31)/5.4));
+}
+
+/* ---------- index of all nodes ---------- */
+const ALL={}; SCHOOLS.forEach(s=>s.nodes.forEach(n=>{n._school=s.id; ALL[n.id]=n;}));
+
+/* ---------- build page ---------- */
+const main=document.getElementById('main');
+const atlasWorld=document.getElementById('atlasWorld');
+const globalYearAxis=document.getElementById('globalYearAxis');
+const minimap=document.getElementById('minimap');
+let minimapViewport=null, minimapWorldW=1, minimapWorldH=1;
+function buildGlobalYearAxis(){
+  const NS='http://www.w3.org/2000/svg';
+  globalYearAxis.setAttribute('viewBox',`0 0 64 ${GLOBAL_CANVAS_H}`);
+  globalYearAxis.setAttribute('width','64');
+  globalYearAxis.setAttribute('height',GLOBAL_CANVAS_H);
+  for(let year=GLOBAL_YMIN;year<=GLOBAL_YMAX;year+=10){
+    const y=GLOBAL_PADY+(year-GLOBAL_YMIN)*GLOBAL_PXY;
+    const tick=document.createElementNS(NS,'line');
+    tick.setAttribute('x1','48'); tick.setAttribute('x2','64');
+    tick.setAttribute('y1',y); tick.setAttribute('y2',y);
+    tick.setAttribute('stroke','var(--ink-mute)'); tick.setAttribute('stroke-width','1');
+    globalYearAxis.appendChild(tick);
+    const label=document.createElementNS(NS,'text');
+    label.setAttribute('x','43'); label.setAttribute('y',y+3.5);
+    label.setAttribute('text-anchor','end'); label.setAttribute('font-family',"'Inter',sans-serif");
+    label.setAttribute('font-size','10'); label.setAttribute('letter-spacing','.08em');
+    label.setAttribute('fill','var(--ink-soft)'); label.textContent=year;
+    globalYearAxis.appendChild(label);
+  }
+}
+buildGlobalYearAxis();
+SCHOOLS.forEach(s=>atlasWorld.appendChild(renderSchool(s)));
+enableMapPan(main);
+main.addEventListener('scroll',()=>{
+  globalYearAxis.style.transform=`translateY(${-main.scrollTop}px)`;
+  updateMinimapViewport();
+},{passive:true});
+
+function buildMinimap(){
+  const NS='http://www.w3.org/2000/svg';
+  const savedZoom=atlasWorld.style.zoom||'1';
+  atlasWorld.style.zoom='1';
+  minimap.replaceChildren();
+  minimapWorldW=Math.max(1,main.scrollWidth);
+  minimapWorldH=Math.max(1,main.scrollHeight);
+  minimap.setAttribute('viewBox',`0 0 ${minimapWorldW} ${minimapWorldH}`);
+  const mainRect=main.getBoundingClientRect();
+  const sx=minimapWorldW/Math.max(1,minimap.clientWidth);
+  const sy=minimapWorldH/Math.max(1,minimap.clientHeight);
+
+  for(let year=GLOBAL_YMIN;year<=GLOBAL_YMAX;year+=10){
+    const line=document.createElementNS(NS,'line');
+    const first=document.querySelector('.school');
+    const firstRect=first.getBoundingClientRect();
+    const diagramTop=firstRect.top-mainRect.top+main.scrollTop+150;
+    const y=diagramTop+GLOBAL_PADY+(year-GLOBAL_YMIN)*GLOBAL_PXY;
+    line.setAttribute('x1','0'); line.setAttribute('x2',minimapWorldW);
+    line.setAttribute('y1',y); line.setAttribute('y2',y);
+    line.setAttribute('stroke','var(--line)'); line.setAttribute('stroke-width','1');
+    line.setAttribute('vector-effect','non-scaling-stroke');
+    minimap.appendChild(line);
+  }
+
+  SCHOOLS.forEach(school=>{
+    const sec=document.getElementById('s-'+school.id);
+    const secRect=sec.getBoundingClientRect();
+    const baseX=secRect.left-mainRect.left+main.scrollLeft+28;
+    const baseY=secRect.top-mainRect.top+main.scrollTop+150;
+    const col=school.color||FALLBACK;
+    const area=document.createElementNS(NS,'rect');
+    area.setAttribute('x',baseX); area.setAttribute('y',baseY);
+    area.setAttribute('width',Number(sec.style.width.replace('px',''))-56);
+    area.setAttribute('height',GLOBAL_CANVAS_H);
+    area.setAttribute('fill',col); area.setAttribute('fill-opacity','.035');
+    area.setAttribute('stroke',col); area.setAttribute('stroke-opacity','.22');
+    area.setAttribute('vector-effect','non-scaling-stroke');
+    minimap.appendChild(area);
+
+    const byid=Object.fromEntries(school.nodes.map(n=>[n.id,n]));
+    school.nodes.forEach(n=>{
+      (n.asc||[]).forEach(aid=>{
+        const p=byid[aid]; if(!p) return;
+        const line=document.createElementNS(NS,'line');
+        line.setAttribute('x1',baseX+p._cx); line.setAttribute('y1',baseY+p._y);
+        line.setAttribute('x2',baseX+n._cx); line.setAttribute('y2',baseY+n._y);
+        line.setAttribute('stroke',col); line.setAttribute('stroke-opacity','.2');
+        line.setAttribute('vector-effect','non-scaling-stroke');
+        minimap.appendChild(line);
+      });
+    });
+    school.nodes.forEach(n=>{
+      const dot=document.createElementNS(NS,'ellipse');
+      dot.setAttribute('cx',baseX+n._cx); dot.setAttribute('cy',baseY+n._y);
+      dot.setAttribute('rx',Math.max(10,sx*1.35)); dot.setAttribute('ry',Math.max(7,sy*1.35));
+      dot.setAttribute('fill',col); dot.setAttribute('fill-opacity','.9');
+      minimap.appendChild(dot);
+    });
+  });
+
+  minimapViewport=document.createElementNS(NS,'rect');
+  minimapViewport.setAttribute('class','minimap-viewport');
+  minimap.appendChild(minimapViewport);
+  atlasWorld.style.zoom=savedZoom;
+  updateMinimapViewport();
+}
+function updateMinimapViewport(){
+  if(!minimapViewport) return;
+  minimapViewport.setAttribute('x',main.scrollLeft/genealogyZoom);
+  minimapViewport.setAttribute('y',main.scrollTop/genealogyZoom);
+  minimapViewport.setAttribute('width',main.clientWidth/genealogyZoom);
+  minimapViewport.setAttribute('height',main.clientHeight/genealogyZoom);
+}
+function goToMinimapPoint(e){
+  const r=minimap.getBoundingClientRect();
+  const x=(e.clientX-r.left)/r.width*minimapWorldW;
+  const y=(e.clientY-r.top)/r.height*minimapWorldH;
+  main.scrollTo({left:x*genealogyZoom-main.clientWidth/2,top:y*genealogyZoom-main.clientHeight/2,behavior:'auto'});
+}
+let minimapDragging=false;
+minimap.addEventListener('pointerdown',e=>{
+  e.preventDefault(); minimapDragging=true;
+  minimap.setPointerCapture(e.pointerId); goToMinimapPoint(e);
+});
+minimap.addEventListener('pointermove',e=>{ if(minimapDragging) goToMinimapPoint(e); });
+const endMinimapDrag=e=>{
+  minimapDragging=false;
+  try{minimap.releasePointerCapture(e.pointerId);}catch(_){}
+};
+minimap.addEventListener('pointerup',endMinimapDrag);
+minimap.addEventListener('pointercancel',endMinimapDrag);
+window.addEventListener('resize',()=>requestAnimationFrame(buildMinimap));
+
+/* ---------- alternate integrated node view ---------- */
+const nodeViewOpen=document.getElementById('nodeViewOpen');
+const genealogyViewOpen=document.getElementById('genealogyViewOpen');
+const nodeViewOverlay=document.getElementById('nodeViewOverlay');
+const nodeViewFrame=document.getElementById('nodeViewFrame');
+const viewTabs=document.querySelector('.view-tabs');
+const nodeSearchInput=document.getElementById('nodeSearchInput');
+let nodeViewLoaded=false;
+let genealogyZoom=1;
+let nodeGraphZoom=1;
+const clampZoom=value=>Math.min(1.75,Math.max(.7,Math.round(value*100)/100));
+function zoomScrollable(container,applyZoom,nextZoom,currentZoom){
+  const centerX=container.scrollLeft+container.clientWidth/2;
+  const centerY=container.scrollTop+container.clientHeight/2;
+  applyZoom(nextZoom);
+  const ratio=nextZoom/currentZoom;
+  requestAnimationFrame(()=>container.scrollTo({
+    left:centerX*ratio-container.clientWidth/2,
+    top:centerY*ratio-container.clientHeight/2,
+    behavior:'auto'
+  }));
+}
+function changeAtlasZoom(delta){
+  if(nodeViewOverlay.classList.contains('open')){
+    const doc=nodeViewFrame.contentDocument;
+    const graph=doc?.getElementById('graph');
+    const graphScroller=graph?.parentElement;
+    const scrolling=doc?.scrollingElement;
+    if(!graph||!graphScroller||!scrolling) return;
+    const next=clampZoom(nodeGraphZoom+delta);
+    const centerX=graphScroller.scrollLeft+graphScroller.clientWidth/2;
+    const centerY=scrolling.scrollTop+scrolling.clientHeight/2;
+    const ratio=next/nodeGraphZoom;
+    const viewBox=graph.viewBox.baseVal;
+    graph.style.width=(viewBox.width*next)+'px';
+    graph.style.height=(viewBox.height*next)+'px';
+    graph.style.maxWidth='none';
+    nodeGraphZoom=next;
+    requestAnimationFrame(()=>{
+      graphScroller.scrollTo({left:centerX*ratio-graphScroller.clientWidth/2,behavior:'auto'});
+      scrolling.scrollTo({top:centerY*ratio-scrolling.clientHeight/2,behavior:'auto'});
+    });
+    return;
+  }
+  const next=clampZoom(genealogyZoom+delta);
+  zoomScrollable(main,value=>{atlasWorld.style.zoom=value;},next,genealogyZoom);
+  genealogyZoom=next;
+  requestAnimationFrame(updateMinimapViewport);
+}
+document.getElementById('atlasZoomIn').addEventListener('click',()=>changeAtlasZoom(.15));
+document.getElementById('atlasZoomOut').addEventListener('click',()=>changeAtlasZoom(-.15));
+function syncNodeSearch(){
+  try{
+    const inner=nodeViewFrame.contentDocument?.getElementById('q');
+    if(!inner) return;
+    inner.value=nodeSearchInput.value;
+    inner.dispatchEvent(new nodeViewFrame.contentWindow.Event('input',{bubbles:true}));
+  }catch(_){}
+}
+nodeSearchInput.addEventListener('input',syncNodeSearch);
+nodeViewFrame.addEventListener('load',()=>{
+  try{
+    const doc=nodeViewFrame.contentDocument;
+    const style=doc.createElement('style');
+    style.textContent=`
+      header,footer,.schoolbar,.schoolbar-sentinel{display:none!important}
+      .schoolbar .wrap{max-width:none!important;padding:0 14px!important}
+      .legend{display:none!important}
+      .toolbar{justify-content:flex-end!important;padding:6px 0!important}
+      .toolbar .spacer{display:none!important}
+      .search{width:230px!important;opacity:1!important;overflow:visible!important;pointer-events:auto!important}
+      .search input{height:34px!important;cursor:text!important}
+      .search input::placeholder{color:var(--ink-mute)!important}
+      html,body{min-height:100%;overflow-x:hidden!important}
+      *{scrollbar-width:thin;scrollbar-color:#655038 #15120f}
+      *::-webkit-scrollbar{width:10px;height:8px}
+      *::-webkit-scrollbar-track{background:#15120f;border-left:1px solid #262320}
+      *::-webkit-scrollbar-thumb{background:#55442f;border:2px solid #15120f;border-radius:10px}
+      *::-webkit-scrollbar-thumb:hover{background:#c79248}
+      .graphwrap{border-top:0!important}
+      #graph{cursor:grab!important;touch-action:none!important}
+      #graph.is-panning{cursor:grabbing!important;user-select:none!important}
+    `;
+    doc.head.appendChild(style);
+    const graph=doc.getElementById('graph');
+    const graphScroller=graph?.parentElement;
+    const pageScroller=doc.scrollingElement;
+    if(graph&&graphScroller&&pageScroller){
+      let pan=null,didDrag=false;
+      graph.addEventListener('pointerdown',event=>{
+        if(event.button!==0) return;
+        pan={id:event.pointerId,x:event.clientX,y:event.clientY,left:graphScroller.scrollLeft,top:pageScroller.scrollTop};
+        didDrag=false;
+      });
+      graph.addEventListener('pointermove',event=>{
+        if(!pan||event.pointerId!==pan.id) return;
+        const dx=event.clientX-pan.x,dy=event.clientY-pan.y;
+        if(!didDrag&&Math.hypot(dx,dy)<4) return;
+        didDrag=true;
+        graph.setPointerCapture(event.pointerId);
+        graph.classList.add('is-panning');
+        graphScroller.scrollLeft=pan.left-dx;
+        pageScroller.scrollTop=pan.top-dy;
+        event.preventDefault();
+      });
+      const endPan=event=>{
+        if(!pan||event.pointerId!==pan.id) return;
+        try{graph.releasePointerCapture(event.pointerId);}catch(_){}
+        graph.classList.remove('is-panning');
+        pan=null;
+        if(didDrag) setTimeout(()=>{didDrag=false;},0);
+      };
+      graph.addEventListener('pointerup',endPan);
+      graph.addEventListener('pointercancel',endPan);
+      graph.addEventListener('click',event=>{
+        if(!didDrag) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      },true);
+    }
+    doc.addEventListener('keydown',e=>{ if(e.key==='Escape') closeNodeView(); });
+    syncNodeSearch();
+  }catch(_){}
+  requestAnimationFrame(()=>nodeViewFrame.classList.add('ready'));
+});
+window.addEventListener('message',event=>{
+  if(event.source!==nodeViewFrame.contentWindow) return;
+  if(event.data?.type==='genealogy:open-detail'&&typeof event.data.id==='string'){
+    openDetail(event.data.id);
+  }else if(event.data?.type==='genealogy:close-detail'){
+    closeDetail();
+  }
+});
+function openNodeView(){
+  unpinHover();
+  closeDetail();
+  closeModelFicha();
+  // La cabecera nueva ocupa dos filas. Mantener el documento arriba evita
+  // que el cambio a Red desplace y recorte la tarjeta de marca.
+  window.scrollTo({top:0,behavior:'auto'});
+  document.body.classList.add('node-view-active');
+  if(!nodeViewLoaded){
+    nodeViewLoaded=true;
+    const template=document.getElementById('atlasDocumentTemplate');
+    const json=JSON.stringify(D).replace(/<\/script/gi,'<\\/script');
+    nodeViewFrame.srcdoc=template.innerHTML.replace('__GENEALOGY_DATA__',json);
+  }
+  nodeViewOverlay.classList.add('open');
+  nodeViewOverlay.setAttribute('aria-hidden','false');
+  nodeViewOpen.classList.add('active');
+  nodeViewOpen.setAttribute('aria-pressed','true');
+  genealogyViewOpen.classList.remove('active');
+  genealogyViewOpen.setAttribute('aria-pressed','false');
+  viewTabs.classList.add('node-mode');
+}
+function closeNodeView(){
+  if(nodeViewOverlay.classList.contains('open')){
+    nodeViewOverlay.classList.remove('open');
+    nodeViewOverlay.setAttribute('aria-hidden','true');
+  }
+  document.body.classList.remove('node-view-active');
+  nodeViewOpen.classList.remove('active');
+  nodeViewOpen.setAttribute('aria-pressed','false');
+  genealogyViewOpen.classList.add('active');
+  genealogyViewOpen.setAttribute('aria-pressed','true');
+  viewTabs.classList.remove('node-mode');
+}
+nodeViewOpen.addEventListener('click',openNodeView);
+genealogyViewOpen.addEventListener('click',closeNodeView);
+
+function focusSchool(id,behavior='smooth'){
+  const sec=document.getElementById('s-'+id);
+  if(!sec) return;
+  const focusX=Number(sec.dataset.focusX)||sec.clientWidth/2;
+  main.scrollTo({
+    left:Math.max(0,sec.offsetLeft+focusX-main.clientWidth/2),
+    top:main.scrollTop,
+    behavior
+  });
+}
+requestAnimationFrame(()=>{
+  focusSchool(SCHOOLS[0].id,'auto');
+  buildMinimap();
+});
+
+/* nav */
+const snav=document.getElementById('snav');
+SCHOOLS.forEach(s=>{
+  const b=document.createElement('button'); b.className='snav';
+  b.innerHTML=`<span class="sw" style="background:${s.color||FALLBACK}"></span>${s.label}`;
+  b.onclick=()=>focusSchool(s.id);
+  snav.appendChild(b);
+});
+const schoolnavShell=document.getElementById('schoolnavShell');
+const schoolnavViewport=document.getElementById('schoolnavViewport');
+const schoolnavPrev=document.getElementById('schoolnavPrev');
+const schoolnavNext=document.getElementById('schoolnavNext');
+function updateSchoolnavArrows(){
+  const max=schoolnavViewport.scrollWidth-schoolnavViewport.clientWidth;
+  schoolnavPrev.disabled=schoolnavViewport.scrollLeft<=1;
+  schoolnavNext.disabled=schoolnavViewport.scrollLeft>=max-1;
+}
+function refreshSchoolnav(){
+  schoolnavShell.classList.remove('can-scroll');
+  const overflows=schoolnavViewport.scrollWidth>schoolnavViewport.clientWidth+1;
+  schoolnavShell.classList.toggle('can-scroll',overflows);
+  requestAnimationFrame(updateSchoolnavArrows);
+}
+schoolnavPrev.addEventListener('click',()=>schoolnavViewport.scrollBy({left:-260,behavior:'smooth'}));
+schoolnavNext.addEventListener('click',()=>schoolnavViewport.scrollBy({left:260,behavior:'smooth'}));
+schoolnavViewport.addEventListener('scroll',updateSchoolnavArrows,{passive:true});
+window.addEventListener('resize',refreshSchoolnav);
+requestAnimationFrame(refreshSchoolnav);
+
+/* ---------- detail panel ---------- */
+const detail=document.getElementById('detail'), scrim=document.getElementById('scrim');
+const EDGES=D.edges||[];
+function relativesOf(id){
+  const n=ALL[id];
+  const inAsc=EDGES.filter(e=>e.to===id);      // who influences this
+  const outDesc=EDGES.filter(e=>e.from===id);  // whom this influences
+  const heredaDe   = inAsc.filter(e=>e.fromS===n._school).map(e=>e.from);
+  const daOrigenA  = outDesc.filter(e=>e.toS===n._school).map(e=>e.to);
+  const inbound    = inAsc.filter(e=>e.fromS!==n._school).map(e=>e.from);
+  const outbound   = outDesc.filter(e=>e.toS!==n._school).map(e=>e.to);
+  const uniq=a=>[...new Set(a)];
+  return {parents:uniq(heredaDe),childrenArr:uniq(daOrigenA),inbound:uniq(inbound),outbound:uniq(outbound)};
+}
+function li(id){ const m=ALL[id]; if(!m) return '';
+  return `<li data-go="${id}"><span class="sw" style="background:${colorOf[m._school]}"></span>${m.label}${m.year?` · ${m.year}`:''}</li>`;}
+function listOr(arr){ return arr.length? '<ul class="dlist">'+arr.map(li).join('')+'</ul>' : '<p class="dempty">Sin enlaces registrados.</p>'; }
+function formatDetailTitle(value){
+  const safe=String(value||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  return safe.replace(/\([^()]*\)/g,match=>`<span class="dtitle-accent">${match}</span>`);
+}
+
+/* Ficha ligera (frase y descripción) resuelta como en Mapamundi:
+   entrada del modelo en Core/escuelas/<escuela>.json → ficha pública en
+   Core/modelos-publicos/... (privada como respaldo, si hay sesión). */
+const NODE_EXTRAS_CACHE=new Map();   // id -> {frase,summary,descripcion,photoUrl}
+const SCHOOL_MODELS_CACHE=new Map(); // schoolId -> Map(id->entrada) | null
+let ESCUELAS_INDEX;
+let VIDA_IMAGE_INDEX;
+const slugifyGenealogy=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+  .toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+async function fetchJsonSafe(path){
+  try{
+    const r=await privateProxyFetch(proxyDataUrl(path),{cache:'no-store'});
+    if(!r.ok) return null;
+    return await r.json();
+  }catch(_){ return null; }
+}
+function extractSchoolModels(school){
+  if(Array.isArray(school)) return school;
+  if(Array.isArray(school?.modelos)) return school.modelos;
+  if(Array.isArray(school?.models)) return school.models;
+  if(school?.modelos&&typeof school.modelos==='object') return Object.values(school.modelos);
+  return [];
+}
+function schoolModelMap(schoolId){
+  // se cachea la promesa (no el resultado) para que las peticiones concurrentes
+  // de la precarga en segundo plano compartan un único fetch por escuela
+  if(SCHOOL_MODELS_CACHE.has(schoolId)) return SCHOOL_MODELS_CACHE.get(schoolId);
+  const promise=(async()=>{
+    let school=await fetchJsonSafe(`Core/escuelas/${schoolId}.json`);
+    if(!school){
+      if(ESCUELAS_INDEX===undefined) ESCUELAS_INDEX=await fetchJsonSafe('Core/escuelas/index.json');
+      const entries=Array.isArray(ESCUELAS_INDEX)?ESCUELAS_INDEX:(Array.isArray(ESCUELAS_INDEX?.escuelas)?ESCUELAS_INDEX.escuelas:[]);
+      const target=slugifyGenealogy(schoolLabel[schoolId]||schoolId);
+      const entry=entries.find(e=>slugifyGenealogy(e?.id)===slugifyGenealogy(schoolId)||slugifyGenealogy(e?.label)===target);
+      if(entry?.id) school=await fetchJsonSafe(`Core/escuelas/${String(entry.id).trim()}.json`);
+      if(!school&&entry?.file){
+        const raw=String(entry.file).trim().replace(/^\/+/,'');
+        school=await fetchJsonSafe(raw.startsWith('Core/')?raw:`Core/${raw}`);
+      }
+    }
+    return school?new Map(extractSchoolModels(school)
+      .filter(m=>m&&typeof m==='object'&&m.id)
+      .map(m=>[String(m.id).trim(),m])):null;
+  })();
+  SCHOOL_MODELS_CACHE.set(schoolId,promise);
+  return promise;
+}
+function normalizeAuthorKey(value){
+  return String(value||'').trim().toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+}
+function vidaImageIndex(){
+  if(VIDA_IMAGE_INDEX!==undefined) return VIDA_IMAGE_INDEX;
+  VIDA_IMAGE_INDEX=(async()=>{
+    const raw=await fetchJsonSafe('Core/imagenes/vida/index.json');
+    const normalizeMap=source=>{
+      const direct={},normalized={};
+      Object.entries(source||{}).forEach(([key,value])=>{
+        if(!value) return;
+        direct[String(key).trim()]=value;
+        normalized[normalizeAuthorKey(key)]=value;
+      });
+      return {direct,normalized};
+    };
+    const models=normalizeMap(raw?.models),authors=normalizeMap(raw?.authors);
+    return {
+      basePath:String(raw?.basePath||'Core/imagenes/vida').replace(/^\/+|\/+$/g,''),
+      models:models.direct,modelsNorm:models.normalized,
+      authors:authors.direct,authorsNorm:authors.normalized
+    };
+  })();
+  return VIDA_IMAGE_INDEX;
+}
+async function loadAuthorPhoto(n,entry){
+  const index=await vidaImageIndex();
+  const fileBase=String(entry?.file||entry?.archivo||'').split('/').pop().replace(/\.[^.]+$/,'').trim();
+  const modelKeys=[n.id,fileBase].filter(Boolean);
+  const modelPhoto=modelKeys.map(key=>index.models?.[key]||index.modelsNorm?.[normalizeAuthorKey(key)]).find(Boolean);
+  const firstAuthor=String(entry?.autores||entry?.autor||n.aut||'').split(/[;,]/)[0].trim();
+  const authorPhoto=index.authors?.[firstAuthor]||index.authorsNorm?.[normalizeAuthorKey(firstAuthor)];
+  const imageEntry=modelPhoto||authorPhoto;
+  const selected=Array.isArray(imageEntry)?imageEntry[0]:imageEntry;
+  if(typeof selected!=='string'||!selected.trim()) return '';
+  const firstFile=selected.trim().split('|')[0].trim().replace(/^\/+|^data\//i,'');
+  const imagePath=firstFile.startsWith('Core/')?firstFile:index.basePath+'/'+firstFile;
+  try{
+    const response=await privateProxyFetch(proxyDataUrl(imagePath),{headers:{Accept:'image/*,*/*'}});
+    return response.ok?URL.createObjectURL(await response.blob()):'';
+  }catch(_){ return ''; }
+}
+const NODE_EXTRAS_INFLIGHT=new Map();
+async function loadNodeExtras(n){
+  const id=n.id;
+  if(NODE_EXTRAS_CACHE.has(id)) return NODE_EXTRAS_CACHE.get(id);
+  if(NODE_EXTRAS_INFLIGHT.has(id)) return NODE_EXTRAS_INFLIGHT.get(id);
+  const promise=(async()=>{
+    const map=await schoolModelMap(n._school);
+    const entry=map?.get(id)||null;
+    let frase=String(entry?.frase||'').trim();
+    let summary=String(entry?.summary||entry?.resumen||'').trim();
+    let descripcion=String(entry?.descripcion||entry?.description||'').trim();
+    const photoPromise=loadAuthorPhoto(n,entry);
+    const file=String(entry?.file||entry?.archivo||'').trim().replace(/^\/+/,'');
+    if((!frase||!descripcion)&&file){
+      const candidates=[];
+      if(file.startsWith('modelos/')) candidates.push(`Core/${file.replace(/^modelos\//,'modelos-publicos/')}`);
+      candidates.push(file.startsWith('Core/')?file:`Core/${file}`);
+      for(const p of candidates){
+        const data=await fetchJsonSafe(p);
+        if(data){
+          frase=frase||String(data.frase||'').trim();
+          summary=summary||String(data.summary||data.resumen||'').trim();
+          descripcion=descripcion||String(data.descripcion||data.description||'').trim();
+          break;
+        }
+      }
+    }
+    const extras={frase,summary,descripcion,photoUrl:await photoPromise};
+    NODE_EXTRAS_CACHE.set(id,extras);
+    return extras;
+  })();
+  NODE_EXTRAS_INFLIGHT.set(id,promise);
+  try{ return await promise; }
+  finally{ NODE_EXTRAS_INFLIGHT.delete(id); }
+}
+function renderDetailExtras(extras,{loading=false}={}){
+  const fraseEl=document.getElementById('dFrase');
+  const descEl=document.getElementById('dDesc');
+  const statusEl=document.getElementById('dStatus');
+  const heroEl=document.getElementById('dHero');
+  const photoEl=document.getElementById('dHeroPhoto');
+  if(!fraseEl||!descEl||!statusEl) return;
+  const frase=extras?.frase||'';
+  fraseEl.textContent=frase?`«${frase.replace(/^[«"']+|[»"']+$/g,'')}»`:'';
+  fraseEl.hidden=!frase;
+  const desc=extras?.descripcion||extras?.summary||'';
+  descEl.textContent=desc;
+  descEl.hidden=!desc;
+  if(loading){
+    statusEl.textContent='Recuperando la ficha…';
+    statusEl.hidden=false;
+  }else if(!frase&&!desc){
+    statusEl.textContent='Descripción no disponible; ábrela en la ficha completa.';
+    statusEl.hidden=false;
+  }else{
+    statusEl.hidden=true;
+  }
+  if(heroEl&&photoEl&&extras?.photoUrl){
+    photoEl.src=extras.photoUrl;
+    heroEl.classList.add('has-photo');
+  }
+}
+const detailScroll=document.getElementById('detailScroll');
+const detailBar=document.getElementById('detailBar');
+let currentDetailId=null;
+function openDetail(id){
+  const n=ALL[id]; if(!n) return;
+  const col=colorOf[n._school];
+  const R=relativesOf(id);
+  currentDetailId=id;
+  detail.style.setProperty('--school-accent',col);
+  document.getElementById('dbody').innerHTML=`
+    <div class="dhero" id="dHero">
+      <div class="dhero-bg"><img id="dHeroPhoto" alt="" decoding="async"></div>
+      <div class="dhero-content">
+        <div class="dfam"><span class="sw" style="background:${col}"></span>${schoolLabel[n._school]}</div>
+        <h3>${formatDetailTitle(n.label)}</h3>
+        ${n.aut?`<p class="dauthors">${n.aut}</p>`:''}
+        <div class="dmeta-row">
+          <div class="dmeta-cell"><b>Año</b><span>${n.year||'—'}</span></div>
+          <div class="dmeta-cell"><b>País</b><span>${n.pais||'—'}</span></div>
+          <div class="dmeta-cell"><b>Tipo</b><span>${n.tipo?n.tipo+(n.fund?' · fundacional':''):'—'}</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="dfrase" id="dFrase" hidden></p>
+    <p class="ddesc" id="dDesc" hidden></p>
+    <p class="dstatus" id="dStatus" hidden></p>
+    <div class="dactions">
+      <button class="dficha-btn" id="dOpenFicha" type="button">
+        <svg class="dficha-book" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.8C10.9 5.6 9.2 5 7.2 5H4v14h3.6c1.7 0 3.2.5 4.4 1.4 1.2-.9 2.7-1.4 4.4-1.4H20V5h-3.2c-2 0-3.7.6-4.8 1.8Zm0 0V20"/></svg>
+        <svg class="dficha-lock" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg>
+        Abrir ficha completa
+      </button>
+      <p class="dsub-note">Contenido para suscriptores · <button class="dsub-link" id="dSubscribeLink" type="button">Suscríbete para acceder</button></p>
+      <button class="dexternal" id="dOpenExternal" type="button">Abrir en una pestaña nueva</button>
+    </div>
+    <div class="dgroup"><h4>Hereda de · ${R.parents.length}</h4>${listOr(R.parents)}</div>
+    <div class="dgroup"><h4>Da origen a · ${R.childrenArr.length}</h4>${listOr(R.childrenArr)}</div>
+    <div class="dgroup"><h4>Influido por otras escuelas · ${R.inbound.length}</h4>${listOr(R.inbound)}</div>
+    <div class="dgroup"><h4>Influye en otras escuelas · ${R.outbound.length}</h4>${listOr(R.outbound)}</div>`;
+  document.querySelectorAll('#dbody [data-go]').forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    travelToNode(el.dataset.go);
+  });
+  document.getElementById('dOpenFicha').onclick=e=>{ e.stopPropagation(); openModelFicha(id); };
+  prewarmModelFicha(id);
+  document.getElementById('dSubscribeLink').onclick=e=>{ e.stopPropagation(); fichaPendingId=id; openSubscriptionGate(); };
+  document.getElementById('dOpenExternal').onclick=e=>{
+    e.stopPropagation();
+    if(!window.HAS_SUBSCRIPTION_ACCESS){ fichaPendingId=null; openSubscriptionGate(); return; }
+    window.open('/modelos/'+encodeURIComponent(id),'_blank','noopener');
+  };
+  const cached=NODE_EXTRAS_CACHE.get(id)||null;
+  renderDetailExtras(cached,{loading:!cached});
+  if(!cached){
+    loadNodeExtras(n).then(extras=>{
+      if(currentDetailId===id) renderDetailExtras(extras);
+    });
+  }
+  detailScroll.scrollTop=0;
+  detail.classList.add('open'); detail.setAttribute('aria-hidden','false');
+  highlightInTree(id);
+}
+function highlightInTree(id){
+  document.querySelectorAll('.tnode').forEach(g=>g.classList.toggle('lit',g.dataset.id===id));
+  document.querySelectorAll('.tedge').forEach(p=>{
+    const on=(p.dataset.child===id||p.dataset.parent===id);
+    p.classList.toggle('lit',on);
+  });
+}
+/* ---------- hover: iluminar influencias del nodo, atenuar el resto ---------- */
+function neighborsOf(id){
+  // todas las influencias (entrantes y salientes), incluidas las que cruzan de escuela
+  const set=new Set([id]);
+  EDGES.forEach(e=>{
+    if(e.from===id) set.add(e.to);
+    if(e.to===id)   set.add(e.from);
+  });
+  return set;
+}
+function isSameSchoolInfluence(sourceId,targetId){
+  const source=ALL[sourceId], target=ALL[targetId];
+  if(!source||!target||source._school!==target._school) return false;
+  return EDGES.some(e=>(e.from===sourceId&&e.to===targetId)||
+                       (e.to===sourceId&&e.from===targetId));
+}
+function fitSvgText(el,value,maxWidth){
+  el.textContent=value;
+  if(el.getComputedTextLength()<=maxWidth) return value;
+  let lo=0,hi=value.length;
+  while(lo<hi){
+    const mid=Math.ceil((lo+hi)/2);
+    el.textContent=value.slice(0,mid)+'…';
+    if(el.getComputedTextLength()<=maxWidth) lo=mid;
+    else hi=mid-1;
+  }
+  el.textContent=value.slice(0,lo)+'…';
+  return el.textContent;
+}
+function expandInfluenceCard(card,rect,label,fullLabel,baseWidth,inbound){
+  clearTimeout(label._collapseTimer);
+  clearTimeout(label._expandTimer);
+  label.textContent=fullLabel;
+  const width=Math.max(baseWidth,Math.ceil(label.getComputedTextLength()+18));
+  label.textContent=label.dataset.shortLabel;
+  const extra=width-baseWidth;
+  card._expanded=true;
+  requestAnimationFrame(()=>{
+    rect.style.width=width+'px';
+    card.style.transform=inbound?`translateX(${-extra}px)`:'translateX(0)';
+  });
+  label._expandTimer=setTimeout(()=>{
+    if(card._expanded) label.textContent=fullLabel;
+  },220);
+}
+function collapseInfluenceCard(card,rect,label,shortLabel,baseWidth){
+  clearTimeout(label._collapseTimer);
+  clearTimeout(label._expandTimer);
+  card._expanded=false;
+  label.textContent=shortLabel;
+  rect.style.width=baseWidth+'px';
+  card.style.transform='translateX(0)';
+}
+function showCrossInfluences(id,ctx){
+  document.querySelectorAll('.cross-layer').forEach(g=>g.remove());
+  document.querySelectorAll('.school.cross-active').forEach(s=>s.classList.remove('cross-active'));
+  if(!ctx) return;
+  const selected=ALL[id];
+  const links=EDGES.filter(e=>(e.to===id && e.fromS!==selected._school) ||
+                              (e.from===id && e.toS!==selected._school));
+  if(!links.length) return;
+  ctx.svg.closest('.school')?.classList.add('cross-active');
+
+  const NS='http://www.w3.org/2000/svg';
+  const layer=document.createElementNS(NS,'g');
+  layer.setAttribute('class','cross-layer');
+  if(pinnedNodeId===id) layer.classList.add('pinned-cross');
+  const lineGroup=document.createElementNS(NS,'g');
+  const cardGroup=document.createElementNS(NS,'g');
+  layer.append(lineGroup,cardGroup);
+  ctx.svg.appendChild(layer);
+
+  const externalW=190, rowGap=48;
+  const selectedW=ctx.node._displayW||CARDW;
+  const columns=[
+    {inbound:true, links:links.filter(e=>e.to===id),
+      x:ctx.node._x-externalW-56},
+    {inbound:false,links:links.filter(e=>e.from===id),
+      x:ctx.node._x+selectedW+56}
+  ];
+  columns.forEach(column=>{
+    const total=(column.links.length-1)*rowGap;
+    const start=ctx.node._y-total/2;
+    column.links.forEach((edge,i)=>{
+      const other=ALL[column.inbound?edge.from:edge.to];
+      if(!other) return;
+      const y=start+i*rowGap;
+      const col=colorOf[other._school]||FALLBACK;
+
+      const path=document.createElementNS(NS,'path');
+      const fromX=column.inbound?column.x+externalW:ctx.node._x+selectedW;
+      const toX=column.inbound?ctx.node._x:column.x;
+      const fromY=column.inbound?y:ctx.node._y;
+      const toY=column.inbound?ctx.node._y:y;
+      const bend=(fromX+toX)/2;
+      path.setAttribute('d',`M ${fromX} ${fromY} C ${bend} ${fromY}, ${bend} ${toY}, ${toX} ${toY}`);
+      path.setAttribute('class','cross-link');
+      path.setAttribute('stroke',col);
+      lineGroup.appendChild(path);
+
+      const card=document.createElementNS(NS,'g');
+      card.setAttribute('class','cross-card');
+      const rect=document.createElementNS(NS,'rect');
+      rect.setAttribute('class','cross-card-bg');
+      rect.setAttribute('x',column.x); rect.setAttribute('y',y-19);
+      rect.setAttribute('width',externalW); rect.setAttribute('height',38); rect.setAttribute('rx',11);
+      rect.style.width=externalW+'px';
+      rect.setAttribute('fill','#191e25'); rect.setAttribute('stroke',col);
+      rect.setAttribute('stroke-opacity','.6'); rect.setAttribute('stroke-width','1');
+      card.appendChild(rect);
+      const kicker=document.createElementNS(NS,'text');
+      kicker.setAttribute('class','cross-kicker'); kicker.setAttribute('x',column.x+9); kicker.setAttribute('y',y-5);
+      const kickerText=(column.inbound?'INFLUENCIA ENTRANTE · ':'INFLUENCIA SALIENTE · ')+schoolLabel[other._school];
+      kicker.textContent=kickerText;
+      card.appendChild(kicker);
+      const label=document.createElementNS(NS,'text');
+      label.setAttribute('class','cross-label'); label.setAttribute('x',column.x+9); label.setAttribute('y',y+11);
+      const labelText=other.label+(other.year?' · '+other.year:'');
+      // plegada: abreviatura si existe; desplegada (hover): nombre completo
+      const compactText=(other.tl||other.label)+(other.year?' · '+other.year:'');
+      label.textContent=compactText; card.appendChild(label);
+      const title=document.createElementNS(NS,'title');
+      title.textContent=kickerText+' — '+labelText; card.appendChild(title);
+      cardGroup.appendChild(card);
+      fitSvgText(kicker,kickerText,externalW-18);
+      const shortLabel=fitSvgText(label,compactText,externalW-18);
+      label.dataset.fullLabel=labelText;
+      label.dataset.shortLabel=shortLabel;
+      card.addEventListener('mouseenter',()=>{
+        if(pinnedNodeId!==id) return;
+        expandInfluenceCard(card,rect,label,labelText,externalW,column.inbound);
+      });
+      card.addEventListener('mouseleave',()=>{
+        if(pinnedNodeId!==id) return;
+        collapseInfluenceCard(card,rect,label,shortLabel,externalW);
+      });
+      card.addEventListener('click',e=>{
+        if(pinnedNodeId!==id||main._suppressClick) return;
+        e.stopPropagation();
+        travelToNode(other.id);
+      });
+    });
+  });
+}
+function hoverNode(id,ctx){
+  const near=neighborsOf(id);
+  document.querySelectorAll('.tnode').forEach(g=>{
+    const nid=g.dataset.id;
+    const on=near.has(nid);
+    g.classList.toggle('dim', !on);
+    g.classList.toggle('lit', nid===id);
+  });
+  document.querySelectorAll('.tedge').forEach(p=>{
+    const on=(p.dataset.child===id||p.dataset.parent===id);
+    p.classList.toggle('lit', on);
+    p.classList.toggle('dim', !on);
+  });
+  showCrossInfluences(id,ctx);
+}
+function collapseExpandedNode(){
+  if(!expandedContext) return;
+  const old=expandedContext;
+  expandedContext=null;
+  old.node._displayW=CARDW;
+  const rect=old.g.querySelector('.node-card');
+  const label=old.g.querySelector('.tlabel');
+  clearTimeout(label._collapseTimer);
+  clearTimeout(label._expandTimer);
+  label.textContent=label.dataset.shortLabel;
+  setSubWidth(old.g,CARDW);
+  rect.style.width=CARDW+'px';
+}
+function expandPinnedNode(ctx,bringToFront=true){
+  collapseExpandedNode();
+  const rect=ctx.g.querySelector('.node-card');
+  const label=ctx.g.querySelector('.tlabel');
+  clearTimeout(label._collapseTimer);
+  clearTimeout(label._expandTimer);
+  label.textContent=label.dataset.fullLabel;
+  const leftPad=23;
+  const width=Math.max(CARDW,Math.ceil(leftPad+label.getComputedTextLength()+14));
+  label.textContent=label.dataset.shortLabel;
+  ctx.node._displayW=width;
+  expandedContext=ctx;
+  if(bringToFront) ctx.g.parentNode.appendChild(ctx.g);
+  requestAnimationFrame(()=>{
+    if(expandedContext===ctx) rect.style.width=width+'px';
+  });
+  label._expandTimer=setTimeout(()=>{
+    if(expandedContext===ctx){
+      label.textContent=label.dataset.fullLabel;
+      setSubWidth(ctx.g,width);
+    }
+  },220);
+}
+function expandSameSchoolInfluence(ctx){
+  if(expandedSameSchoolContext===ctx) return;
+  collapseSameSchoolInfluence();
+  const rect=ctx.g.querySelector('.node-card');
+  const label=ctx.g.querySelector('.tlabel');
+  clearTimeout(label._collapseTimer);
+  clearTimeout(label._expandTimer);
+  label.textContent=label.dataset.fullLabel;
+  const leftPad=23;
+  const width=Math.max(CARDW,Math.ceil(leftPad+label.getComputedTextLength()+14));
+  label.textContent=label.dataset.shortLabel;
+  expandedSameSchoolContext=ctx;
+  requestAnimationFrame(()=>{ rect.style.width=width+'px'; });
+  label._expandTimer=setTimeout(()=>{
+    if(expandedSameSchoolContext===ctx){
+      label.textContent=label.dataset.fullLabel;
+      setSubWidth(ctx.g,width);
+    }
+  },220);
+}
+function collapseSameSchoolInfluence(){
+  if(!expandedSameSchoolContext) return;
+  const old=expandedSameSchoolContext;
+  expandedSameSchoolContext=null;
+  const rect=old.g.querySelector('.node-card');
+  const label=old.g.querySelector('.tlabel');
+  clearTimeout(label._collapseTimer);
+  clearTimeout(label._expandTimer);
+  label.textContent=label.dataset.shortLabel;
+  setSubWidth(old.g,CARDW);
+  rect.style.width=CARDW+'px';
+}
+function travelToNode(id){
+  const ctx=NODE_CONTEXTS[id];
+  if(!ctx) return;
+  const mainRect=main.getBoundingClientRect();
+  const svgRect=ctx.svg.getBoundingClientRect();
+  const scaleX=svgRect.width/ctx.L.W;
+  const scaleY=svgRect.height/ctx.L.H;
+  const contentX=main.scrollLeft+(svgRect.left-mainRect.left)+ctx.node._cx*scaleX;
+  const contentY=main.scrollTop +(svgRect.top-mainRect.top) +ctx.node._y*scaleY;
+  pinHover(id,ctx);
+  openDetail(id);
+  // el panel de detalle ocupa la derecha: centra el nodo en el hueco visible
+  // entre el borde izquierdo y el panel, no en toda la pantalla
+  const panelWidth=detail.classList.contains('open')?detail.getBoundingClientRect().width:0;
+  const visibleCenterX=(window.innerWidth-panelWidth)/2;
+  main.scrollTo({
+    left:contentX-(visibleCenterX-mainRect.left),
+    top:contentY-main.clientHeight/2,
+    behavior:'smooth'
+  });
+}
+function pinHover(id,ctx){
+  if(pinnedNodeId===id) return;
+  collapseSameSchoolInfluence();
+  pinnedNodeId=id;
+  if(expandedContext===ctx){
+    // El hover ya lo ha expandido: al fijarlo conservamos ancho y texto,
+    // sin contraer y reproducir de nuevo la animaciÃ³n.
+    ctx.g.parentNode.appendChild(ctx.g);
+  }else{
+    expandPinnedNode(ctx);
+  }
+  hoverNode(id,ctx);
+}
+function unpinHover(){
+  if(!pinnedNodeId) return;
+  pinnedNodeId=null;
+  clearHover();
+  collapseExpandedNode();
+  collapseSameSchoolInfluence();
+}
+function clearHover(){
+  document.querySelectorAll('.cross-layer').forEach(g=>g.remove());
+  document.querySelectorAll('.school.cross-active').forEach(s=>s.classList.remove('cross-active'));
+  document.querySelectorAll('.tnode').forEach(g=>g.classList.remove('dim','lit'));
+  document.querySelectorAll('.tedge').forEach(p=>p.classList.remove('dim','lit'));
+}
+function clearTreeHighlight(){
+  document.querySelectorAll('.tnode.lit').forEach(g=>g.classList.remove('lit'));
+  document.querySelectorAll('.tedge.lit').forEach(p=>p.classList.remove('lit'));
+}
+function closeDetail(){ detail.classList.remove('open'); scrim.classList.remove('show');
+  detail.setAttribute('aria-hidden','true'); currentDetailId=null; clearTreeHighlight(); }
+document.getElementById('dclose').onclick=closeDetail;
+scrim.onclick=closeDetail;
+
+/* ---------- ficha completa del modelo (modal a pantalla grande) ---------- */
+/* se abre desde el botón «Abrir ficha completa» del panel de detalle;
+   se cierra con la X, con Escape o pulsando el fondo oscurecido */
+const fichaPanel=document.getElementById('fichaPanel');
+const fichaFrame=document.getElementById('fichaFrame');
+const fichaClose=document.getElementById('fichaClose');
+const fichaExternal=document.getElementById('fichaExternal');
+const fichaTitle=document.getElementById('fichaTitle');
+const fichaLoading=document.getElementById('fichaLoading');
+let fichaCurrentId=null;
+let fichaPrevFocus=null;
+let fichaPendingId=null;
+let fichaReadySrc='';      // src del iframe cuyo load ya terminó
+let fichaPrewarmTimer=null;
+function fichaSrcFor(id){ return '/modelos/'+encodeURIComponent(id)+'?embed=1'; }
+/* Precalienta la ficha en el iframe (oculto tras el modal cerrado) en cuanto se
+   abre el panel de detalle: al pulsar «Abrir ficha completa» ya está cargada o
+   a medio cargar. Solo con suscripción; el retardo evita descargar fichas al
+   saltar rápido de nodo en nodo. */
+function prewarmModelFicha(id){
+  clearTimeout(fichaPrewarmTimer);
+  fichaPrewarmTimer=setTimeout(()=>{
+    if(!window.HAS_SUBSCRIPTION_ACCESS) return;
+    if(fichaPanel.classList.contains('open')) return;
+    const src=fichaSrcFor(id);
+    if(fichaFrame.getAttribute('src')===src) return;
+    fichaReadySrc='';
+    fichaFrame.src=src;
+  },250);
+}
+function openModelFicha(id){
+  // la ficha completa (iframe de /modelos) es lo único reservado a suscriptores
+  if(!window.HAS_SUBSCRIPTION_ACCESS){ fichaPendingId=id; openSubscriptionGate(); return; }
+  clearTimeout(fichaPrewarmTimer);
+  fichaCurrentId=id;
+  fichaPrevFocus=document.activeElement;
+  fichaTitle.textContent=ALL[id]?.label||'';
+  const src=fichaSrcFor(id);
+  if(fichaFrame.getAttribute('src')!==src){
+    fichaReadySrc='';
+    fichaFrame.src=src;
+  }
+  if(fichaReadySrc===src){
+    fichaLoading.style.opacity='0';
+    fichaLoading.style.display='none';
+  }else{
+    fichaLoading.style.opacity='1';
+    fichaLoading.style.display='grid';
+  }
+  fichaPanel.classList.add('open'); fichaPanel.setAttribute('aria-hidden','false');
+  requestAnimationFrame(()=>fichaPanel.classList.add('visible'));
+  fichaClose.focus();
+}
+function closeModelFicha(){
+  if(!fichaPanel.classList.contains('open')) return;
+  fichaPanel.classList.remove('visible');
+  fichaPanel.setAttribute('aria-hidden','true');
+  setTimeout(()=>{
+    fichaPanel.classList.remove('open');
+    // se conserva el documento cargado para reabrir al instante; solo se corta
+    // cualquier reproducción en curso (mismo origen, acceso directo al DOM)
+    try{
+      const doc=fichaFrame.contentDocument;
+      doc?.querySelectorAll('video,audio').forEach(m=>m.pause());
+      doc?.querySelectorAll('iframe').forEach(f=>{const s=f.getAttribute('src');if(s)f.setAttribute('src',s);});
+    }catch(_){}
+  },420);
+  if(fichaPrevFocus&&typeof fichaPrevFocus.focus==='function') fichaPrevFocus.focus();
+}
+document.addEventListener('genealogy:subscription',e=>{
+  if(e.detail?.mode==='active'&&fichaPendingId){
+    const id=fichaPendingId; fichaPendingId=null; openModelFicha(id);
+  }
+});
+fichaClose.onclick=closeModelFicha;
+fichaExternal.onclick=()=>{
+  if(fichaCurrentId) window.open('/modelos/'+encodeURIComponent(fichaCurrentId),'_blank','noopener');
+};
+fichaPanel.addEventListener('click',e=>{ if(e.target===fichaPanel) closeModelFicha(); });
+fichaFrame.addEventListener('load',()=>{
+  const src=fichaFrame.getAttribute('src')||'';
+  if(!src||src==='about:blank') return;
+  fichaReadySrc=src;
+  fichaLoading.style.opacity='0';
+  setTimeout(()=>{ fichaLoading.style.display='none'; },420);
+});
+
+document.addEventListener('click',e=>{
+  if(main._suppressClick) return;
+  if(detail.contains(e.target)||fichaPanel.contains(e.target)) return;
+  unpinHover();
+  closeDetail();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(fichaPanel.classList.contains('open')){ closeModelFicha(); return; }
+    unpinHover(); closeDetail(); closeNodeView();
+  }
+});
+
+/* Precarga en segundo plano los extras del panel de detalle (frase, descripción
+   y foto) de todos los modelos para que el clic en un nodo sea instantáneo.
+   Dos descargas a la vez, arranque diferido para no competir con el primer
+   render, y sin duplicados: el nodo clicado comparte caché y peticiones en
+   vuelo con esta cola. Se omite si el usuario tiene activado el ahorro de
+   datos del navegador. */
+setTimeout(()=>{
+  if(navigator.connection?.saveData) return;
+  const queue=[];
+  SCHOOLS.forEach(s=>s.nodes.forEach(n=>queue.push(n)));
+  let idx=0,active=0;
+  const MAX_PARALLEL=2;
+  (function pump(){
+    while(active<MAX_PARALLEL&&idx<queue.length){
+      const n=queue[idx++];
+      if(NODE_EXTRAS_CACHE.has(n.id)) continue;
+      active++;
+      loadNodeExtras(n).catch(()=>{}).finally(()=>{active--;pump();});
+    }
+  })();
+},2500);
+</script>
+</body></html>
