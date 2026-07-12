@@ -176,6 +176,9 @@ function isPublicModelDataPath(path) {
     || lowerPath === 'core/foto.json'
     || lowerPath === 'core/imagenes/vida/index.json'
     || lowerPath === 'core/escuelas/index.json'
+    // Grafo de la genealogía: relaciones entre modelos, visible en abierto
+    // (las fichas completas siguen siendo privadas).
+    || lowerPath === 'core/influencias/modelos_influencias.json'
     || /^core\/escuelas\/[a-z0-9_-]+\.json$/i.test(value)
     || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
 }
