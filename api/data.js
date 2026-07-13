@@ -157,10 +157,17 @@ function isPublicModelImagePath(path) {
   const isImage = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']
     .some((ext) => lowerPath.endsWith(ext));
 
-  return isImage && (
-    lowerPath.startsWith('core/fotos/')
-    || lowerPath.startsWith('core/imagenes/vida/')
-    || lowerPath.startsWith('core/imagenes/localizacion/')
+  // Retratos usados por la app publica /metamodelos. Se admite solamente
+  // un archivo de imagen directo: no listados, JSON ni subdirectorios.
+  const isMetamodelAuthorImage = /^core\/imagenes\/metamodelos\/[a-z0-9_-]+\.(?:jpe?g|png|webp)$/i
+    .test(value);
+
+  return isMetamodelAuthorImage || (
+    isImage && (
+      lowerPath.startsWith('core/fotos/')
+      || lowerPath.startsWith('core/imagenes/vida/')
+      || lowerPath.startsWith('core/imagenes/localizacion/')
+    )
   );
 }
 
