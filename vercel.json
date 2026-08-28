@@ -1,4 +1,21 @@
 {
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/modelos/index.html",
+      "destination": "/modelos/",
+      "permanent": true
+    },
+    {
+      "source": "/genealogia/index.html",
+      "destination": "/genealogia",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -11,6 +28,33 @@
     {
       "source": "/modelos/:id",
       "destination": "/modelos/index.html"
+    },
+    {
+      "source": "/procesos",
+      "destination": "/procesos/index.html"
+    },
+    {
+      "source": "/procesos/",
+      "destination": "/procesos/index.html"
+    },
+    {
+      "source": "/quiz",
+      "destination": "/quiz/index.html"
+    },
+    {
+      "source": "/quiz/",
+      "destination": "/quiz/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/quiz/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     }
   ]
 }
