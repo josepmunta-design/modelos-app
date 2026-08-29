@@ -6,6 +6,8 @@ const PUBLIC_DIR = path.join(ROOT, 'public');
 const MODELS_DIR = path.join(PUBLIC_DIR, 'modelos');
 const LOCAL_INDEX_PATH = path.join(PUBLIC_DIR, 'assets', 'Repo', 'modelos-index.json');
 const MANIFEST_PATH = path.join(MODELS_DIR, '.generated-pages.json');
+const APP_TEMPLATE_PATH = path.join(MODELS_DIR, 'index.html');
+const GENERATED_ASSETS_DIR = path.join(MODELS_DIR, 'generated-assets');
 
 const BASE_URL = String(process.env.PUBLIC_APP_URL || 'https://apps.tumentorpsicologia.com')
   .replace(/\/+$/, '');
@@ -282,16 +284,108 @@ function relatedModelsFor(model, models) {
     .slice(0, 5);
 }
 
-function renderModelPage(model, allModels) {
-  const url = `${BASE_URL}/modelos/${encodeURIComponent(model.id)}`;
-  const interactiveUrl = `/modelos/?open=${encodeURIComponent(model.id)}`;
-  const description = truncateText(model.descripcion, 158);
-  const title = `${model.label} | Modelo de psicoterapia`;
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function replaceElementTextById(html, tagName, id, value) {
+  const pattern = new RegExp(
+    `(<${tagName}\\b[^>]*\\bid=["']${escapeRegExp(id)}["'][^>]*>)[\\s\\S]*?(<\\/${tagName}>)`,
+    'i'
+  );
+  return html.replace(pattern, `$1${escapeHtml(value)}$2`);
+}
+
+function replaceAttributeById(html, tagName, id, attribute, value) {
+  const pattern = new RegExp(
+    `<${tagName}\\b[^>]*\\bid=["']${escapeRegExp(id)}["'][^>]*>`,
+    'i'
+  );
+  return html.replace(pattern, (tag) => {
+    const attributePattern = new RegExp(`\\s${escapeRegExp(attribute)}\\s*=\\s*(["']).*?\\1`, 'i');
+    const nextAttribute = ` ${attribute}="${escapeHtml(value)}"`;
+    return attributePattern.test(tag)
+      ? tag.replace(attributePattern, nextAttribute)
+      : tag.replace(/>$/, `${nextAttribute}>`);
+  });
+}
+
+function replaceMetaByProperty(html, property, value) {
+  const pattern = new RegExp(
+    `<meta\\b(?=[^>]*\\bproperty=["']${escapeRegExp(property)}["'])[^>]*>`,
+    'i'
+  );
+  return html.replace(pattern, (tag) => {
+    const contentPattern = /\scontent\s*=\s*(["']).*?\1/i;
+    const nextContent = ` content="${escapeHtml(value)}"`;
+    return contentPattern.test(tag)
+      ? tag.replace(contentPattern, nextContent)
+      : tag.replace(/>$/, `${nextContent}>`);
+  });
+}
+
+async function prepareInteractiveTemplate() {
+  let html = await fs.readFile(APP_TEMPLATE_PATH, 'utf8');
+  const assets = [];
+  let styleIndex = 0;
+  let scriptIndex = 0;
+
+  if (!html.includes('getModelIdFromPath')) {
+    throw new Error('La plantilla de la biblioteca no reconoce las rutas individuales de modelos.');
+  }
+
+  html = html.replace(/<style\b([^>]*)>([\s\S]*?)<\/style>/gi, (_match, _attributes, content) => {
+    const filename = `app-${++styleIndex}.css`;
+    assets.push({ filename, content: `${content.trim()}\n` });
+    return `<link rel="stylesheet" href="/modelos/generated-assets/${filename}">`;
+  });
+
+  html = html.replace(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi, (match, attributes, content) => {
+    const normalizedAttributes = String(attributes || '').trim();
+    if (!content.trim() || /\bsrc\s*=/i.test(normalizedAttributes) || /application\/ld\+json/i.test(normalizedAttributes)) {
+      return match;
+    }
+
+    const filename = `app-${++scriptIndex}.js`;
+    assets.push({ filename, content: `${content.trim()}\n` });
+    return `<script${normalizedAttributes ? ` ${normalizedAttributes}` : ''} src="/modelos/generated-assets/${filename}"></script>`;
+  });
+
+  await fs.rm(GENERATED_ASSETS_DIR, { recursive: true, force: true });
+  await fs.mkdir(GENERATED_ASSETS_DIR, { recursive: true });
+  await Promise.all(assets.map(({ filename, content }) => (
+    fs.writeFile(path.join(GENERATED_ASSETS_DIR, filename), content, 'utf8')
+  )));
+
+  return html;
+}
+
+function renderNoScriptFallback(model, related) {
   const theory = compactText(model?.teoriaCambio?.resumen || '');
   const ideas = model.ideasPrincipales.slice(0, 10);
-  const related = relatedModelsFor(model, allModels);
-  const location = [model.ciudad, model.pais].filter(Boolean).join(' · ');
   const references = model.refs.map(compactText).filter(Boolean).slice(0, 20);
+
+  return `<noscript>
+    <style>.seo-noscript{max-width:980px;margin:40px auto;padding:32px;color:#f0ece5;background:#0b1016;font:16px/1.65 system-ui,sans-serif}.seo-noscript h1,.seo-noscript h2{font-family:Georgia,serif;font-weight:400}.seo-noscript a{color:#8ed4d0}</style>
+    <article class="seo-noscript">
+      <p>${escapeHtml([model.grupo, model.year].filter(Boolean).join(' · '))}</p>
+      <h1>${escapeHtml(model.label)}</h1>
+      ${model.frase ? `<blockquote>${escapeHtml(model.frase)}</blockquote>` : ''}
+      <p>${escapeHtml(model.descripcion)}</p>
+      ${theory ? `<section><h2>Teoría del cambio</h2><p>${escapeHtml(theory)}</p></section>` : ''}
+      ${ideas.length ? `<section><h2>Ideas fundamentales</h2><ol>${ideas.map(renderIdea).join('')}</ol></section>` : ''}
+      ${model.influencias.length ? `<section><h2>Influencias</h2>${renderSimpleList(model.influencias)}</section>` : ''}
+      ${references.length ? `<section><h2>Referencias principales</h2>${renderSimpleList(references)}</section>` : ''}
+      ${related.length ? `<nav aria-label="Modelos relacionados"><h2>Modelos relacionados</h2><ul>${related.map((item) => `<li><a href="/modelos/${encodeURIComponent(item.id)}">${escapeHtml(item.label)}</a></li>`).join('')}</ul></nav>` : ''}
+    </article>
+  </noscript>`;
+}
+
+function renderModelPage(model, allModels, interactiveTemplate) {
+  const url = `${BASE_URL}/modelos/${encodeURIComponent(model.id)}`;
+  const description = truncateText(model.descripcion, 158);
+  const title = `${model.label} | Modelo de psicoterapia`;
+  const related = relatedModelsFor(model, allModels);
   const indexable = model.descripcion.length >= 160;
 
   const structuredData = {
@@ -330,74 +424,26 @@ function renderModelPage(model, allModels) {
     ]
   };
 
-  return `<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>${escapeHtml(title)}</title>
-  <meta name="description" content="${escapeHtml(description)}">
-  <meta name="robots" content="${indexable ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' : 'noindex,follow'}">
-  <meta name="author" content="Tu Mentor Psicología">
-  <meta name="theme-color" content="#0b1016">
-  <link rel="canonical" href="${escapeHtml(url)}">
-  <link rel="icon" type="image/png" href="/assets/logo/logo.png">
-  <meta property="og:locale" content="es_ES">
-  <meta property="og:type" content="article">
-  <meta property="og:site_name" content="Tu Mentor Psicología">
-  <meta property="og:title" content="${escapeHtml(title)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
-  <meta property="og:url" content="${escapeHtml(url)}">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="${escapeHtml(title)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <script type="application/ld+json">${safeJsonForHtml(structuredData)}</script>
-  <style>
-    :root{color-scheme:dark;--bg:#080b0f;--panel:#0e141a;--line:#24313a;--ink:#f0ece5;--muted:#a8a5a0;--accent:#8ed4d0;--accent-soft:#142729}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 80% 0,#182125 0,transparent 30rem),var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.65}
-    a{color:inherit}.wrap{width:min(1120px,calc(100% - 36px));margin:auto}.topbar{display:flex;align-items:center;justify-content:space-between;padding:22px 0;border-bottom:1px solid var(--line)}.brand{text-decoration:none;font-family:Georgia,serif;font-size:1.28rem}.back{color:var(--muted);text-decoration:none;font-size:.92rem}.hero{padding:78px 0 62px;border-bottom:1px solid var(--line)}.eyebrow{color:var(--accent);font-size:.75rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.hero h1{max-width:900px;margin:.55rem 0 1rem;font-family:Georgia,"Times New Roman",serif;font-size:clamp(2.7rem,7vw,6rem);font-weight:400;line-height:.98;letter-spacing:-.035em}.lede{max-width:820px;color:#d6d1c9;font-size:clamp(1.05rem,2vw,1.3rem)}.meta{display:flex;flex-wrap:wrap;gap:10px;margin:28px 0}.meta span{padding:7px 11px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.85rem}.cta{display:inline-flex;align-items:center;gap:10px;margin-top:10px;padding:12px 18px;border-radius:999px;background:var(--accent);color:#071011;text-decoration:none;font-weight:800}.quote{margin:0;padding:26px 0 0;max-width:850px;color:#ded8ce;font-family:Georgia,serif;font-size:clamp(1.25rem,2.7vw,2rem);font-style:italic}.content{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:64px;padding:64px 0 96px}.section{padding:0 0 48px;margin:0 0 48px;border-bottom:1px solid var(--line)}.section h2{margin:0 0 20px;font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.4rem);font-weight:400;line-height:1.08}.section p{color:#c9c4bd;font-size:1.05rem}.ideas{list-style:none;padding:0;margin:0;display:grid;gap:16px}.ideas li{padding:22px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,var(--panel),#0a0e12)}.ideas h3{margin:0 0 8px;font-size:1rem}.ideas p{margin:0;font-size:.95rem}.chips{display:flex;flex-wrap:wrap;gap:9px;list-style:none;padding:0}.chips li{padding:8px 11px;border:1px solid #345154;border-radius:999px;background:var(--accent-soft);font-size:.86rem}.refs{padding-left:1.25rem;color:var(--muted);font-size:.88rem}.refs li{margin-bottom:.7rem}.aside{position:sticky;top:24px;align-self:start;padding:20px;border:1px solid var(--line);border-radius:18px;background:rgba(14,20,26,.88)}.aside h2{font-family:Georgia,serif;font-weight:400}.related{list-style:none;padding:0;margin:0}.related li+li{border-top:1px solid var(--line)}.related a{display:block;padding:13px 0;text-decoration:none}.related small{display:block;color:var(--muted)}footer{padding:28px 0;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}@media(max-width:800px){.content{grid-template-columns:1fr;gap:10px}.aside{position:static}.hero{padding-top:52px}}
-  </style>
-</head>
-<body>
-  <header class="wrap topbar">
-    <a class="brand" href="/">Tu Mentor Psicología</a>
-    <a class="back" href="/modelos/">← Biblioteca de modelos</a>
-  </header>
-  <main>
-    <article>
-      <header class="hero">
-        <div class="wrap">
-          <div class="eyebrow">${escapeHtml([model.grupo, model.tipo || 'Modelo de psicoterapia'].filter(Boolean).join(' · '))}</div>
-          <h1>${escapeHtml(model.label)}</h1>
-          ${model.frase ? `<p class="quote">“${escapeHtml(model.frase)}”</p>` : ''}
-          <div class="meta">
-            ${model.autores ? `<span>${escapeHtml(model.autores)}</span>` : ''}
-            ${model.year ? `<span>${escapeHtml(model.year)}</span>` : ''}
-            ${location ? `<span>${escapeHtml(location)}</span>` : ''}
-          </div>
-          <p class="lede">${escapeHtml(model.descripcion)}</p>
-          <a class="cta" href="${escapeHtml(interactiveUrl)}">Abrir ficha interactiva <span aria-hidden="true">→</span></a>
-        </div>
-      </header>
-      <div class="wrap content">
-        <div>
-          ${theory ? `<section class="section"><div class="eyebrow">Teoría del cambio</div><h2>Cómo entiende el cambio</h2><p>${escapeHtml(theory)}</p></section>` : ''}
-          ${ideas.length ? `<section class="section"><div class="eyebrow">Ideas fundamentales</div><h2>Claves del modelo</h2><ol class="ideas">${ideas.map(renderIdea).join('')}</ol></section>` : ''}
-          ${model.influencias.length ? `<section class="section"><div class="eyebrow">Linaje teórico</div><h2>Influencias</h2>${renderSimpleList(model.influencias, 'chips')}</section>` : ''}
-          ${references.length ? `<section class="section"><div class="eyebrow">Fuentes</div><h2>Referencias principales</h2>${renderSimpleList(references, 'refs')}</section>` : ''}
-        </div>
-        <aside class="aside" aria-label="Modelos relacionados">
-          <div class="eyebrow">Seguir explorando</div>
-          <h2>Modelos relacionados</h2>
-          <ul class="related">${related.map((item) => `<li><a href="/modelos/${encodeURIComponent(item.id)}">${escapeHtml(item.label)}<small>${escapeHtml([item.autores, item.year].filter(Boolean).join(' · '))}</small></a></li>`).join('')}</ul>
-        </aside>
-      </div>
-    </article>
-  </main>
-  <footer><div class="wrap">Contenido educativo basado en fuentes bibliográficas. No sustituye la evaluación ni el tratamiento profesional.</div></footer>
-</body>
-</html>
-`;
+  let html = interactiveTemplate;
+  html = replaceElementTextById(html, 'title', 'seoTitle', title);
+  html = replaceAttributeById(html, 'meta', 'seoDescription', 'content', description);
+  html = replaceAttributeById(html, 'link', 'seoCanonical', 'href', url);
+  html = replaceAttributeById(html, 'meta', 'seoOgTitle', 'content', title);
+  html = replaceAttributeById(html, 'meta', 'seoOgDescription', 'content', description);
+  html = replaceAttributeById(html, 'meta', 'seoOgUrl', 'content', url);
+  html = replaceAttributeById(html, 'meta', 'seoTwitterTitle', 'content', title);
+  html = replaceAttributeById(html, 'meta', 'seoTwitterDescription', 'content', description);
+  html = replaceMetaByProperty(html, 'og:type', 'article');
+  html = html.replace(
+    /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
+    `<meta name="robots" content="${indexable ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' : 'noindex,follow'}">`
+  );
+  html = html.replace(
+    /<script\b[^>]*\bid=["']seoStructuredData["'][^>]*>[\s\S]*?<\/script>/i,
+    `<script id="seoStructuredData" type="application/ld+json">${safeJsonForHtml(structuredData)}</script>`
+  );
+  html = html.replace('</body>', `${renderNoScriptFallback(model, related)}\n</body>`);
+  return html;
 }
 
 function assertGeneratedPath(id) {
@@ -435,11 +481,16 @@ async function build() {
 
   const previousIds = await readPreviousManifest();
   await removePreviousGeneratedPages(previousIds);
+  const interactiveTemplate = await prepareInteractiveTemplate();
 
   for (const model of uniqueModels) {
     const modelDir = assertGeneratedPath(model.id);
     await fs.mkdir(modelDir, { recursive: true });
-    await fs.writeFile(path.join(modelDir, 'index.html'), renderModelPage(model, uniqueModels), 'utf8');
+    await fs.writeFile(
+      path.join(modelDir, 'index.html'),
+      renderModelPage(model, uniqueModels, interactiveTemplate),
+      'utf8'
+    );
   }
 
   const manifest = {
