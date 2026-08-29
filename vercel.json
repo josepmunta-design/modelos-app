@@ -1,4 +1,6 @@
 {
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "redirects": [
     {
       "source": "/index.html",
@@ -23,10 +25,6 @@
     },
     {
       "source": "/modelos",
-      "destination": "/modelos/index.html"
-    },
-    {
-      "source": "/modelos/:id",
       "destination": "/modelos/index.html"
     },
     {
@@ -58,3 +56,4 @@
     }
   ]
 }
+
