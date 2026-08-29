@@ -4,7 +4,9 @@ import path from 'node:path';
 const ROOT = process.cwd();
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const MODEL_INDEX_PATH = path.join(PUBLIC_DIR, 'assets', 'Repo', 'modelos-index.json');
-const BASE_URL = 'https://apps.tumentorpsicologia.com';
+const GENERATED_MANIFEST_PATH = path.join(PUBLIC_DIR, 'modelos', '.generated-pages.json');
+const BASE_URL = String(process.env.PUBLIC_APP_URL || 'https://apps.tumentorpsicologia.com')
+  .replace(/\/+$/, '');
 
 function escapeXml(value) {
   return String(value)
@@ -15,31 +17,51 @@ function escapeXml(value) {
     .replaceAll("'", '&apos;');
 }
 
-function modelUrl(id) {
-  return `${BASE_URL}/modelos/${encodeURIComponent(String(id).trim())}`;
+function cleanModelId(value) {
+  const id = String(value ?? '').trim();
+  return /^[a-z0-9][a-z0-9_-]*$/i.test(id) ? id : '';
+}
+
+async function readJson(filePath) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+async function readModelIds() {
+  const manifest = await readJson(GENERATED_MANIFEST_PATH);
+  if (Array.isArray(manifest?.indexableModels)) {
+    return manifest.indexableModels.map(cleanModelId).filter(Boolean);
+  }
+  if (Array.isArray(manifest?.models)) {
+    return manifest.models.map(cleanModelId).filter(Boolean);
+  }
+
+  const index = await readJson(MODEL_INDEX_PATH);
+  const sourceModels = Array.isArray(index) ? index : index?.models;
+  if (Array.isArray(sourceModels)) {
+    return sourceModels.map((model) => cleanModelId(model?.id)).filter(Boolean);
+  }
+
+  throw new Error('No existe un manifiesto ni un índice válido de modelos.');
 }
 
 async function buildSeoFiles() {
-  const rawIndex = await fs.readFile(MODEL_INDEX_PATH, 'utf8');
-  const parsedIndex = JSON.parse(rawIndex);
-  const sourceModels = Array.isArray(parsedIndex) ? parsedIndex : parsedIndex.models;
+  const modelIds = [...new Set(await readModelIds())]
+    .sort((a, b) => a.localeCompare(b, 'es'));
+  const manifest = await readJson(GENERATED_MANIFEST_PATH);
+  const generatedAt = String(manifest?.generatedAt || '');
+  const lastModified = /^\d{4}-\d{2}-\d{2}/.test(generatedAt)
+    ? generatedAt.slice(0, 10)
+    : new Date().toISOString().slice(0, 10);
 
-  if (!Array.isArray(sourceModels)) {
-    throw new Error('El índice de modelos no contiene una lista válida.');
-  }
-
-  const modelIds = [...new Set(
-    sourceModels
-      .map((model) => String(model?.id || '').trim())
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b, 'es'));
-
-  const lastModified = new Date().toISOString().slice(0, 10);
   const urls = [
     `${BASE_URL}/`,
     `${BASE_URL}/modelos/`,
     `${BASE_URL}/genealogia`,
-    ...modelIds.map(modelUrl)
+    ...modelIds.map((id) => `${BASE_URL}/modelos/${encodeURIComponent(id)}`)
   ];
 
   const sitemap = [
@@ -76,3 +98,4 @@ buildSeoFiles().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+

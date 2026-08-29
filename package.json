@@ -1,0 +1,12 @@
+{
+  "name": "tu-mentor-modelos-app",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-model-pages.mjs && node scripts/build-seo.mjs",
+    "build:model-pages": "node scripts/build-model-pages.mjs",
+    "seo:build": "node scripts/build-seo.mjs"
+  }
+}
+
