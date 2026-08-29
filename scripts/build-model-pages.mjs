@@ -13,6 +13,10 @@ const DATA_API_URL = String(process.env.PUBLIC_DATA_API_URL || `${BASE_URL}/api/
   .replace(/\/+$/, '');
 const FORCE_REMOTE = process.env.MODEL_PAGES_SOURCE === 'remote';
 const FETCH_CONCURRENCY = Math.max(1, Number(process.env.MODEL_PAGES_CONCURRENCY || 8));
+const GITHUB_OWNER = String(process.env.GITHUB_OWNER || '').trim();
+const GITHUB_REPO = String(process.env.GITHUB_REPO || '').trim();
+const GITHUB_TOKEN = String(process.env.GITHUB_TOKEN || '').trim();
+const GITHUB_REF = String(process.env.GITHUB_REF_NAME || process.env.GITHUB_DATA_REF || 'main').trim();
 
 function compactText(value) {
   return String(value ?? '')
@@ -105,6 +109,30 @@ async function fetchJson(dataPath) {
   return response.json();
 }
 
+async function githubRequest(repoPath, { raw = false } = {}) {
+  const encodedPath = String(repoPath)
+    .split('/')
+    .map(encodeURIComponent)
+    .join('/');
+  const url = new URL(`https://api.github.com/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${encodedPath}`);
+  url.searchParams.set('ref', GITHUB_REF);
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${GITHUB_TOKEN}`,
+      Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
+      'User-Agent': 'tu-mentor-model-pages/1.0',
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`GitHub no pudo leer ${repoPath}: HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
 async function mapWithConcurrency(items, limit, worker) {
   const results = new Array(items.length);
   let cursor = 0;
@@ -166,6 +194,35 @@ async function loadRemoteModels() {
   return loaded.filter(Boolean);
 }
 
+async function loadGitHubPublicModels() {
+  const rootPath = 'data/Core/modelos-publicos';
+  const schools = await githubRequest(rootPath);
+  if (!Array.isArray(schools)) throw new Error('GitHub no devolvió el directorio de modelos públicos.');
+
+  const files = [];
+  for (const school of schools.filter((entry) => entry?.type === 'dir')) {
+    const entries = await githubRequest(school.path);
+    if (!Array.isArray(entries)) continue;
+    for (const entry of entries) {
+      if (entry?.type === 'file' && String(entry.name || '').toLowerCase().endsWith('.json')) {
+        files.push(entry.path);
+      }
+    }
+  }
+
+  const loaded = await mapWithConcurrency(files, FETCH_CONCURRENCY, async (filePath) => {
+    try {
+      const detail = await githubRequest(filePath, { raw: true });
+      return normalizeModel({ ...detail, __seoDetail: true });
+    } catch (error) {
+      console.warn(`[omitido] ${filePath}: ${error.message}`);
+      return null;
+    }
+  });
+
+  return loaded.filter(Boolean);
+}
+
 async function loadLocalModels() {
   const raw = await fs.readFile(LOCAL_INDEX_PATH, 'utf8');
   const parsed = JSON.parse(raw);
@@ -175,6 +232,11 @@ async function loadLocalModels() {
 }
 
 async function loadModels() {
+  if (GITHUB_OWNER && GITHUB_REPO && GITHUB_TOKEN) {
+    console.log(`Fuente: JSON públicos del repositorio privado ${GITHUB_OWNER}/${GITHUB_REPO}.`);
+    return loadGitHubPublicModels();
+  }
+
   if (!FORCE_REMOTE && await fileExists(LOCAL_INDEX_PATH)) {
     console.log('Fuente: índice local de modelos.');
     return loadLocalModels();
@@ -382,7 +444,9 @@ async function build() {
 
   const manifest = {
     generatedAt: new Date().toISOString(),
-    source: !FORCE_REMOTE && await fileExists(LOCAL_INDEX_PATH) ? 'local-index' : DATA_API_URL,
+    source: GITHUB_OWNER && GITHUB_REPO && GITHUB_TOKEN
+      ? `github:${GITHUB_OWNER}/${GITHUB_REPO}:modelos-publicos`
+      : (!FORCE_REMOTE && await fileExists(LOCAL_INDEX_PATH) ? 'local-index' : DATA_API_URL),
     count: uniqueModels.length,
     models: uniqueModels.map((model) => model.id),
     indexableModels: uniqueModels
