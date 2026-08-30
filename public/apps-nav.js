@@ -11,6 +11,7 @@
 
   const path = `${location.pathname.replace(/\/+$/, '')}/`;
   const currentApp = apps.find((app) => path.startsWith(`${app.href}`))?.id || '';
+  document.documentElement.dataset.tmpsApp = currentApp;
   const nav = document.createElement('nav');
   nav.id = NAV_ID;
   nav.dataset.open = 'false';

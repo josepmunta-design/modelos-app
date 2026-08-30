@@ -4833,6 +4833,12 @@
     .app-temporarily-hidden {
       display: none !important;
     }
+
+    @media (min-width: 981px) {
+      html.public-home-access .apps-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
   </style>
 </head>
 <body>

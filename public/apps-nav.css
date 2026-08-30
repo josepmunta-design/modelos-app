@@ -157,6 +157,25 @@
   border-top: 1px solid rgba(243, 236, 226, 0.1);
 }
 
+/* En Genealogía de escritorio, evita solaparse con el minimapa. */
+@media (min-width: 761px) {
+  html[data-tmps-app="genealogia"] #tmpsAppsNav {
+    top: calc(var(--mast-h, 110px) + 14px);
+    bottom: auto;
+  }
+
+  html[data-tmps-app="genealogia"] .tmps-apps-nav__panel {
+    top: calc(100% + 10px);
+    bottom: auto;
+    transform: translateY(-7px) scale(0.98);
+    transform-origin: right top;
+  }
+
+  html[data-tmps-app="genealogia"] #tmpsAppsNav[data-open="true"] .tmps-apps-nav__panel {
+    transform: translateY(0) scale(1);
+  }
+}
+
 /* El acceso se conserva en cada HTML, pero queda fuera de la interfaz pública. */
 .authUserMenu,
 .shared-auth,
