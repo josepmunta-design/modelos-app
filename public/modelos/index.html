@@ -25009,14 +25009,12 @@ function renderEpistemologiaComparisonPlaceholder(){
 function hydrateTimelineMotion(host, scrollRoot){
   if (!host || window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
 
-  // Animate the vertical line drawing itself
+  // La línea recorre una lista muy alta. Mantenerla transformada tras animarla
+  // puede hacer que Chrome deje de rasterizarla al alejarse de su origen.
+  // Se deja estática y solo se animan las entradas de la cronología.
   const list = host.querySelector('.school-editorialTimelineList');
   if (list){
-    list.classList.add('tl-will-animate');
-    const listObs = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting){ list.classList.add('is-visible'); listObs.disconnect(); }
-    }, { root: scrollRoot || null, threshold: 0.01 });
-    listObs.observe(list);
+    list.classList.remove('tl-will-animate', 'is-visible');
   }
 
   // Animate each item on scroll with a stagger that resets between scroll events
