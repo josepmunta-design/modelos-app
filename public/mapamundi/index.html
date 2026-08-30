@@ -1335,6 +1335,8 @@ body:not([data-mm-theme="light"]) #mmDetailScroll::-webkit-scrollbar-thumb:hover
   #mmDetail, #mmSchoolsDrawer, #mmFichaFrame, #mmFicha{ transition-duration: 0.01s; }
 }
 </style>
+<link rel="stylesheet" href="/apps-nav.css">
+<script src="/apps-nav.js" defer></script>
 </head>
 
 <body class="mm-body" data-mm-theme="dark">
@@ -2742,13 +2744,14 @@ fichaIframe.addEventListener('load', () => {
    public/index.html y public/modelos (sesión 'tmp-shared-auth-v1',
    /api/billing-status, /api/create-checkout-session, /api/create-portal-session)
    --------------------------------------------------------------- */
-window.HAS_SUBSCRIPTION_ACCESS = false;
+const PUBLIC_MAP_ACCESS = true;
+window.HAS_SUBSCRIPTION_ACCESS = PUBLIC_MAP_ACCESS;
 
 /* Funciones reservadas a suscriptores: tema, etiquetas, filtro de
    escuelas y cronología. Sin suscripción, el atlas se ve completo
    (acumulado, todas las escuelas, tema nocturno) pero sin controles. */
 function isPremium(){
-  return window.HAS_SUBSCRIPTION_ACCESS === true;
+  return PUBLIC_MAP_ACCESS || window.HAS_SUBSCRIPTION_ACCESS === true;
 }
 
 function promptPremium(){
@@ -2957,6 +2960,14 @@ async function startBillingFlow(endpoint, button){
 
 async function renderAuthState(session){
   const renderVersion = ++authRenderVersion;
+  if (PUBLIC_MAP_ACCESS){
+    currentSession = null;
+    window.HAS_SUBSCRIPTION_ACCESS = true;
+    applyPremiumState(true);
+    setAccountPop(false);
+    closeAuth();
+    return;
+  }
   currentSession = session || null;
   const email = session?.user?.email || '';
 
@@ -3266,6 +3277,7 @@ function restorePrefs(){
 
 async function boot(){
   restorePrefs();
+  if (PUBLIC_MAP_ACCESS) applyPremiumState(true);
   $('mmError').classList.remove('show');
 
   // Sesión y suscripción en paralelo a la carga de datos (no bloquea el mapa)

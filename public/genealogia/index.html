@@ -726,8 +726,10 @@
   .open-ficha-btn rect{fill:rgba(24,28,35,.94);stroke:var(--glass-line);stroke-width:1}
   .open-ficha-btn text{font:600 10.5px 'Inter',-apple-system,sans-serif;letter-spacing:.05em;fill:var(--gold-bright)}
 </style>
+<link rel="stylesheet" href="/apps-nav.css">
+<script src="/apps-nav.js" defer></script>
 </head>
-<body class="sub-locked">
+<body>
 <section class="subscription-gate" id="subscriptionGate" role="dialog" aria-modal="true" aria-labelledby="subscriptionTitle" aria-hidden="true">
   <div class="subscription-card">
     <button class="subscription-close" id="subscriptionClose" type="button" aria-label="Cerrar">×</button>
@@ -1589,7 +1591,9 @@ const subscriptionText=document.getElementById('subscriptionText');
 const subscriptionLoginButton=document.getElementById('subscriptionLoginButton');
 const subscriptionCheckoutButton=document.getElementById('subscriptionCheckoutButton');
 const subscriptionStatus=document.getElementById('subscriptionStatus');
+const PUBLIC_GENEALOGY_ACCESS=true;
 const GENEALOGY_LOCAL_FULL_ACCESS=['localhost','127.0.0.1','::1',''].includes(location.hostname.toLowerCase());
+window.HAS_SUBSCRIPTION_ACCESS=PUBLIC_GENEALOGY_ACCESS;
 let sharedAuthMode='login';
 let subscriptionCheckVersion=0;
 
@@ -1633,6 +1637,7 @@ async function getGenealogyBillingStatus(session){
 }
 async function applyGenealogySubscription(session){
   const version=++subscriptionCheckVersion;
+  if(PUBLIC_GENEALOGY_ACCESS){setSubscriptionState('active');return;}
   renderSharedAuth(session);
   if(GENEALOGY_LOCAL_FULL_ACCESS){setSubscriptionState('active');return;}
   if(!session){setSubscriptionState('login');return;}

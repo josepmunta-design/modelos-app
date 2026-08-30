@@ -1,0 +1,188 @@
+/* Navegación compartida entre las apps públicas. */
+#tmpsAppsNav {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 1000010;
+  width: max-content;
+  color: #f3ece2;
+  color-scheme: dark;
+  font-family: Inter, "Hanken Grotesk", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.2;
+  isolation: isolate;
+}
+
+#tmpsAppsNav,
+#tmpsAppsNav * {
+  box-sizing: border-box;
+}
+
+.tmps-apps-nav__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 86px;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid rgba(243, 236, 226, 0.2);
+  border-radius: 12px;
+  background: rgba(20, 23, 27, 0.9);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  color: #f3ece2;
+  font: 650 13px/1 Inter, "Hanken Grotesk", system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(16px) saturate(1.12);
+  backdrop-filter: blur(16px) saturate(1.12);
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.tmps-apps-nav__button:hover,
+.tmps-apps-nav__button:focus-visible,
+#tmpsAppsNav[data-open="true"] .tmps-apps-nav__button {
+  border-color: rgba(217, 170, 63, 0.58);
+  background: rgba(30, 33, 37, 0.96);
+}
+
+.tmps-apps-nav__button:active {
+  transform: translateY(1px);
+}
+
+.tmps-apps-nav__button:focus-visible,
+.tmps-apps-nav__link:focus-visible {
+  outline: 2px solid #d9aa3f;
+  outline-offset: 3px;
+}
+
+.tmps-apps-nav__icon {
+  display: grid;
+  grid-template-columns: repeat(2, 5px);
+  gap: 3px;
+  width: 13px;
+  height: 13px;
+  flex: none;
+}
+
+.tmps-apps-nav__icon i {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border: 1px solid currentColor;
+  border-radius: 1px;
+}
+
+.tmps-apps-nav__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  width: min(286px, calc(100vw - 28px));
+  padding: 9px;
+  border: 1px solid rgba(243, 236, 226, 0.16);
+  border-radius: 15px;
+  background: rgba(18, 21, 24, 0.96);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(7px) scale(0.98);
+  transform-origin: right bottom;
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
+  backdrop-filter: blur(20px) saturate(1.12);
+  transition: opacity 150ms ease, visibility 150ms ease, transform 150ms ease;
+}
+
+#tmpsAppsNav[data-open="true"] .tmps-apps-nav__panel {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.tmps-apps-nav__heading {
+  margin: 0;
+  padding: 9px 10px 8px;
+  color: rgba(243, 236, 226, 0.52);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tmps-apps-nav__links {
+  display: grid;
+  gap: 3px;
+}
+
+.tmps-apps-nav__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 42px;
+  padding: 10px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: rgba(243, 236, 226, 0.78);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 560;
+  transition: color 140ms ease, background 140ms ease, border-color 140ms ease;
+}
+
+.tmps-apps-nav__link:hover {
+  color: #fffaf2;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.tmps-apps-nav__link[aria-current="page"] {
+  border-color: rgba(217, 170, 63, 0.28);
+  background: rgba(217, 170, 63, 0.1);
+  color: #f1d49a;
+}
+
+.tmps-apps-nav__current {
+  color: rgba(241, 212, 154, 0.7);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tmps-apps-nav__home {
+  margin-top: 5px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(243, 236, 226, 0.1);
+}
+
+/* El acceso se conserva en cada HTML, pero queda fuera de la interfaz pública. */
+.authUserMenu,
+.shared-auth,
+#mmBtnAccount,
+#mmAccountPop,
+#mmAuth {
+  display: none !important;
+}
+
+@media (max-width: 560px) {
+  #tmpsAppsNav {
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(10px, env(safe-area-inset-bottom));
+  }
+
+  .tmps-apps-nav__button {
+    min-width: 76px;
+    min-height: 42px;
+    padding: 9px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tmps-apps-nav__button,
+  .tmps-apps-nav__panel,
+  .tmps-apps-nav__link {
+    transition: none;
+  }
+}
