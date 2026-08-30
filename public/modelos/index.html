@@ -254,6 +254,11 @@ const GH_REPO  = "tmps-data";
 
 const API_BASE = LOCAL_API_BASE;
 const USE_PRIVATE_PROXY = true;
+// Modo temporal de biblioteca abierta. Mantiene preparado el flujo de
+// autenticacion y Stripe para poder reactivarlo cambiando este valor a false.
+const PUBLIC_LIBRARY_ACCESS = true;
+window.PUBLIC_LIBRARY_ACCESS = PUBLIC_LIBRARY_ACCESS;
+document.documentElement.classList.toggle('public-library-access', PUBLIC_LIBRARY_ACCESS);
 const SUPABASE_URL = "https://yritadgaurvplltgubii.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -265,12 +270,16 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
   }
 });
 window.SUPABASE_ACCESS_TOKEN = "";
-window.HAS_SUBSCRIPTION_ACCESS = false;
+window.HAS_SUBSCRIPTION_ACCESS = PUBLIC_LIBRARY_ACCESS;
 window.SUPABASE_AUTH_READY = new Promise((resolve) => {
   window.__resolveSupabaseAuthReady = resolve;
 });
 
 async function getSupabaseAccessToken(){
+  if (PUBLIC_LIBRARY_ACCESS){
+    window.SUPABASE_ACCESS_TOKEN = "";
+    return "";
+  }
   const { data } = await supabaseClient.auth.getSession();
   const token = data?.session?.access_token || "";
   window.SUPABASE_ACCESS_TOKEN = token;
@@ -17604,6 +17613,20 @@ body.theme-light .ed-ficha .ed-arch-head h2,body.theme-light .ed-ficha .ed-arch-
   font-weight:300;
 }
 body.network-mode .modelSearchOpen{ display:none; }
+
+/* Biblioteca abierta: oculta las superficies de cuenta y suscripcion sin
+   eliminar su marcado ni su logica, para poder recuperarlas en el futuro. */
+html.public-library-access .accessGate,
+html.public-library-access .checkoutNoticeModal,
+html.public-library-access .authUserMenu,
+html.public-library-access .tagsPaywall,
+html.public-library-access .mp-lockedSection,
+html.public-library-access .mp-publicPreview,
+html.public-library-access [data-action="subscribe-premium-grouping"],
+html.public-library-access [data-action="subscribe-network-graph"],
+html.public-library-access [data-action="subscribe-public-model"]{
+  display:none !important;
+}
   </style>
 
 </head>
@@ -17790,6 +17813,19 @@ body.network-mode .modelSearchOpen{ display:none; }
       let checkoutInFlight = false;
       let accessMode = 'login';
       let recoveryLinkInvalid = false;
+
+      if (PUBLIC_LIBRARY_ACCESS){
+        document.body.classList.remove('access-locked', 'auth-logged-in');
+        window.SUPABASE_ACCESS_TOKEN = '';
+        window.HAS_SUBSCRIPTION_ACCESS = true;
+        window.startSubscriptionCheckout = () => {};
+        window.openSubscriptionLogin = () => {};
+        if (typeof window.__resolveSupabaseAuthReady === 'function'){
+          window.__resolveSupabaseAuthReady(null);
+          window.__resolveSupabaseAuthReady = null;
+        }
+        return;
+      }
 
       const LOGIN_TITLE = 'Modelos';
       const LOGIN_TEXT = 'Entra para guardar tu sesi\u00f3n o suscr\u00edbete para abrir la biblioteca completa. Puedes seguir gratis con fichas parciales.';
@@ -31694,6 +31730,17 @@ async function openModel(id, options = {}){
 
     if (window.HAS_SUBSCRIPTION_ACCESS !== true){
       publicModel = markModelAsPublicView(publicModel);
+    }
+
+    // En modo abierto no se pinta la vista parcial ni sus placeholders de
+    // suscripcion: esperamos la ficha completa y la mostramos directamente.
+    if (PUBLIC_LIBRARY_ACCESS){
+      const fullModel = await ensureModelFull(publicModel);
+      renderModelInfo(fullModel);
+      setModelSeo(fullModel);
+      if (window.__SMH) window.__SMH.rescan();
+      infoFadeIn();
+      return;
     }
 
     // 2) Pintar la version publica.

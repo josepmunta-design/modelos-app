@@ -41,6 +41,9 @@ function readLocalEnvValue(name) {
 const GITHUB_OWNER = readLocalEnvValue('GITHUB_OWNER');
 const GITHUB_REPO = readLocalEnvValue('GITHUB_REPO');
 const GITHUB_TOKEN = readLocalEnvValue('GITHUB_TOKEN');
+// Biblioteca abierta por defecto. El control de cuenta y suscripcion permanece
+// disponible para el futuro estableciendo PUBLIC_LIBRARY_ACCESS=0.
+const PUBLIC_LIBRARY_ACCESS = readLocalEnvValue('PUBLIC_LIBRARY_ACCESS') !== '0';
 const SUPABASE_URL = readLocalEnvValue('SUPABASE_URL') || 'https://yritadgaurvplltgubii.supabase.co';
 const SUPABASE_SECRET_KEY = readLocalEnvValue('SUPABASE_SERVICE_ROLE_KEY') || readLocalEnvValue('SUPABASE_SECRET_KEY');
 const SUPABASE_API_KEY = SUPABASE_SECRET_KEY
@@ -258,7 +261,7 @@ export default async function handler(req, res) {
     : req.query.path;
 
   const filePath = cleanRequestedPath(rawPath);
-  const publicRequest = isPublicModelDataPath(filePath);
+  const publicRequest = PUBLIC_LIBRARY_ACCESS || isPublicModelDataPath(filePath);
 
   if (LOCAL_DEV_FULL_ACCESS) {
     console.log('[data proxy] local bypass active', {
