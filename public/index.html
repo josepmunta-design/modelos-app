@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" class="public-home-access">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -59,17 +59,13 @@
         "operatingSystem": "Web",
         "inLanguage": "es",
         "isAccessibleForFree": true,
-        "offers": {
-          "@type": "Offer",
-          "price": "9.95",
-          "priceCurrency": "EUR",
-          "category": "subscription"
-        },
         "publisher": { "@id": "https://apps.tumentorpsicologia.com/#organization" }
       }
     ]
   }
   </script>
+  <!-- Oferta de suscripcion preservada para una futura reactivacion:
+       { "@type": "Offer", "price": "9.95", "priceCurrency": "EUR", "category": "subscription" } -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -4826,6 +4822,12 @@
         border-bottom: 1px solid rgba(243, 236, 226, 0.1);
       }
     }
+
+    /* Modo actual de acceso abierto. Las superficies de cuenta, planes y pago
+       siguen en el documento para poder reactivarlas mas adelante. */
+    html.public-home-access .subscription-only {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -4836,7 +4838,7 @@
       </div>
       <div>
         <p class="brand-title">Tu Mentor Psicolog&iacute;a</p>
-        <p class="brand-subtitle">Apps privadas</p>
+        <p class="brand-subtitle">Apps abiertas</p>
       </div>
     </div>
 
@@ -4849,12 +4851,13 @@
         <span></span>
       </button>
       <div class="top-menu-panel" id="topMenuPanel">
+        <a class="button-link" href="#apps">Apps</a>
         <a class="button-link" id="faqTopLink" href="#preguntas-frecuentes">Preguntas frecuentes</a>
         <a class="button-link hidden" id="openModelosTop" href="/modelos/">Biblioteca</a>
-        <button class="login-button hidden" id="subscribeButton" type="button">Suscribirme</button>
-        <button class="hidden" id="billingPortalButton" type="button">Gestionar suscripci&oacute;n</button>
-        <button class="login-button" id="openLoginButton" type="button">Entrar</button>
-        <button class="hidden" id="signOutButton" type="button">Cerrar sesi&oacute;n</button>
+        <button class="login-button hidden subscription-only" id="subscribeButton" type="button">Suscribirme</button>
+        <button class="hidden subscription-only" id="billingPortalButton" type="button">Gestionar suscripci&oacute;n</button>
+        <button class="login-button subscription-only" id="openLoginButton" type="button">Entrar</button>
+        <button class="hidden subscription-only" id="signOutButton" type="button">Cerrar sesi&oacute;n</button>
       </div>
     </div>
   </header>
@@ -4870,7 +4873,7 @@
         <div class="hero-content">
           <p class="eyebrow">Biblioteca cl&iacute;nica &middot; est. 2026</p>
           <h1 id="platformTitle">Cartograf&iacute;a la psicoterapia, afina tu <span class="title-italic">intervenci&oacute;n.</span></h1>
-          <p class="lead">M&aacute;s de 200 modelos con contexto hist&oacute;rico, procesos de cambio, t&eacute;cnicas y referencias, conectados en una sola arquitectura cl&iacute;nica privada.</p>
+          <p class="lead">M&aacute;s de 200 modelos con contexto hist&oacute;rico, procesos de cambio, t&eacute;cnicas y referencias, conectados en una sola arquitectura cl&iacute;nica abierta.</p>
           <div class="hero-chips" aria-label="Contenido de la plataforma">
             <span class="hero-chip">Modelos</span>
             <span class="hero-chip">Procesos</span>
@@ -4878,15 +4881,15 @@
             <span class="hero-chip">Metateor&iacute;as</span>
           </div>
           <div class="hero-actions">
-            <div class="hero-login-cta hidden" id="heroLoginCta">
-              <button id="heroLoginButton" type="button" aria-label="Entrar a la biblioteca cl&iacute;nica">
+            <div class="hero-login-cta" id="heroLoginCta">
+              <button id="heroLoginButton" type="button" aria-label="Explorar las aplicaciones abiertas">
                 <svg class="hero-cta-icon" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M3.5 5.25c2.85-.72 5.68-.2 8.5 1.55v12.1c-2.82-1.75-5.65-2.27-8.5-1.55V5.25Zm17 0c-2.85-.72-5.68-.2-8.5 1.55v12.1c2.82-1.75 5.65-2.27 8.5-1.55V5.25Z" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round"/>
                 </svg>
-                <span id="heroCtaLabel">Entrar a la biblioteca</span>
+                <span id="heroCtaLabel">Explorar las apps</span>
                 <span class="hero-cta-arrow" aria-hidden="true">&rarr;</span>
               </button>
-              <span class="hero-login-note" id="heroLoginNote"><strong>10 d&iacute;as gratis sin tarjeta</strong> &middot; Despu&eacute;s 9,95 &euro;/mes &middot; Cancela cuando quieras</span>
+              <span class="hero-login-note" id="heroLoginNote"><strong>Acceso libre</strong> &middot; Sin registro</span>
             </div>
           </div>
         </div>
@@ -4904,7 +4907,7 @@
       </div>
     </section>
 
-    <section class="section" aria-label="Herramientas disponibles">
+    <section class="section" id="apps" aria-label="Herramientas disponibles">
       <h2 style="max-width:680px;margin:0 0 34px;color:var(--ink);font-family:'Instrument Serif',Georgia,serif;font-size:clamp(2rem,3.4vw,2.9rem);line-height:1.02;font-weight:400;">Una plataforma, varias herramientas</h2>
       <div class="apps-grid">
         <a class="app-card" href="/modelos/">
@@ -4912,39 +4915,39 @@
             <h2>Biblioteca</h2>
             <p>Biblioteca editorial de escuelas, modelos y autores.</p>
           </span>
-          <span class="tag">Activo</span>
+          <span class="tag">Acceso libre</span>
         </a>
 
-        <a class="app-card" href="https://apps.tumentorpsicologia.com/genealogia">
+        <a class="app-card" href="/genealogia/">
           <span>
             <h2>Genealog&iacute;a</h2>
             <p>Genealog&iacute;a de escuelas, modelos e influencias te&oacute;ricas.</p>
           </span>
-          <span class="tag">Activo</span>
+          <span class="tag">Acceso libre</span>
         </a>
 
-        <a class="app-card disabled" href="/mapamundi/" aria-disabled="true" tabindex="-1">
+        <a class="app-card" href="/mapamundi/">
           <span>
             <h2>Mapamundi</h2>
             <p>Exploraci&oacute;n geogr&aacute;fica y cultural.</p>
           </span>
-          <span class="tag">Pr&oacute;ximamente</span>
+          <span class="tag">Acceso libre</span>
         </a>
 
-        <div class="app-card disabled">
+        <a class="app-card" href="/procesos/">
           <span>
             <h2>Procesos</h2>
             <p>T&eacute;cnicas, procedimientos y microintervenciones ordenados por procesos.</p>
           </span>
-          <span class="tag">Pr&oacute;ximamente</span>
-        </div>
+          <span class="tag">Acceso libre</span>
+        </a>
 
-        <a class="app-card disabled" href="/metamodelos/" aria-disabled="true" tabindex="-1">
+        <a class="app-card" href="/metamodelos/">
           <span>
             <h2>Metamodelos</h2>
             <p>Estructuras transversales de comparaci&oacute;n.</p>
           </span>
-          <span class="tag">Pr&oacute;ximamente</span>
+          <span class="tag">Acceso libre</span>
         </a>
       </div>
     </section>
@@ -5296,7 +5299,7 @@
       </div>
     </section>
 
-    <section class="plans-section" aria-labelledby="plansTitle">
+    <section class="plans-section subscription-only" aria-labelledby="plansTitle">
       <div class="plans-inner">
         <p class="model-info-kicker">Compara las versiones</p>
         <h2 class="plans-heading" id="plansTitle">Empieza a explorar gratis. Profundiza cuando <span class="title-italic">necesites intervenir</span></h2>
@@ -5415,7 +5418,7 @@
       </div>
     </section>
 
-    <section class="cta-section" aria-labelledby="pricingTitle">
+    <section class="cta-section subscription-only" aria-labelledby="pricingTitle">
       <div class="cta-inner">
         <p class="model-info-kicker">Prueba gratis durante 10 d&iacute;as</p>
         <h2 class="cta-heading" id="pricingTitle">Comprende la psicoterapia con m&aacute;s contexto, conexi&oacute;n y <span class="title-italic">criterio cl&iacute;nico</span></h2>
@@ -5866,7 +5869,7 @@
             <p class="faq-kicker">Ayuda y orientaci&oacute;n</p>
             <h2 class="faq-title" id="faqTitle">Preguntas frecuentes</h2>
           </div>
-          <p class="faq-lead">Todo lo esencial sobre la biblioteca, el acceso, la suscripci&oacute;n y el uso responsable de sus contenidos.</p>
+          <p class="faq-lead">Todo lo esencial sobre la biblioteca, el acceso libre y el uso responsable de sus contenidos.</p>
         </header>
 
         <div class="faq-list">
@@ -5886,6 +5889,13 @@
           </details>
 
           <details class="faq-item">
+            <summary>&iquest;El acceso es gratuito?</summary>
+            <div class="faq-answer">
+              <p>S&iacute;. Puedes entrar directamente a las aplicaciones y consultar las fichas completas de la biblioteca sin crear una cuenta.</p>
+            </div>
+          </details>
+
+          <details class="faq-item subscription-only">
             <summary>&iquest;Qu&eacute; incluye la suscripci&oacute;n?</summary>
             <div class="faq-answer">
               <p>La suscripci&oacute;n da acceso a los contenidos y funcionalidades disponibles en la plataforma: fichas de modelos, conceptos clave, procedimientos, micros, procesos de cambio, referencias, influencias y recursos visuales para conectar enfoques.</p>
@@ -5897,11 +5907,11 @@
             <summary>&iquest;La biblioteca se actualiza?</summary>
             <div class="faq-answer">
               <p>S&iacute;. Esta es una biblioteca viva: se ir&aacute;n a&ntilde;adiendo nuevos modelos, ampliando referencias, perfeccionando contenidos existentes y desarrollando nuevas aplicaciones dentro del ecosistema.</p>
-              <p>La suscripci&oacute;n no da acceso a un producto cerrado, sino a una plataforma en evoluci&oacute;n continua.</p>
+              <p>La plataforma permanece abierta y en evoluci&oacute;n continua.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item subscription-only">
             <summary>&iquest;Puedo cancelar la suscripci&oacute;n cuando quiera?</summary>
             <div class="faq-answer">
               <p>S&iacute;. Puedes cancelar tu suscripci&oacute;n en cualquier momento, sin permanencia.</p>
@@ -5909,21 +5919,21 @@
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item subscription-only">
             <summary>&iquest;C&oacute;mo cancelo mi suscripci&oacute;n?</summary>
             <div class="faq-answer">
               <p>Haz clic en <strong>Gestionar suscripci&oacute;n</strong>, disponible en la landing o en la p&aacute;gina de inicio. Acceder&aacute;s a una p&aacute;gina segura de Stripe desde la que podr&aacute;s cancelar la suscripci&oacute;n.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item subscription-only">
             <summary>&iquest;D&oacute;nde puedo descargar mis facturas?</summary>
             <div class="faq-answer">
               <p>Desde el mismo apartado de <strong>Gestionar suscripci&oacute;n</strong>. Stripe te llevar&aacute; a tu portal de cliente, donde podr&aacute;s consultar tus pagos y descargar las facturas correspondientes.</p>
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item subscription-only">
             <summary>&iquest;Es seguro el pago?</summary>
             <div class="faq-answer">
               <p>S&iacute;. Los pagos y la gesti&oacute;n de suscripciones se realizan mediante Stripe, una plataforma internacional de pago seguro. Tu informaci&oacute;n bancaria no se almacena en Tu Mentor Psicolog&iacute;a.</p>
@@ -5937,7 +5947,7 @@
             </div>
           </details>
 
-          <details class="faq-item">
+          <details class="faq-item subscription-only">
             <summary>&iquest;Puedo compartir mi cuenta?</summary>
             <div class="faq-answer">
               <p>No. El acceso es personal e intransferible. Compartir una cuenta con otras personas puede afectar al funcionamiento del servicio y vulnera las condiciones de uso.</p>
@@ -5971,7 +5981,7 @@
     </div>
   </footer>
 
-  <div class="checkout-notice-modal" id="checkoutNoticeModal" hidden role="dialog" aria-modal="true" aria-labelledby="checkoutNoticeTitle">
+  <div class="checkout-notice-modal subscription-only" id="checkoutNoticeModal" hidden role="dialog" aria-modal="true" aria-labelledby="checkoutNoticeTitle">
     <section class="checkout-notice-card">
       <h2 id="checkoutNoticeTitle">Antes de ir al pago</h2>
       <p>Si eres aut&oacute;nomo/a y necesitas factura, selecciona <strong>&laquo;ES NIF&raquo;</strong> en el campo de identificaci&oacute;n fiscal de Stripe e introduce tu NIF.</p>
@@ -5982,7 +5992,7 @@
     </section>
   </div>
 
-  <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="modal subscription-only" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
     <section class="auth-panel">
       <div class="auth-panel-inner">
         <div class="auth-head">
@@ -6026,9 +6036,11 @@
   </div>
 
   <script>
+    const PUBLIC_HOME_ACCESS = true;
+    document.documentElement.classList.toggle('public-home-access', PUBLIC_HOME_ACCESS);
     const SUPABASE_URL = "https://yritadgaurvplltgubii.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_ddx-9W2ZbYubGUlqx7TRig_AqS6rftm";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    const supabaseClient = PUBLIC_HOME_ACCESS ? null : window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -6125,6 +6137,7 @@
     }
 
     async function getSupabaseAccessToken(){
+      if (PUBLIC_HOME_ACCESS) return "";
       const { data } = await supabaseClient.auth.getSession();
       return data?.session?.access_token || "";
     }
@@ -6138,7 +6151,7 @@
       }
 
       const response = await fetch(url, { ...options, headers });
-      if (response.status !== 401) return response;
+      if (response.status !== 401 || PUBLIC_HOME_ACCESS) return response;
 
       const { data } = await supabaseClient.auth.refreshSession();
       const refreshedToken = data?.session?.access_token || "";
@@ -6346,6 +6359,22 @@
       currentSession = session || null;
       const email = session?.user?.email || '';
       closeTopMenu();
+
+      if (PUBLIC_HOME_ACCESS){
+        currentSession = null;
+        sessionEmail.textContent = '';
+        sessionEmail.classList.add('hidden');
+        signOutButton.classList.add('hidden');
+        openLoginButton.classList.add('hidden');
+        subscribeButton.classList.add('hidden');
+        billingPortalButton.classList.add('hidden');
+        heroLoginCta.classList.remove('hidden');
+        heroCtaLabel.textContent = 'Explorar las apps';
+        heroLoginButton.setAttribute('aria-label', 'Explorar las aplicaciones abiertas');
+        heroLoginNote.innerHTML = '<strong>Acceso libre</strong> &middot; Sin registro';
+        loadHeroImages();
+        return;
+      }
 
       sessionEmail.textContent = email;
       sessionEmail.classList.toggle('hidden', !session);
@@ -6812,6 +6841,10 @@
     }
 
     async function checkInitialSession(){
+      if (PUBLIC_HOME_ACCESS){
+        await renderAuthState(null);
+        return;
+      }
       const { data } = await supabaseClient.auth.getSession();
       renderAuthState(data?.session || null);
       if (new URLSearchParams(location.search).get('auth') === 'login' && !data?.session){
@@ -6830,18 +6863,20 @@
       loadHeroImages();
     }
 
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-      renderAuthState(session);
-      if (event === 'PASSWORD_RECOVERY' || hasResetPasswordParam()){
-        if (session){
-          recoveryLinkInvalid = false;
-          openLogin('reset');
-        }else if (hasResetPasswordParam()){
-          recoveryLinkInvalid = true;
-          openLogin('reset', 'El enlace de recuperaci\u00f3n ha caducado o no es v\u00e1lido. Solicita un nuevo enlace.');
+    if (!PUBLIC_HOME_ACCESS){
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        renderAuthState(session);
+        if (event === 'PASSWORD_RECOVERY' || hasResetPasswordParam()){
+          if (session){
+            recoveryLinkInvalid = false;
+            openLogin('reset');
+          }else if (hasResetPasswordParam()){
+            recoveryLinkInvalid = true;
+            openLogin('reset', 'El enlace de recuperaci\u00f3n ha caducado o no es v\u00e1lido. Solicita un nuevo enlace.');
+          }
         }
-      }
-    });
+      });
+    }
 
     topMenuButton.addEventListener('click', (event) => {
       event.preventDefault();
@@ -6861,6 +6896,10 @@
 
     openLoginButton.addEventListener('click', () => openLogin());
     heroLoginButton.addEventListener('click', () => {
+      if (PUBLIC_HOME_ACCESS){
+        document.getElementById('apps')?.scrollIntoView({ behavior:'smooth', block:'start' });
+        return;
+      }
       if (currentSession){
         openCheckoutNotice();
         return;
