@@ -3740,7 +3740,7 @@ body[data-mt-theme="light"] #mtFichaClose:hover{ background: #fff; }
 }
 </style>
 </head>
-<body class="mt-body" data-mt-theme="light">
+<body class="mt-body" data-mt-theme="dark">
 <div id="mtApp">
 <div id="mtGrain" aria-hidden="true"></div>
 
@@ -5960,12 +5960,7 @@ $('mtThemeBtn').addEventListener('click', () => {
   applyTheme(next);
   try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
 });
-applyTheme((() => {
-  const fromUrl = new URLSearchParams(location.search).get('theme');
-  if (fromUrl === 'light' || fromUrl === 'dark') return fromUrl;
-  try{ const saved = localStorage.getItem(THEME_KEY); if (saved === 'light' || saved === 'dark') return saved; }catch(e){}
-  return 'light';
-})());
+applyTheme('dark');
 
 /* ---------------------------------------------------------------
    NAVEGACIÓN — scrollspy + aparición al hacer scroll

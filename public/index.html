@@ -4828,6 +4828,11 @@
     html.public-home-access .subscription-only {
       display: none !important;
     }
+
+    /* La app se conserva preparada, pero no se ofrece desde la home. */
+    .app-temporarily-hidden {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -4934,7 +4939,7 @@
           <span class="tag">Acceso libre</span>
         </a>
 
-        <a class="app-card" href="/procesos/">
+        <a class="app-card app-temporarily-hidden" href="/procesos/">
           <span>
             <h2>Procesos</h2>
             <p>T&eacute;cnicas, procedimientos y microintervenciones ordenados por procesos.</p>

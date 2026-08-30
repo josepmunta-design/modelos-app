@@ -1820,11 +1820,12 @@ const map = L.map('mmMap', {
 });
 map.attributionControl.setPrefix(false);
 
+const CARTO_BASEMAPS_API_KEY = 'cb1_2krb_1_7874140f2d0e9e2cc1e0781f';
 const TILES = {
-  dark:  'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
-  darkLabels: 'https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png',
-  light: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
-  lightLabels: 'https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png'
+  dark:  `https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=${CARTO_BASEMAPS_API_KEY}`,
+  darkLabels: `https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png?key=${CARTO_BASEMAPS_API_KEY}`,
+  light: `https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png?key=${CARTO_BASEMAPS_API_KEY}`,
+  lightLabels: `https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png?key=${CARTO_BASEMAPS_API_KEY}`
 };
 const TILE_OPTS = {
   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
