@@ -1994,6 +1994,7 @@ body.embedMode .appsHomeLink{
 }
 .school-editorialTimelineList{
   position:relative;
+  isolation:isolate;
   display:grid;
   gap:0;
   margin:0;
@@ -2006,14 +2007,20 @@ body.embedMode .appsHomeLink{
   left:252px;
   top:0;
   bottom:54px;
-  width:1px;
+  z-index:0;
+  width:2px;
+  border-radius:999px;
   background:linear-gradient(180deg,
-    color-mix(in srgb,var(--schoolColor,#D9AA3F) 42%,transparent),
-    color-mix(in srgb,var(--schoolColor,#D9AA3F) 30%,transparent) 88%,
+    color-mix(in srgb,var(--schoolColor,#D9AA3F) 76%,transparent),
+    color-mix(in srgb,var(--schoolColor,#D9AA3F) 54%,transparent) 88%,
     transparent);
+  transform:translateX(-50%);
+  box-shadow:0 0 10px color-mix(in srgb,var(--schoolColor,#D9AA3F) 18%,transparent);
+  pointer-events:none;
 }
 .school-editorialTimelineItem{
   position:relative;
+  z-index:1;
   display:grid;
   grid-template-columns:228px 104px minmax(0,1fr);
   gap:36px;
