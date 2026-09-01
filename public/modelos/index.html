@@ -18981,9 +18981,6 @@ function setupModelCardPhotoRetry(imgEl, baseUrl){
 function hydrateModelCardAvatars(){
   const modelsListEl = getModelsListElement();
   if (!modelsListEl || getGroupingModeValue() === 'network') return;
-  if (isEpistemologiaListMode()){
-    return;
-  }
 
   const idx = window.AUTHOR_PHOTO_INDEX;
   const hasPhotoData = !!(
@@ -19021,9 +19018,6 @@ function hydrateModelCardAvatars(){
 function initVisibleModelCardPhotoRetries(){
   const modelsListEl = getModelsListElement();
   if (!modelsListEl || getGroupingModeValue() === 'network') return;
-  if (isEpistemologiaListMode()){
-    return;
-  }
   modelsListEl.querySelectorAll('.mi-avatar img[data-photo-url]').forEach((imgEl) => {
     if (imgEl.dataset.retryBound === '1') return;
     imgEl.dataset.retryBound = '1';
