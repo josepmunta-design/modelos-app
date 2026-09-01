@@ -17721,9 +17721,8 @@ html.public-library-access [data-action="subscribe-public-model"]{
             </div>
             <label class="compactLabel" for="groupBySelect">Clasificar por</label>
             <select id="groupBySelect">
-              <option value="school">Escuela</option>
-              <option value="process">Proceso</option>
-              <option value="dimension">Dimensión</option>
+              <option value="school">Escuelas</option>
+              <option value="epistemology">Epistemologías</option>
               <option value="tags">Tags</option>
               <option value="network">Vista red</option>
             </select>
@@ -18982,7 +18981,7 @@ function setupModelCardPhotoRetry(imgEl, baseUrl){
 function hydrateModelCardAvatars(){
   const modelsListEl = getModelsListElement();
   if (!modelsListEl || getGroupingModeValue() === 'network') return;
-  if (getGroupingModeValue() === 'school' && isEpistemologiaSchoolName(currentSchool || groupingTarget)){
+  if (isEpistemologiaListMode()){
     return;
   }
 
@@ -19022,7 +19021,7 @@ function hydrateModelCardAvatars(){
 function initVisibleModelCardPhotoRetries(){
   const modelsListEl = getModelsListElement();
   if (!modelsListEl || getGroupingModeValue() === 'network') return;
-  if (getGroupingModeValue() === 'school' && isEpistemologiaSchoolName(currentSchool || groupingTarget)){
+  if (isEpistemologiaListMode()){
     return;
   }
   modelsListEl.querySelectorAll('.mi-avatar img[data-photo-url]').forEach((imgEl) => {
@@ -20526,7 +20525,7 @@ ISOMORPHISM_PROMISE = ASSET_VERSION_PROMISE
 
 ISOMORPHISM_PROMISE.then(async () => {
   const activeId = String(getCurrentModelIdValue() || '').trim();
-  if (!activeId || groupingMode !== 'school') return;
+  if (!activeId || !['school', 'epistemology'].includes(groupingMode)) return;
 
   const baseModel = getAllModelsPool().find((m) => String(m?.id || '') === activeId);
   if (!baseModel) return;
@@ -21509,6 +21508,7 @@ function bindSpecialModelModules(host){
       { key:'Integrativo',     color:'#FF9DA7' },
    { key:'Transversal', color:'#5F7F78' },
    { key:'Fronteras', color:'#8D6E63' },
+   { key:'Epistemología', color:'#D9AA3F' },
 
 
 
@@ -21588,6 +21588,13 @@ uso clinico o paraclinico real, pero con fundamentos, evidencia o encuadres prof
 para comprender su lugar historico y sus riesgos, diferenciando recursos potencialmente integrables de afirmaciones
 teoricas que requieren cautela critica.`,
   keys: ['limite epistemologico', 'evidencia discutida', 'influencia cultural', 'uso prudente', 'riesgo de sugestion']
+},
+  'Epistemología': {
+  subtitle: 'Marcos sobre conocimiento, sujeto, verdad y cambio',
+  desc: `Las epistemologías explicitan los supuestos desde los que cada tradición comprende qué puede conocerse,
+cómo se construye la experiencia y qué hace posible el cambio. Este grupo permite compararlas como marcos transversales,
+al mismo nivel de navegación que las escuelas, sin tratarlas como una escuela psicoterapéutica más.`,
+  keys: ['conocimiento', 'verdad', 'sujeto', 'cambio', 'rol terapéutico']
 },
   'Otros': {
   subtitle: 'Tradiciones no occidentales, contemplativas y culturales',
@@ -22094,6 +22101,29 @@ function isEpistemologiaModel(model){
 
 function isEpistemologiaSchoolName(value){
   return normalizeModelDataKey(value || '').includes('epistemologia');
+}
+
+function getEpistemologiaSchoolLabel(){
+  const ghLabel = (GH_SCHOOLS || [])
+    .map((school) => school?.label || school?.id || '')
+    .find(isEpistemologiaSchoolName);
+  if (ghLabel) return String(ghLabel).trim();
+
+  const localLabel = (LOCAL_MODELS || [])
+    .map((model) => model?.grupo || '')
+    .find(isEpistemologiaSchoolName);
+  return String(localLabel || 'Epistemología').trim();
+}
+
+function isEpistemologiaGrouping(){
+  return getGroupingModeValue() === 'epistemology';
+}
+
+function isEpistemologiaListMode(){
+  return isEpistemologiaGrouping() || (
+    getGroupingModeValue() === 'school' &&
+    isEpistemologiaSchoolName(currentSchool || groupingTarget)
+  );
 }
 
 function getChangeTheoryData(model){
@@ -22859,7 +22889,7 @@ function closeMobileModelInfoToList(){
   updateLibraryUrl();
   setLibrarySeo();
   setMobileModelPanelLowered(false);
-  if (groupingMode === 'school'){
+  if (groupingMode === 'school' || groupingMode === 'epistemology'){
     renderSchoolInfo(currentSchool);
   }else{
     renderModelInfo(null);
@@ -23585,7 +23615,9 @@ function buildSchoolOptions(){
   const ghSchools = (GH_SCHOOLS || []).map(s => s.label || s.id).filter(Boolean);
 
   // unión sin duplicados
-  const set = new Set([...localSchools, ...ghSchools]);
+  const set = new Set(
+    [...localSchools, ...ghSchools].filter((school) => !isEpistemologiaSchoolName(school))
+  );
  const schoolOrder = [
   'Psicoanálisis',
   'Conductismo',
@@ -23662,9 +23694,7 @@ function buildModelListItemMarkup(model, options = {}){
     ? ` data-pende="${escapeHtml(getModelDependencyParentId(model))}"`
     : '';
   const authorText = escapeHtml(model.autores ?? '-');
-  const isEpistemologiaList =
-    getGroupingModeValue() === 'school' &&
-    isEpistemologiaSchoolName(currentSchool || groupingTarget);
+  const isEpistemologiaList = isEpistemologiaListMode();
   const avatarHtml = isEpistemologiaList
     ? `<div class="mi-avatarFallback" aria-hidden="true">${escapeHtml(getAuthorInitials(model?.autores))}</div>`
     : buildModelCardAvatarHtml(model);
@@ -23731,16 +23761,18 @@ async function openSchoolTimeline(schoolLabel = ''){
   const school = String(schoolLabel || currentSchool || (groupingMode === 'school' ? groupingTarget : '') || '').trim();
   if (!school) return false;
 
+  const nextGroupingMode = isEpistemologiaSchoolName(school) ? 'epistemology' : 'school';
+
   currentSchool = school;
-  groupingMode = 'school';
+  groupingMode = nextGroupingMode;
   groupingTarget = school;
   currentModelId = null;
   window.__CURRENT_MODEL_ID = '';
 
-  if (schoolSelect) schoolSelect.value = school;
-  if (groupBySelectEl) groupBySelectEl.value = 'school';
+  if (schoolSelect && nextGroupingMode === 'school') schoolSelect.value = school;
+  if (groupBySelectEl) groupBySelectEl.value = nextGroupingMode;
   syncGroupingTargetOptions();
-  if (groupTargetSelectEl) groupTargetSelectEl.value = school;
+  if (groupTargetSelectEl && nextGroupingMode === 'school') groupTargetSelectEl.value = school;
 
   setInfoFullscreen(isMobileViewport());
   setModelInfoOpen(false);
@@ -24156,6 +24188,15 @@ function baseListByGroupingMode(){
     return filteredModelsBySchool(currentSchool);
   }
 
+  if (groupingMode === 'epistemology'){
+    return MODELS
+      .filter((model) => isModelVisibleInApp(model) && isEpistemologiaModel(model))
+      .sort((a,b) =>
+        (+a.year||0) - (+b.year||0) ||
+        String(a.label || '').localeCompare(String(b.label || ''), 'es')
+      );
+  }
+
   if (groupingMode === 'tags'){
     return MODELS
       .filter(isModelVisibleInApp)
@@ -24272,6 +24313,12 @@ function syncGroupingTargetOptions(){
       if (schoolSelect && currentSchool) schoolSelect.value = currentSchool;
     }
     groupTargetSelectEl.value = currentSchool || '';
+    return;
+  }
+
+  if (groupingMode === 'epistemology'){
+    groupTargetWrapEl.hidden = true;
+    groupTargetSelectEl.innerHTML = '';
     return;
   }
 
@@ -24423,6 +24470,10 @@ function bindPremiumGroupingPaywallAction(){
 async function handleGroupingModeChange(nextMode){
   groupingMode = String(nextMode || 'school');
   if (groupBySelectEl) groupBySelectEl.value = groupingMode;
+  if (groupingMode === 'epistemology'){
+    currentSchool = getEpistemologiaSchoolLabel();
+    groupingTarget = currentSchool;
+  }
   syncGroupingTargetOptions();
   currentModelId = null;
   window.__CURRENT_MODEL_ID = '';
@@ -24440,6 +24491,18 @@ async function handleGroupingModeChange(nextMode){
       renderModelsList();
     }
     resetRightPanelToTop();
+    return;
+  }
+
+  if (groupingMode === 'epistemology'){
+    renderSchoolInfo(currentSchool);
+    renderModelsList();
+    resetRightPanelToTop();
+    await ensureSchoolFromGitHub(currentSchool).catch((error) => {
+      console.warn('No se pudo cargar la colección de epistemologías:', error);
+    });
+    renderSchoolInfo(currentSchool);
+    renderModelsList();
     return;
   }
 
@@ -24716,6 +24779,13 @@ function renderModelsList(){
       <span class="count-txt">con peso significativo en</span>
       <span class="count-school">“${escapeHtml(dimLabel)}”</span>
     `;
+  }else if (groupingMode === 'epistemology'){
+    setLeftListMeta('Epistemologías', 'abrir timeline');
+    countLine.innerHTML = `
+      <span class="count-n">${list.length}</span>
+      <span class="count-txt">marco${list.length === 1 ? '' : 's'} en</span>
+      <span class="count-school">&ldquo;Epistemologías&rdquo;</span>
+    `;
   }else{
     setLeftListMeta('Modelos', 'abrir timeline');
     countLine.innerHTML = `
@@ -24732,13 +24802,15 @@ function renderModelsList(){
     }
     const emptyByGrouping = (groupingMode === 'school')
       ? `No hay modelos en esta escuela todavía.`
+      : (groupingMode === 'epistemology'
+        ? `No hay epistemologías disponibles todavía.`
       : (groupingMode === 'process'
         ? `No hay modelos con nivel 4 en ese proceso.`
         : (groupingMode === 'dimension'
           ? `No hay modelos con >=${SIGNIFICANT_DIMENSION_PCT}% en esa dimensión.`
           : (groupingMode === 'tags'
             ? `No hay modelos que combinen los tags seleccionados.`
-            : `No hay modelos para la vista red.`)));
+            : `No hay modelos para la vista red.`))));
     modelsListEl.innerHTML =
       `<div class="subtitle" style="margin:10px 0 0 0">${escapeHtml(emptyByGrouping)}</div>`;
     return;
@@ -24753,9 +24825,7 @@ function renderModelsList(){
       const saveData = !!(navigator.connection && navigator.connection.saveData);
       if (saveData) return;
 
-      const isEpistemologiaList =
-        getGroupingModeValue() === 'school' &&
-        isEpistemologiaSchoolName(currentSchool || groupingTarget);
+      const isEpistemologiaList = isEpistemologiaListMode();
 
       if (isEpistemologiaList) return;
 
@@ -24823,9 +24893,7 @@ function renderModelsList(){
   }
 
   try{
-    const isEpistemologiaList =
-      getGroupingModeValue() === 'school' &&
-      isEpistemologiaSchoolName(currentSchool || groupingTarget);
+    const isEpistemologiaList = isEpistemologiaListMode();
 
     if (!isEpistemologiaList){
       initVisibleModelCardPhotoRetries();
@@ -24849,9 +24917,7 @@ function renderModelsList(){
       const saveData = !!(navigator.connection && navigator.connection.saveData);
       if (saveData) return;
 
-      const isEpistemologiaList =
-        getGroupingModeValue() === 'school' &&
-        isEpistemologiaSchoolName(currentSchool || groupingTarget);
+      const isEpistemologiaList = isEpistemologiaListMode();
 
       if (isEpistemologiaList) return;
 
@@ -25158,6 +25224,7 @@ const subtitle = info.subtitle || '—';
 const desc = info.desc || 'Aún no has definido la descripción de esta escuela.';
 const keys = info.keys || [];
 const shouldShowEpistemologiaTable = isEpistemologiaSchoolName(grupo);
+const editorialTitle = shouldShowEpistemologiaTable ? 'Epistemologías' : grupo;
 const epistemologiaTable = shouldShowEpistemologiaTable ? renderEpistemologiaComparisonPlaceholder() : '';
 
   // Tinte del panel derecho como ya haces con modelos
@@ -25197,8 +25264,8 @@ if (window.__SMH){
     <article class="school-editorial" style="--schoolColor:${col}">
       <div class="school-editorialHero">
         <div class="school-editorialMain">
-          <p class="school-editorialKicker">Escuela psicoterap&eacute;utica</p>
-          <h1 class="school-editorialTitle">${escapeHtml(grupo)}</h1>
+          <p class="school-editorialKicker">${shouldShowEpistemologiaTable ? 'Marco epistemol&oacute;gico' : 'Escuela psicoterap&eacute;utica'}</p>
+          <h1 class="school-editorialTitle">${escapeHtml(editorialTitle)}</h1>
           <p class="school-editorialSubtitle">${escapeHtml(subtitle)}</p>
         </div>
 
@@ -25533,8 +25600,8 @@ function buildNetworkOverviewHtml(){
           <div class="networkControl">
             <select id="networkGroupBySelect" aria-label="Vista actual">
               <option value="school">Escuelas</option>
-              <option value="process">Procesos</option>
-              <option value="dimension">Dimensiones</option>
+              <option value="epistemology">Epistemologías</option>
+              <option value="tags">Tags</option>
               <option value="network" selected>Vista red</option>
             </select>
           </div>
@@ -31603,8 +31670,8 @@ async function openModelFromNetworkSelection(id){
   }
   if (!baseModel) return;
 
-  groupingMode = 'school';
-  if (groupBySelectEl) groupBySelectEl.value = 'school';
+  groupingMode = isEpistemologiaSchoolName(baseModel.grupo) ? 'epistemology' : 'school';
+  if (groupBySelectEl) groupBySelectEl.value = groupingMode;
   currentSchool = String(baseModel.grupo || currentSchool || '').trim();
   groupingTarget = currentSchool;
   NETWORK_FILTER_STATE.selectedNodeId = '';
@@ -31612,8 +31679,8 @@ async function openModelFromNetworkSelection(id){
   syncGroupingTargetOptions();
 
   if (currentSchool){
-    if (schoolSelect) schoolSelect.value = currentSchool;
-    if (groupTargetSelectEl) groupTargetSelectEl.value = currentSchool;
+    if (schoolSelect && groupingMode === 'school') schoolSelect.value = currentSchool;
+    if (groupTargetSelectEl && groupingMode === 'school') groupTargetSelectEl.value = currentSchool;
     renderSchoolInfo(currentSchool);
     renderModelsList();
     resetRightPanelToTop();
@@ -32061,9 +32128,15 @@ if (window.OPEN_ID){
   if (window.OPEN_SCHOOL){
     try{
       currentSchool = window.OPEN_SCHOOL;
+      if (isEpistemologiaSchoolName(currentSchool)){
+        groupingMode = 'epistemology';
+        groupingTarget = currentSchool;
+        if (groupBySelectEl) groupBySelectEl.value = groupingMode;
+        syncGroupingTargetOptions();
+      }
 
       // si tienes selector de escuelas, déjalo coherente
-      if (typeof schoolSelect !== "undefined" && schoolSelect){
+      if (typeof schoolSelect !== "undefined" && schoolSelect && groupingMode === 'school'){
         schoolSelect.value = currentSchool;
       }
 
