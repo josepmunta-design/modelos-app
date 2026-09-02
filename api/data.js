@@ -174,11 +174,26 @@ function isPublicModelImagePath(path) {
   );
 }
 
+// Overlays de traduccion. Un overlay solo puede ser tan publico como su fuente
+// espanola: se admiten los de modelos publicos y escuelas, y se dejan fuera los
+// de `Core/modelos/`, que siguen requiriendo sesion y suscripcion.
+const PUBLIC_I18N_OVERLAY_PATTERNS = [
+  /^core\/i18n\/[a-z]{2}\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i,
+  /^core\/i18n\/[a-z]{2}\/escuelas\/[a-z0-9_-]+\.json$/i,
+  /^core\/i18n\/[a-z]{2}\/taxonomias\.json$/i
+];
+
+function isPublicI18nOverlayPath(path) {
+  const value = String(path || '').replace(/\/+$/, '');
+  return PUBLIC_I18N_OVERLAY_PATTERNS.some((pattern) => pattern.test(value));
+}
+
 function isPublicModelDataPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();
 
-  return isPublicLandingAssetPath(value)
+  return isPublicI18nOverlayPath(value)
+    || isPublicLandingAssetPath(value)
     || isPublicModelImagePath(value)
     // Estos indices solo relacionan modelos/autores con sus imagenes publicas.
     || lowerPath === 'core/fotos/foto.json'

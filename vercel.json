@@ -28,6 +28,18 @@
       "destination": "/modelos/index.html"
     },
     {
+      "source": "/en/models",
+      "destination": "/modelos/index.html"
+    },
+    {
+      "source": "/en/models/",
+      "destination": "/modelos/index.html"
+    },
+    {
+      "source": "/en/models/:id",
+      "destination": "/modelos/index.html"
+    },
+    {
       "source": "/procesos",
       "destination": "/procesos/index.html"
     },

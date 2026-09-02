@@ -1,0 +1,72 @@
+.localeSwitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(8, 13, 18, 0.46);
+}
+
+.sidebarHeaderActions {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.sidebarHeaderActions .appsHomeLink {
+  grid-column: auto;
+  margin-top: 0;
+}
+
+.landingBrand .localeSwitch {
+  margin-left: auto;
+}
+
+.landingBrand .localeSwitch__link {
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.localeSwitch__link {
+  min-width: 34px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.62);
+  font: 700 10px/1 "Inter", sans-serif;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.localeSwitch__link:hover,
+.localeSwitch__link:focus-visible {
+  color: #fff;
+  outline: none;
+}
+
+.localeSwitch__link[aria-current="page"] {
+  color: #071217;
+  background: #9ddbd3;
+}
+
+html[data-locale="en"] .localeSwitch__link[aria-current="page"] {
+  background: #d6c197;
+}
+
+html[data-locale="en"] .accessEditorialAside::after {
+  content: "Fig. 01 · Clinical library";
+}
+
+@media (max-width: 720px) {
+  .localeSwitch {
+    flex: 0 0 auto;
+  }
+
+  .sidebarHeaderActions {
+    gap: 4px;
+  }
+}
