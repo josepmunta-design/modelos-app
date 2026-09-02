@@ -129,7 +129,7 @@ lista para publicación ni para SEO mientras conserve secciones españolas.
 ### 2. Esquema de traducciones en `tmps-data`
 
 - [x] Crear `data/Core/i18n/en/` y un esquema de overlay.
-- [x] Inventariar campos traducibles de los 283 JSON de modelos.
+- [x] Inventariar campos traducibles de los 284 JSON de modelos.
 - [x] Asegurar `id` o `codigo` estable en todos los arrays traducibles.
   - [x] `conceptosClave`: 2.812 elementos con clave estable.
   - [x] `secuencias[].pasos`: 921 elementos con clave estable.
@@ -169,7 +169,7 @@ Implementado en `tmps-data`:
 - `npm run validate:i18n` ejecuta las pruebas, verifica que no falte ninguna clave
   estable y valida el piloto. Pasa sin errores ni avisos.
 
-El inventario cubre los 283 JSON sin errores de parseo: 281 contienen un modelo
+El inventario cubre los 284 JSON sin errores de parseo: 282 contienen un modelo
 con `id` y dos son documentos auxiliares. Registra 416 rutas textuales, 108 rutas
 de array y **0 rutas que bloqueen una fusión segura**. La primera migración añadió
 2.704 IDs a conceptos y 921 a pasos. La segunda añadió 4.561 más y cerró los 48
@@ -231,7 +231,7 @@ report:i18n-relations` las genera en `data/Core/i18n/en/RELATIONS.md` y
 
 - [x] Crear el manifiesto inglés de resúmenes de la biblioteca.
 - [x] Traducir los nombres de escuela en pantalla.
-- [ ] Traducir las descripciones largas de cada escuela.
+- [x] Traducir las descripciones largas de cada escuela.
 - [ ] Traducir procesos, subprocesos y dimensiones de cambio.
 - [ ] Traducir tags, tipos, facetas y etiquetas de filtros.
 - [x] Vocabulario compartido de países, ciudades e instituciones.
@@ -276,8 +276,10 @@ escuela, 5 tipos, 39 países, 44 ciudades y 15 instituciones. Un valor sin entra
 se muestra en español y aparece como pendiente en `MANIFEST_COVERAGE.md`.
 
 **Estado:** 12 escuelas y 249 resúmenes analizados; 537 valores de taxonomía se
-traducen al pintar. Solo 1 resumen tiene título inglés, porque solo ACT tiene
-overlay de ficha. El cuello de botella ya no es el mecanismo, es el volumen de
+traducen al pintar. Las 12 escuelas disponen además de subtítulo, descripción y
+conceptos clave editoriales en español e inglés. Solo 1 resumen tenía título
+inglés al crear el manifiesto inicial; las tandas posteriores se incorporan al
+regenerarlo. El cuello de botella ya no es el mecanismo, es el volumen de
 traducción.
 
 ### 4. Generadores y API
@@ -314,6 +316,8 @@ igual que `Core/modelos/**`.
 - [x] Usar estados `draft`, `machine_translated` y `reviewed`.
 - [x] Guardar un hash de la fuente para detectar traducciones obsoletas.
 - [x] Crear informe de cobertura por modelo y por campo.
+- [x] Automatizar lotes `machine_translated` con exportación e importación segura.
+- [x] Separar la promoción a `reviewed` mediante una puerta de revisión humana.
 - [ ] Revisar clínicamente procedimientos y microintervenciones.
 
 #### Clasificación completa del esquema
@@ -359,7 +363,7 @@ arista dentro de `modulosEspeciales`. El total de campos traducibles baja de
 ### 7. Piloto y despliegue gradual
 
 - [x] Traducir de tres a cinco modelos que cubran el esquema más complejo.
-- [ ] Revisión clínica de las cuatro fichas para pasarlas a `reviewed`.
+- [ ] Revisión clínica de las ocho fichas completas para pasarlas a `reviewed`.
 - [ ] Verificar escritorio, móvil, búsqueda, filtros y enlaces profundos.
 - [ ] Revisar que la página inglesa no contenga textos españoles inesperados.
 - [ ] Publicar solo los modelos con traducción revisada.
@@ -447,31 +451,74 @@ aplicado al pintar. Con esto el mecanismo está completo: no queda ninguna pieza
 técnica entre traducir una ficha y verla en inglés en la portada.
 
 **Hecho en la sesión del 2026-09-02 (cuarta parte).** Cerrado el piloto de la
-fase 7 y la mayor parte de la fase 6. Cuatro fichas completas al 100 % en cuatro
-escuelas, la categoría `review` del esquema vaciada (131 rutas → 0), glosario de
-80 términos con comprobador de adherencia, e informe de cobertura por modelo y
-campo. El esfuerzo por ficha ya está medido y no estimado.
+fase 7 y la mayor parte de la fase 6. Ocho fichas completas al 100 % en seis
+escuelas —incluida RULER con tres `modulosEspeciales`—, la categoría `review` del
+esquema vaciada (131 rutas → 0), glosario de 80 términos con comprobador de
+adherencia e informe de cobertura por modelo y campo. El esfuerzo por ficha ya
+está medido y no estimado.
+
+**Hecho en la sesión del 2026-09-02 (quinta parte).** Traducida la presentación
+editorial de las 12 escuelas: subtítulo, descripción larga y conceptos clave.
+`SCHOOL_INFO` conserva las etiquetas españolas como claves funcionales y elige
+el contenido ES/EN según la ruta. La portada y la ficha de escuela muestran ahora
+el nombre localizado sin cambiar el valor canónico usado por filtros, colores y
+navegación. Se añadió también la ficha editorial que faltaba para
+`Psicodélicos`.
+
+**Hecho en la sesión del 2026-09-02 (sexta parte).** Adoptado el modelo de
+producción por lotes solicitado: traducción automática completa con estado
+`machine_translated`, seguida de revisión de Codex antes de publicar. El exportador
+divide las fichas en fragmentos, aplica el glosario pertinente y genera paquetes
+locales para traducir dentro de Codex, usando la suscripción y sin API. El importador reconstruye los
+overlays por claves estables y cancela el lote completo ante resultados parciales,
+claves desconocidas, hashes obsoletos o archivos preexistentes.
+
+La promoción a `reviewed` es un comando distinto: exige cobertura del 100 %, hash
+vigente, identificación del revisor y confirmación explícita de precisión clínica,
+terminología, calidad lingüística y correspondencia con la fuente. Se ha generado
+un piloto local de tres fichas epistemológicas: 35 campos, 2.342 caracteres y
+tres unidades de trabajo. El piloto Codex vive en
+`tmps-data/tmp/i18n-batches/pilot-codex-20260902/`, fuera de Git. Su manifiesto
+incluye la huella SHA-256 y el tamaño exacto de `work-items.jsonl`. Los IDs de
+lote son inmutables y el exportador respeta los límites configurados de unidades,
+bytes y caracteres.
+
+Validación técnica cerrada: 28 pruebas superadas, 284 fuentes comprobadas sin
+IDs estables pendientes y 18 overlays ingleses válidos, con 0 errores y 0
+avisos. Este flujo no realiza llamadas de API ni genera costes por uso.
+
+**Corrección de alcance acordada con el usuario.** Se ha retirado por completo
+el envío mediante API y su comando asociado. Las traducciones se realizan en
+esta conversación con Codex y la suscripción existente. Codex ha traducido las
+tres fichas del piloto, las ha importado inicialmente como `machine_translated`
+y ha completado después la revisión de las 11 fichas con cobertura total. Las
+11 están ahora en estado `reviewed`; ACT, que sigue incompleta, permanece en
+`draft`. El manifiesto público y la app rechazan cualquier overlay que no tenga
+estado `reviewed`.
+
+La cobertura actual es de 921/54.124 campos (1,7 %), con 11 fichas completas.
+El control del glosario compara los 921 pares traducidos y deja 14 términos como
+avisos editoriales trazables; la auditoría confirmó que son reformulaciones o
+usos contextuales válidos, no traducciones bloqueantes.
 
 **Siguiente trabajo recomendado:**
 
-1. Decidir el modelo de producción para las 277 fichas restantes. Traducirlas a
-   mano no es viable en un plazo razonable; el estado `machine_translated` existe
-   precisamente para esto, y el glosario y la cobertura por ficha dan el control
-   de calidad. Es una decisión de proceso, no técnica.
-2. Traducir una ficha con `modulosEspeciales`, la única sección voluminosa que el
-   piloto no estrena y la que más claves estables consumió (3.417 de 4.561).
-3. Revisión clínica de las cuatro fichas piloto para pasarlas a `reviewed` y
-   poder publicarlas.
-4. Traducir las descripciones largas de escuela, que el manifiesto no cubre
-   porque no existe overlay de `Core/escuelas/<id>.json` escrito a mano.
-5. Extender la fusión de overlays a los documentos que hoy no la reciben: la
+1. Preparar el siguiente lote local de hasta diez fichas y traducirlo en Codex.
+2. Importarlo primero en modo simulación y después aplicar los overlays como
+   `machine_translated`.
+3. Ejecutar desde Codex la revisión final de terminología, precisión clínica,
+   calidad lingüística y correspondencia con la fuente antes de promover cada
+   ficha completa a `reviewed`.
+4. Extender la fusión de overlays a los documentos que hoy no la reciben: la
    tabla comparativa de epistemologías y los modelos públicos.
-6. Revisar `data/Core/i18n/en/RELATIONS.md` si se quiere convertir en enlaces las
+5. Revisar `data/Core/i18n/en/RELATIONS.md` si se quiere convertir en enlaces las
    296 influencias que coinciden con un modelo del catálogo. No bloquea nada.
+6. Completar la validación visual en navegador de escritorio y móvil.
 
 La app ya solicita `Core/i18n/en/modelos/<escuela>/<modelId>.json` en rutas
-inglesas, lo fusiona con el modelo español y conserva como fallback cualquier
-campo todavía no traducido. La caché de sesión está separada por locale.
+inglesas y solo lo fusiona si está en estado `reviewed`; en los demás casos
+conserva el modelo español como fallback. La caché de sesión está separada por
+locale.
 
 Verificado en esta sesión, sin navegador:
 
@@ -488,6 +535,8 @@ Verificado en esta sesión, sin navegador:
 - Los helpers de presentación de taxonomías, extraídos también de la plantilla,
   pasan 9 comprobaciones en `en` y en `es`, incluidos valores vacíos y nulos.
 - Los dos diccionarios de interfaz siguen teniendo las mismas 554 claves.
+- La puerta de publicación excluye `draft` y `machine_translated` tanto de las
+  fichas individuales como del manifiesto de la portada.
 
 Sigue pendiente la validación visual en navegador: no había instancia conectada.
 
@@ -514,6 +563,9 @@ npm run report:i18n-relations  regenera relations-report.json y RELATIONS.md
 npm run build:i18n-manifest    regenera el manifiesto de la biblioteca
 npm run report:i18n-coverage   regenera coverage.json y COVERAGE.md
 npm run report:i18n-glossary   regenera GLOSARIO.md y revisa su cumplimiento
+npm run export:i18n-batch      crea un paquete local para traducir en Codex
+npm run import:i18n-batch      valida; con --apply crea machine_translated
+npm run review:i18n            valida la revisión humana; con --apply promueve
 ```
 
 Al traducir una ficha, el bucle de trabajo es:

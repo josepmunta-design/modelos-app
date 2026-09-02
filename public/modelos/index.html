@@ -21560,6 +21560,7 @@ function bindSpecialModelModules(host){
       { key:'Constructivista', color:'#B07AA1' },
       { key:'Integrativo',     color:'#FF9DA7' },
    { key:'Transversal', color:'#5F7F78' },
+   { key:'Psicodélicos', color:'#9575CD' },
    { key:'Fronteras', color:'#8D6E63' },
    { key:'Epistemología', color:'#D9AA3F' },
 
@@ -21571,7 +21572,7 @@ function bindSpecialModelModules(host){
       
       
     // ===== INFO DE ESCUELAS (texto manual) =====
-const SCHOOL_INFO = {
+const SCHOOL_INFO_ES = {
   'Psicoanálisis': {
     subtitle: 'Inconsciente, conflicto, defensas y desarrollo',
     desc: `La escuela psicoanalítica entiende el malestar como expresión de conflictos internos, defensas y patrones relacionales
@@ -21634,6 +21635,13 @@ las expectativas, la explicación compartida del malestar y la activación de pr
 buscando coherencia clínica más que fidelidad a una escuela concreta.`,
   keys: ['factores comunes', 'alianza', 'expectativas', 'procesos de cambio', 'coherencia']
 },
+  'Psicodélicos': {
+  subtitle: 'Preparación, experiencia psicodélica e integración',
+  desc: `Los modelos psicodélicos organizan el acompañamiento clínico antes, durante y después de una experiencia
+psicodélica. Integran preparación, seguridad, atención al contexto, apoyo durante la sesión e integración posterior,
+con especial cuidado por el consentimiento, la vulnerabilidad, las expectativas y los límites profesionales.`,
+  keys: ['preparación', 'acompañamiento', 'integración', 'set y setting', 'seguridad']
+},
   'Fronteras': {
   subtitle: 'Practicas influyentes, limitrofes y epistemologicamente controvertidas',
   desc: `Agrupa modelos y practicas situadas en los bordes del campo psicoterapeutico: propuestas con influencia cultural,
@@ -21671,6 +21679,117 @@ con la experiencia y la forma de vivirla.`,
 
 
 };
+
+const SCHOOL_INFO_EN = {
+  'Psicoanálisis': {
+    subtitle: 'Unconscious processes, conflict, defences and development',
+    desc: `The psychoanalytic school understands distress as an expression of internal conflicts, defences and relational patterns
+organised throughout development. Therapeutic work generally focuses on insight, emotional working-through and changing
+patterns enacted in the transference and therapeutic relationship, with varying degrees of directiveness depending on the author.`,
+    keys: ['conflict/defences', 'transference', 'development', 'therapeutic relationship', 'working-through']
+  },
+
+  'Conductismo': {
+    subtitle: 'Learning, contingencies and exposure',
+    desc: `The focus is on how behaviour and emotional responses are acquired and maintained through learning.
+Intervention prioritises functional assessment, changing contingencies, skills training and exposure to modify habits
+and reduce avoidance.`,
+    keys: ['functional analysis', 'exposure', 'reinforcement', 'skills', 'habits']
+  },
+
+  'Cognitivo': {
+    subtitle: 'Information processing, beliefs and restructuring',
+    desc: `This school proposes that thinking, attention and memory influence emotion and behaviour. Work addresses beliefs,
+biases and coping strategies through techniques such as restructuring, behavioural experiments and metacognitive
+training, depending on the model.`,
+    keys: ['beliefs', 'biases', 'restructuring', 'experiments', 'metacognition']
+  },
+
+  'Humanista': {
+    subtitle: 'Experience, authenticity and growth',
+    desc: `This school emphasises lived experience, congruence and the potential for growth. The therapeutic relationship is
+a central agent of change through presence, acceptance and empathy, while the work generally facilitates emotional contact,
+self-compassion and authenticity.`,
+    keys: ['experience', 'empathy', 'acceptance', 'authenticity', 'growth']
+  },
+
+  'Sistémico': {
+    subtitle: 'Relational patterns, communication and context',
+    desc: `This school understands the problem within systems of relationships and patterns of interaction. Intervention seeks
+to change rules, meanings and communication sequences, working with families or couples, or with the “internal” system
+represented in the session.`,
+    keys: ['patterns', 'communication', 'cycle', 'context', 'reframing']
+  },
+
+  'Integrativo': {
+    subtitle: 'Processes and the coherent combination of strategies',
+    desc: `This school integrates techniques and principles from different traditions, seeking coherence with the case and its
+change processes. It commonly draws on case formulation, common factors and the strategic selection of interventions.`,
+    keys: ['formulation', 'processes', 'common factors', 'selection', 'flexibility']
+  },
+
+  'Constructivista': {
+    subtitle: 'Meaning, organisation of the self and construction of experience',
+    desc: `The constructivist school understands distress as a form of organisation of meaning and the self, built throughout
+relational and biographical experience. Therapeutic change does not arise from correcting content, but from transforming how
+people interpret, make sense of and relate to their own experience, fostering coherence, differentiation and integration.`,
+    keys: ['meaning', 'self', 'narrative', 'coherence', 'identity']
+  },
+
+  'Transversal': {
+    subtitle: 'Common factors, change processes and therapeutic coherence',
+    desc: `Cross-cutting approaches are not defined by a single theory of the problem, but by identifying change processes and
+conditions that operate across different models. They emphasise the alliance, expectations, a shared explanation of distress
+and the activation of relevant psychological processes, seeking clinical coherence rather than allegiance to a particular school.`,
+    keys: ['common factors', 'alliance', 'expectations', 'change processes', 'coherence']
+  },
+
+  'Psicodélicos': {
+    subtitle: 'Preparation, psychedelic experience and integration',
+    desc: `Psychedelic models organise clinical support before, during and after a psychedelic experience. They integrate
+preparation, safety, attention to context, support during the session and subsequent integration, with particular care for
+consent, vulnerability, expectations and professional boundaries.`,
+    keys: ['preparation', 'support', 'integration', 'set and setting', 'safety']
+  },
+
+  'Fronteras': {
+    subtitle: 'Influential, boundary and epistemologically contested practices',
+    desc: `This group brings together models and practices at the margins of psychotherapy: proposals with cultural influence
+and real clinical or para-clinical use, but with contested foundations, evidence or professional frameworks. They are included
+to clarify their historical place and risks, distinguishing potentially integrable resources from theoretical claims that
+require critical caution.`,
+    keys: ['epistemological boundary', 'contested evidence', 'cultural influence', 'prudent use', 'risk of suggestion']
+  },
+
+  'Epistemología': {
+    subtitle: 'Frameworks for knowledge, subject, truth and change',
+    desc: `Epistemologies make explicit the assumptions through which each tradition understands what can be known,
+how experience is constructed and what makes change possible. This group allows them to be compared as cross-cutting
+frameworks at the same level of navigation as the schools, without treating them as another school of psychotherapy.`,
+    keys: ['knowledge', 'truth', 'subject', 'change', 'therapeutic role']
+  },
+
+  'Otros': {
+    subtitle: 'Non-Western, contemplative and cultural traditions',
+    desc: `The “Other” category brings together therapeutic approaches that did not emerge from the Western historical
+development of psychotherapy, or that rest on epistemologies different from the classical schools such as psychoanalysis,
+cognitive, humanistic and systemic traditions.
+
+It includes Eastern traditions, contemplative models, Indigenous approaches and systems for understanding distress grounded
+in acceptance, right action, life discipline or a relationship with nature and community. In these models, change does not
+come from correcting symptoms or mental content, but from transforming one’s relationship with experience and way of living it.`,
+    keys: [
+      'acceptance',
+      'action in the presence of distress',
+      'awareness',
+      'life discipline',
+      'experiential wisdom',
+      'cultural context'
+    ]
+  }
+};
+
+const SCHOOL_INFO = MODELOS_LOCALE === 'en' ? SCHOOL_INFO_EN : SCHOOL_INFO_ES;
 
 function hexToRgba(hex, a=0.14){
   if (!hex) return `rgba(217,170,63,${a})`;
@@ -22654,7 +22773,10 @@ async function applyModelLocaleOverlay(model, sourceFile = ''){
     dataUrlCandidates(`Core/i18n/${MODELOS_LOCALE}/${rawFile}`),
     { bust:true, quiet:true }
   ).then((overlay) => {
-    const valid = overlay && typeof overlay === 'object' && String(overlay.id || '').trim() === id;
+    const valid = overlay
+      && typeof overlay === 'object'
+      && String(overlay.id || '').trim() === id
+      && overlay?._translation?.status === 'reviewed';
     const normalized = valid ? overlay : null;
     MODEL_LOCALE_OVERLAY_CACHE.set(cacheKey, normalized);
     return normalized;
@@ -23847,6 +23969,7 @@ function buildLandingSchools(){
 
  grid.innerHTML = schools.map((label, index) => {
   const col = groupColor.get(label) || '#D9AA3F';
+  const displayLabel = schoolDisplayLabel(label) || label;
   const desc = SCHOOL_INFO[label]?.subtitle || uiText(
     'landing.schoolDefaultDescription',
     'Colección de modelos y desarrollos clínicos relacionados.'
@@ -23854,10 +23977,10 @@ function buildLandingSchools(){
 
   // Pinta placeholder; luego lo rellenamos async
 return `
-  <button type="button" class="landingSchool" data-school="${escapeHtml(label)}" data-search="${escapeHtml(`${label} ${desc}`.toLowerCase())}" style="--schoolColor:${col}">
+  <button type="button" class="landingSchool" data-school="${escapeHtml(label)}" data-search="${escapeHtml(`${label} ${displayLabel} ${desc}`.toLowerCase())}" style="--schoolColor:${col}">
     <span class="landingSchoolIndex">${String(index + 1).padStart(2, '0')}</span>
     <span class="landingSchoolCopy">
-      <span class="landingSchoolName">${escapeHtml(label)}</span>
+      <span class="landingSchoolName">${escapeHtml(displayLabel)}</span>
       <span class="landingSchoolDesc">${escapeHtml(desc)}</span>
     </span>
     <div class="landingSchoolMeta">
@@ -23962,6 +24085,7 @@ function buildSchoolOptions(){
   'Constructivista',
   'Integrativo',
   'Transversal',
+  'Psicodélicos',
   'Fronteras',
   'Otros'
 ];
@@ -25604,7 +25728,9 @@ const subtitle = info.subtitle || '—';
 const desc = info.desc || uiText('overview.school.defaultDescription', 'Aún no has definido la descripción de esta escuela.');
 const keys = info.keys || [];
 const shouldShowEpistemologiaTable = isEpistemologiaSchoolName(grupo);
-const editorialTitle = shouldShowEpistemologiaTable ? uiText('overview.school.epistemologies', 'Epistemologías') : grupo;
+const editorialTitle = shouldShowEpistemologiaTable
+  ? uiText('overview.school.epistemologies', 'Epistemologías')
+  : (schoolDisplayLabel(grupo) || grupo);
 const epistemologiaTable = shouldShowEpistemologiaTable ? renderEpistemologiaComparisonPlaceholder() : '';
 
   // Tinte del panel derecho como ya haces con modelos
