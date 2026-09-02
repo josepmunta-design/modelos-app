@@ -365,38 +365,64 @@ arista dentro de `modulosEspeciales`. El total de campos traducibles baja de
 - [ ] Publicar solo los modelos con traducción revisada.
 - [ ] Ampliar progresivamente hasta completar el catálogo.
 
-#### Las cuatro fichas piloto
+#### Las ocho fichas traducidas
 
-Cuatro escuelas distintas, elegidas por cobertura de esquema y no por tamaño.
+Seis escuelas distintas, elegidas por cobertura de esquema y no por tamaño.
 Todas al **100 % de cobertura** y validando sin errores ni avisos:
 
 | Modelo | Escuela | Campos | Caracteres | Secciones que estrena |
 | --- | --- | --- | --- | --- |
 | `constructivismo-genetico-piaget-1936` | Constructivista | 51 | 9.289 | `neimeyer` |
+| `mindfulness-mbsr-contemplativo-1979` | Transversal | 59 | 11.808 | — |
 | `conductismo-clasico-watson-1913` | Conductismo | 107 | 14.421 | `conceptosClave`, `procedimientos`, `micros` |
 | `relaciones-objeto-fairbairn` | Psicoanálisis | 114 | 17.036 | `alianzaModelo`, justificaciones de procesos y dimensiones, `summary` |
+| `condicionamiento-clasico-pavlov-1927` | Conductismo | 150 | 20.485 | — |
 | `cognitive-therapy-ptsd-ehlers-clark-2000` | Cognitivo | 129 | 21.180 | `secuencias` con sus pasos |
+| `terapia-centrada-soluciones-1982` | Sistémico | 103 | 21.542 | — |
+| `ruler-yale-emotional-intelligence-2012` | Cognitivo | 158 | 22.664 | **`modulosEspeciales`**: matriz, mapa y ciclo |
 
-Entre las cuatro cubren `descripcion`, `frase`, `summary`, `teoriaCambio`,
-`contextoOrigen` completo, `conceptosClave`, `ideasPrincipales`, `procedimientos`,
-`micros`, `secuencias`, `neimeyer`, `alianzaModelo`, las dos justificaciones y
-`influencias`. Queda sin estrenar `modulosEspeciales`, que es la sección más
-voluminosa del catálogo y merece una ficha piloto propia.
+Entre las ocho cubren todas las secciones del esquema: `descripcion`, `frase`,
+`summary`, `teoriaCambio`, `contextoOrigen` completo, `conceptosClave`,
+`ideasPrincipales`, `procedimientos`, `micros`, `secuencias`, `modulosEspeciales`,
+`neimeyer`, `alianzaModelo`, las dos justificaciones e `influencias`.
 
-Las cuatro están en `draft`. Pasarlas a `reviewed` es una decisión clínica, no
+RULER cierra el último hueco con sus tres módulos de visualización: 61 campos
+entre celdas de matriz, zonas y nodos de mapa, etiquetas de arista, leyenda y
+pasos de ciclo. El informe de cobertura detectó de paso que la ficha tenía tres
+secuencias y no una, que es exactamente para lo que sirve.
+
+En Ehlers-Clark el `label` ya estaba en inglés en la fuente, así que el generador
+del manifiesto no lo duplica. No es un fallo: la lista inglesa ya muestra el
+título correcto.
+
+Las ocho están en `draft`. Pasarlas a `reviewed` es una decisión clínica, no
 técnica: el validador ya exige para ese estado un `reviewedAt` y un hash de fuente
 vigente.
+
+#### Un fallo de clasificación que aparecio al traducir modulos
+
+Al preparar RULER se vio que `modulosEspeciales[].relaciones[].etiqueta` y
+`.descripcion` estaban marcados como `preserve`. Era un error mío: al clasificar
+el esquema colapsé todo el subárbol `relaciones` a `preserve` porque contiene
+cableado (`origen`, `destino`, `trazado`, puertos), pero esas dos claves son
+texto que la app pinta sobre el mapa.
+
+Ahora la regla distingue dentro del mismo subárbol: las claves de prosa
+(`etiqueta`, `titulo`, `subtitulo`, `nombre`, `descripcion`, `texto`) son
+`overlay` y el resto sigue siendo `preserve`. Recupera **1.096 campos** que
+habrían quedado en español en todos los mapas del catálogo. El total de campos
+traducibles pasa de 53.944 a 55.040.
 
 #### Esfuerzo medido
 
 Este era el objetivo declarado del piloto, y ahora hay cifras en vez de
 estimaciones:
 
-- **401 campos y 61.926 caracteres** traducidos en las cuatro fichas.
-- Media real del catálogo: **191 campos y 38.341 caracteres por ficha**, con
-  mediana de 31.126. Las cuatro elegidas están por debajo de la media: se
-  eligieron por cobertura de esquema, no por representatividad de tamaño.
-- Quedan **277 fichas y 53.186 campos**, unos 10,7 millones de caracteres.
+- **871 campos y 138.425 caracteres** traducidos en las ocho fichas.
+- Media real del catálogo: **195 campos y 38.763 caracteres por ficha**. Las ocho
+  elegidas están por debajo de la media: se eligieron por cobertura de esquema,
+  no por representatividad de tamaño.
+- Quedan **274 fichas y 54.150 campos**, unos 10,8 millones de caracteres.
 - La distribución es muy desigual: la ficha más pequeña tiene 533 caracteres y la
   mayor 180.548.
 
