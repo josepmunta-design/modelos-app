@@ -29,7 +29,8 @@
   const currentLocale = detectLocale();
   document.documentElement.lang = currentLocale;
   document.documentElement.dataset.locale = currentLocale;
-  if (currentLocale === 'en') {
+  const reviewedStaticTranslation = document.documentElement.dataset.translationStatus === 'reviewed';
+  if (currentLocale === 'en' && !reviewedStaticTranslation) {
     document.querySelector('meta[name="robots"]')?.setAttribute('content', 'noindex,follow');
   }
 
@@ -117,7 +118,7 @@
       afterDomReady(() => {
         translateDom();
         updateLanguageLinks();
-        if (typeof window.setLibrarySeo === 'function') window.setLibrarySeo();
+        if (!getModelId() && typeof window.setLibrarySeo === 'function') window.setLibrarySeo();
         document.dispatchEvent(new CustomEvent('modelos:locale-ready', {
           detail: { locale: currentLocale }
         }));

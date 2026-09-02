@@ -29,15 +29,15 @@
     },
     {
       "source": "/en/models",
-      "destination": "/modelos/index.html"
+      "destination": "/en/models/index.html"
     },
     {
       "source": "/en/models/",
-      "destination": "/modelos/index.html"
+      "destination": "/en/models/index.html"
     },
     {
       "source": "/en/models/:id",
-      "destination": "/modelos/index.html"
+      "destination": "/en/models/:id/index.html"
     },
     {
       "source": "/procesos",

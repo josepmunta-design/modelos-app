@@ -1,13 +1,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
-const PUBLIC_DIR = path.join(ROOT, 'public');
+const SOURCE_PUBLIC_DIR = path.join(ROOT, 'public');
+const PUBLIC_DIR = process.env.MODEL_PAGES_OUTPUT_DIR
+  ? path.resolve(process.env.MODEL_PAGES_OUTPUT_DIR)
+  : SOURCE_PUBLIC_DIR;
 const MODELS_DIR = path.join(PUBLIC_DIR, 'modelos');
-const LOCAL_INDEX_PATH = path.join(PUBLIC_DIR, 'assets', 'Repo', 'modelos-index.json');
+const EN_MODELS_DIR = path.join(PUBLIC_DIR, 'en', 'models');
+const LOCAL_INDEX_PATH = path.join(SOURCE_PUBLIC_DIR, 'assets', 'Repo', 'modelos-index.json');
 const MANIFEST_PATH = path.join(MODELS_DIR, '.generated-pages.json');
-const APP_TEMPLATE_PATH = path.join(MODELS_DIR, 'index.html');
+const APP_TEMPLATE_PATH = path.join(SOURCE_PUBLIC_DIR, 'modelos', 'index.html');
 const GENERATED_ASSETS_DIR = path.join(MODELS_DIR, 'generated-assets');
+const MODEL_PAGES_DATA_ROOT = String(process.env.MODEL_PAGES_DATA_ROOT || '').trim();
 
 const BASE_URL = String(process.env.PUBLIC_APP_URL || 'https://apps.tumentorpsicologia.com')
   .replace(/\/+$/, '');
@@ -19,6 +25,39 @@ const GITHUB_OWNER = String(process.env.GITHUB_OWNER || '').trim();
 const GITHUB_REPO = String(process.env.GITHUB_REPO || '').trim();
 const GITHUB_TOKEN = String(process.env.GITHUB_TOKEN || '').trim();
 const GITHUB_REF = String(process.env.GITHUB_REF_NAME || process.env.GITHUB_DATA_REF || 'main').trim();
+
+const LOCALES = {
+  es: {
+    code: 'es',
+    path: 'modelos',
+    libraryName: 'Modelos',
+    pageSuffix: 'Modelo de psicoterapia',
+    home: 'Inicio',
+    theory: 'Teoría del cambio',
+    ideas: 'Ideas fundamentales',
+    influences: 'Influencias',
+    references: 'Referencias principales',
+    related: 'Modelos relacionados',
+    idea: 'Idea principal',
+    imageAlt: 'Ficha clínica de un modelo de psicoterapia',
+    psychotherapy: 'Psicoterapia'
+  },
+  en: {
+    code: 'en',
+    path: 'en/models',
+    libraryName: 'Models',
+    pageSuffix: 'Psychotherapy model',
+    home: 'Home',
+    theory: 'Theory of change',
+    ideas: 'Core ideas',
+    influences: 'Influences',
+    references: 'Key references',
+    related: 'Related models',
+    idea: 'Core idea',
+    imageAlt: 'Clinical psychotherapy model profile',
+    psychotherapy: 'Psychotherapy'
+  }
+};
 
 function compactText(value) {
   return String(value ?? '')
@@ -57,12 +96,112 @@ function cleanModelId(value) {
   return id;
 }
 
-function normalizeModel(raw, school = {}) {
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function stableKeyForItem(item) {
+  if (!isPlainObject(item)) return null;
+  if (typeof item.id === 'string' && item.id.trim()) return ['id', item.id];
+  if (typeof item.codigo === 'string' && item.codigo.trim()) return ['codigo', item.codigo];
+  return null;
+}
+
+export function mergeModelOverlay(source, overlay, pathLabel = '$') {
+  if (Array.isArray(source)) {
+    if (Array.isArray(overlay)) {
+      const translated = new Map();
+      for (const item of overlay) {
+        const key = stableKeyForItem(item);
+        if (!key) throw new Error(`${pathLabel}: translated array item has no id or codigo`);
+        translated.set(`${key[0]}:${key[1]}`, item);
+      }
+      const matched = new Set();
+      const merged = source.map((item) => {
+        const key = stableKeyForItem(item);
+        if (!key) return item;
+        const lookup = `${key[0]}:${key[1]}`;
+        if (!translated.has(lookup)) return item;
+        matched.add(lookup);
+        return mergeModelOverlay(item, translated.get(lookup), `${pathLabel}[${lookup}]`);
+      });
+      const unknown = [...translated.keys()].filter((key) => !matched.has(key));
+      if (unknown.length) throw new Error(`${pathLabel}: unknown translated item(s): ${unknown.join(', ')}`);
+      return merged;
+    }
+    if (!isPlainObject(overlay)) throw new Error(`${pathLabel}: translated array requires an array or keyed object`);
+
+    const byStableKey = new Map();
+    const byString = new Map();
+    source.forEach((item, index) => {
+      const key = stableKeyForItem(item);
+      if (key) byStableKey.set(key[1], index);
+      else if (typeof item === 'string') {
+        if (!byString.has(item)) byString.set(item, []);
+        byString.get(item).push(index);
+      }
+    });
+    const merged = source.slice();
+    for (const [key, value] of Object.entries(overlay)) {
+      if (byString.has(key)) {
+        if (typeof value !== 'string') throw new Error(`${pathLabel}[${key}]: expected translated string`);
+        for (const index of byString.get(key)) merged[index] = value;
+      } else if (byStableKey.has(key)) {
+        const index = byStableKey.get(key);
+        merged[index] = mergeModelOverlay(source[index], value, `${pathLabel}[${key}]`);
+      } else {
+        throw new Error(`${pathLabel}: unknown translated item ${key}`);
+      }
+    }
+    return merged;
+  }
+
+  if (Array.isArray(overlay)) throw new Error(`${pathLabel}: source is not an array`);
+  if (!isPlainObject(overlay)) {
+    if (isPlainObject(source)) throw new Error(`${pathLabel}: source is an object`);
+    return overlay;
+  }
+  if (!isPlainObject(source)) throw new Error(`${pathLabel}: source is not an object`);
+
+  const merged = { ...source };
+  for (const [key, value] of Object.entries(overlay)) {
+    if (key === '_translation') continue;
+    if (!(key in source)) throw new Error(`${pathLabel}.${key}: field does not exist in source`);
+    if (pathLabel === '$' && ['grupo', 'year', 'autores', 'lat', 'lon', 'file'].includes(key)) {
+      throw new Error(`${pathLabel}.${key}: canonical field cannot be translated`);
+    }
+    merged[key] = mergeModelOverlay(source[key], value, `${pathLabel}.${key}`);
+  }
+  return merged;
+}
+
+function applyReviewedOverlay(source, overlay) {
+  if (!isPlainObject(overlay) || overlay?._translation?.status !== 'reviewed') return null;
+  if (String(overlay.id || '') !== String(source.id || '')) return null;
+  return {
+    ...mergeModelOverlay(source, overlay),
+    __locale: 'en',
+    __translation: overlay._translation
+  };
+}
+
+function localizedPublicPath(dataPath, locale = 'en') {
+  const clean = String(dataPath || '').replace(/^data\//i, '').replace(/^Core\//i, '');
+  return clean.startsWith('modelos-publicos/') ? `Core/i18n/${locale}/${clean}` : '';
+}
+
+function taxonomyLabel(taxonomies, group, value) {
+  const raw = compactText(value);
+  const translated = taxonomies?.[group]?.[raw];
+  return typeof translated === 'string' && translated.trim() ? translated.trim() : raw;
+}
+
+function normalizeModel(raw, school = {}, taxonomies = null) {
   const id = cleanModelId(raw?.id);
   if (!id) return null;
 
   const label = compactText(raw?.label || raw?.templabel || id);
-  const group = compactText(raw?.grupo || school?.label || school?.id || '');
+  const group = taxonomyLabel(taxonomies, 'escuelas', raw?.grupo || school?.label || school?.id || '');
   const description = compactText(
     raw?.descripcion
       || raw?.summary
@@ -77,8 +216,9 @@ function normalizeModel(raw, school = {}) {
     grupo: group,
     descripcion: description,
     autores: compactText(raw?.autores || ''),
-    ciudad: compactText(raw?.ciudad || ''),
-    pais: compactText(raw?.pais || ''),
+    ciudad: taxonomyLabel(taxonomies, 'ciudades', raw?.ciudad || ''),
+    pais: taxonomyLabel(taxonomies, 'paises', raw?.pais || ''),
+    universidad: taxonomyLabel(taxonomies, 'universidades', raw?.universidad || ''),
     frase: compactText(raw?.frase || ''),
     year: Number.isFinite(Number(raw?.year)) ? Number(raw.year) : null,
     ideasPrincipales: Array.isArray(raw?.ideasPrincipales) ? raw.ideasPrincipales : [],
@@ -171,6 +311,12 @@ function publicModelPath(modelFile, school, modelId) {
 async function loadRemoteModels() {
   const schools = await fetchJson('Core/escuelas/index.json');
   if (!Array.isArray(schools)) throw new Error('El índice remoto de escuelas no es válido.');
+  let taxonomies = {};
+  try {
+    taxonomies = await fetchJson('Core/i18n/en/taxonomias.json');
+  } catch {
+    // El build español puede continuar aunque falte el vocabulario inglés.
+  }
 
   const entries = [];
   for (const school of schools) {
@@ -186,20 +332,43 @@ async function loadRemoteModels() {
   const loaded = await mapWithConcurrency(entries, FETCH_CONCURRENCY, async (entry) => {
     try {
       const detail = await fetchJson(entry.dataPath);
-      return normalizeModel({ ...entry.summary, ...detail, __seoDetail: true }, entry.school);
+      const source = { ...entry.summary, ...detail, __seoDetail: true };
+      const es = normalizeModel(source, entry.school);
+      let en = null;
+      const overlayPath = localizedPublicPath(entry.dataPath);
+      if (overlayPath) {
+        try {
+          const overlay = await fetchJson(overlayPath);
+          const localized = applyReviewedOverlay(source, overlay);
+          if (localized) en = normalizeModel(localized, entry.school, taxonomies);
+        } catch {
+          // Una traducción ausente o no revisada no genera una página inglesa.
+        }
+      }
+      return { es, en };
     } catch (error) {
       console.warn(`[resumen] ${entry.summary?.id || entry.dataPath}: ${error.message}`);
-      return normalizeModel({ ...entry.summary, __seoDetail: false }, entry.school);
+      return { es: normalizeModel({ ...entry.summary, __seoDetail: false }, entry.school), en: null };
     }
   });
 
-  return loaded.filter(Boolean);
+  return {
+    es: loaded.map((entry) => entry?.es).filter(Boolean),
+    en: loaded.map((entry) => entry?.en).filter(Boolean)
+  };
 }
 
 async function loadGitHubPublicModels() {
   const rootPath = 'data/Core/modelos-publicos';
   const schools = await githubRequest(rootPath);
   if (!Array.isArray(schools)) throw new Error('GitHub no devolvió el directorio de modelos públicos.');
+
+  let taxonomies = {};
+  try {
+    taxonomies = await githubRequest('data/Core/i18n/en/taxonomias.json', { raw: true });
+  } catch {
+    // La ausencia del vocabulario solo impide localizar taxonomías, no el build español.
+  }
 
   const files = [];
   for (const school of schools.filter((entry) => entry?.type === 'dir')) {
@@ -215,14 +384,33 @@ async function loadGitHubPublicModels() {
   const loaded = await mapWithConcurrency(files, FETCH_CONCURRENCY, async (filePath) => {
     try {
       const detail = await githubRequest(filePath, { raw: true });
-      return normalizeModel({ ...detail, __seoDetail: true });
+      const source = { ...detail, __seoDetail: true };
+      const es = normalizeModel(source);
+      let en = null;
+      const relative = String(filePath).replace(/^data\/Core\//i, '');
+      const overlayPath = relative.startsWith('modelos-publicos/')
+        ? `data/Core/i18n/en/${relative}`
+        : '';
+      if (overlayPath) {
+        try {
+          const overlay = await githubRequest(overlayPath, { raw: true });
+          const localized = applyReviewedOverlay(source, overlay);
+          if (localized) en = normalizeModel(localized, {}, taxonomies);
+        } catch {
+          // GitHub responde 404 para modelos todavía no traducidos.
+        }
+      }
+      return { es, en };
     } catch (error) {
       console.warn(`[omitido] ${filePath}: ${error.message}`);
       return null;
     }
   });
 
-  return loaded.filter(Boolean);
+  return {
+    es: loaded.map((entry) => entry?.es).filter(Boolean),
+    en: loaded.map((entry) => entry?.en).filter(Boolean)
+  };
 }
 
 async function loadLocalModels() {
@@ -230,10 +418,71 @@ async function loadLocalModels() {
   const parsed = JSON.parse(raw);
   const list = Array.isArray(parsed) ? parsed : parsed?.models;
   if (!Array.isArray(list)) throw new Error('El índice local de modelos no es válido.');
-  return list.map((model) => normalizeModel(model)).filter(Boolean);
+  return {
+    es: list.map((model) => normalizeModel(model)).filter(Boolean),
+    en: []
+  };
+}
+
+async function listJsonFiles(directory) {
+  const files = [];
+  let entries;
+  try {
+    entries = await fs.readdir(directory, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') return files;
+    throw error;
+  }
+  for (const entry of entries) {
+    const fullPath = path.join(directory, entry.name);
+    if (entry.isDirectory()) files.push(...await listJsonFiles(fullPath));
+    else if (entry.isFile() && entry.name.toLowerCase().endsWith('.json')) files.push(fullPath);
+  }
+  return files;
+}
+
+async function loadDataRepositoryModels() {
+  const coreRoot = path.join(path.resolve(MODEL_PAGES_DATA_ROOT), 'data', 'Core');
+  const publicRoot = path.join(coreRoot, 'modelos-publicos');
+  const files = await listJsonFiles(publicRoot);
+  if (!files.length) throw new Error(`No hay modelos públicos en ${publicRoot}.`);
+  let taxonomies = {};
+  try {
+    taxonomies = await readJsonFile(path.join(coreRoot, 'i18n', 'en', 'taxonomias.json'));
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+
+  const loaded = await mapWithConcurrency(files, FETCH_CONCURRENCY, async (filePath) => {
+    const source = { ...await readJsonFile(filePath), __seoDetail: true };
+    const es = normalizeModel(source);
+    const relative = path.relative(publicRoot, filePath);
+    const overlayPath = path.join(coreRoot, 'i18n', 'en', 'modelos-publicos', relative);
+    let en = null;
+    try {
+      const localized = applyReviewedOverlay(source, await readJsonFile(overlayPath));
+      if (localized) en = normalizeModel(localized, {}, taxonomies);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    return { es, en };
+  });
+
+  return {
+    es: loaded.map((entry) => entry.es).filter(Boolean),
+    en: loaded.map((entry) => entry.en).filter(Boolean)
+  };
+}
+
+async function readJsonFile(filePath) {
+  return JSON.parse(await fs.readFile(filePath, 'utf8'));
 }
 
 async function loadModels() {
+  if (MODEL_PAGES_DATA_ROOT) {
+    console.log(`Fuente: repositorio de datos local ${path.resolve(MODEL_PAGES_DATA_ROOT)}.`);
+    return loadDataRepositoryModels();
+  }
   if (GITHUB_OWNER && GITHUB_REPO && GITHUB_TOKEN) {
     console.log(`Fuente: JSON públicos del repositorio privado ${GITHUB_OWNER}/${GITHUB_REPO}.`);
     return loadGitHubPublicModels();
@@ -248,12 +497,12 @@ async function loadModels() {
   return loadRemoteModels();
 }
 
-function renderIdea(idea) {
+function renderIdea(idea, locale) {
   if (typeof idea === 'string') {
     return `<li><p>${escapeHtml(compactText(idea))}</p></li>`;
   }
 
-  const title = compactText(idea?.titulo || idea?.title || 'Idea principal');
+  const title = compactText(idea?.titulo || idea?.title || locale.idea);
   const body = compactText(idea?.desarrollo || idea?.descripcion || idea?.text || '');
   return [
     '<li>',
@@ -271,7 +520,7 @@ function renderSimpleList(items, className = '') {
     .join('')}</ul>`;
 }
 
-function relatedModelsFor(model, models) {
+function relatedModelsFor(model, models, localeCode) {
   return models
     .filter((candidate) => candidate.id !== model.id && candidate.grupo === model.grupo)
     .sort((a, b) => {
@@ -279,7 +528,7 @@ function relatedModelsFor(model, models) {
       const yearB = b.year ?? 9999;
       const distanceA = model.year ? Math.abs(yearA - model.year) : yearA;
       const distanceB = model.year ? Math.abs(yearB - model.year) : yearB;
-      return distanceA - distanceB || a.label.localeCompare(b.label, 'es');
+      return distanceA - distanceB || a.label.localeCompare(b.label, localeCode);
     })
     .slice(0, 5);
 }
@@ -324,6 +573,14 @@ function replaceMetaByProperty(html, property, value) {
   });
 }
 
+function removeElementById(html, tagName, id) {
+  const pattern = new RegExp(
+    `<${tagName}\\b[^>]*\\bid=["']${escapeRegExp(id)}["'][^>]*>`,
+    'i'
+  );
+  return html.replace(pattern, '');
+}
+
 async function prepareInteractiveTemplate() {
   let html = await fs.readFile(APP_TEMPLATE_PATH, 'utf8');
   const assets = [];
@@ -360,7 +617,11 @@ async function prepareInteractiveTemplate() {
   return html;
 }
 
-function renderNoScriptFallback(model, related) {
+function modelUrl(modelId, locale) {
+  return `${BASE_URL}/${locale.path}/${encodeURIComponent(modelId)}`;
+}
+
+function renderNoScriptFallback(model, related, locale) {
   const theory = compactText(model?.teoriaCambio?.resumen || '');
   const ideas = model.ideasPrincipales.slice(0, 10);
   const references = model.refs.map(compactText).filter(Boolean).slice(0, 20);
@@ -372,21 +633,25 @@ function renderNoScriptFallback(model, related) {
       <h1>${escapeHtml(model.label)}</h1>
       ${model.frase ? `<blockquote>${escapeHtml(model.frase)}</blockquote>` : ''}
       <p>${escapeHtml(model.descripcion)}</p>
-      ${theory ? `<section><h2>Teoría del cambio</h2><p>${escapeHtml(theory)}</p></section>` : ''}
-      ${ideas.length ? `<section><h2>Ideas fundamentales</h2><ol>${ideas.map(renderIdea).join('')}</ol></section>` : ''}
-      ${model.influencias.length ? `<section><h2>Influencias</h2>${renderSimpleList(model.influencias)}</section>` : ''}
-      ${references.length ? `<section><h2>Referencias principales</h2>${renderSimpleList(references)}</section>` : ''}
-      ${related.length ? `<nav aria-label="Modelos relacionados"><h2>Modelos relacionados</h2><ul>${related.map((item) => `<li><a href="/modelos/${encodeURIComponent(item.id)}">${escapeHtml(item.label)}</a></li>`).join('')}</ul></nav>` : ''}
+      ${theory ? `<section><h2>${escapeHtml(locale.theory)}</h2><p>${escapeHtml(theory)}</p></section>` : ''}
+      ${ideas.length ? `<section><h2>${escapeHtml(locale.ideas)}</h2><ol>${ideas.map((idea) => renderIdea(idea, locale)).join('')}</ol></section>` : ''}
+      ${model.influencias.length ? `<section><h2>${escapeHtml(locale.influences)}</h2>${renderSimpleList(model.influencias)}</section>` : ''}
+      ${references.length ? `<section><h2>${escapeHtml(locale.references)}</h2>${renderSimpleList(references)}</section>` : ''}
+      ${related.length ? `<nav aria-label="${escapeHtml(locale.related)}"><h2>${escapeHtml(locale.related)}</h2><ul>${related.map((item) => `<li><a href="/${locale.path}/${encodeURIComponent(item.id)}">${escapeHtml(item.label)}</a></li>`).join('')}</ul></nav>` : ''}
     </article>
   </noscript>`;
 }
 
-function renderModelPage(model, allModels, interactiveTemplate) {
-  const url = `${BASE_URL}/modelos/${encodeURIComponent(model.id)}`;
+export function renderModelPage(model, allModels, interactiveTemplate, localeCode = 'es', englishModelIds = new Set()) {
+  const locale = LOCALES[localeCode];
+  if (!locale) throw new Error(`Locale no soportado: ${localeCode}`);
+  const url = modelUrl(model.id, locale);
   const description = truncateText(model.descripcion, 158);
-  const title = `${model.label} | Modelo de psicoterapia`;
-  const related = relatedModelsFor(model, allModels);
+  const title = `${model.label} | ${locale.pageSuffix}`;
+  const related = relatedModelsFor(model, allModels, localeCode);
   const indexable = model.descripcion.length >= 160;
+  const spanishUrl = modelUrl(model.id, LOCALES.es);
+  const englishUrl = modelUrl(model.id, LOCALES.en);
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -397,7 +662,7 @@ function renderModelPage(model, allModels, interactiveTemplate) {
         url,
         name: title,
         description,
-        inLanguage: 'es',
+        inLanguage: locale.code,
         isPartOf: { '@id': `${BASE_URL}/#website` },
         breadcrumb: { '@id': `${url}#breadcrumb` },
         mainEntity: { '@id': `${url}#article` }
@@ -409,15 +674,15 @@ function renderModelPage(model, allModels, interactiveTemplate) {
         description,
         author: model.autores ? { '@type': 'Person', name: model.autores } : undefined,
         publisher: { '@id': `${BASE_URL}/#organization` },
-        about: [model.grupo, 'Psicoterapia'].filter(Boolean),
-        inLanguage: 'es'
+        about: [model.grupo, locale.psychotherapy].filter(Boolean),
+        inLanguage: locale.code
       },
       {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Inicio', item: `${BASE_URL}/` },
-          { '@type': 'ListItem', position: 2, name: 'Modelos', item: `${BASE_URL}/modelos/` },
+          { '@type': 'ListItem', position: 1, name: locale.home, item: `${BASE_URL}/` },
+          { '@type': 'ListItem', position: 2, name: locale.libraryName, item: `${BASE_URL}/${locale.path}/` },
           { '@type': 'ListItem', position: 3, name: model.label, item: url }
         ]
       }
@@ -425,15 +690,26 @@ function renderModelPage(model, allModels, interactiveTemplate) {
   };
 
   let html = interactiveTemplate;
+  html = html.replace(/<html\b([^>]*)\blang=(['"])[^'"]*\2/i, `<html$1lang="${locale.code}"`);
+  if (localeCode === 'en') {
+    html = html.replace(/<html\b([^>]*)>/i, '<html$1 data-translation-status="reviewed">');
+  }
   html = replaceElementTextById(html, 'title', 'seoTitle', title);
   html = replaceAttributeById(html, 'meta', 'seoDescription', 'content', description);
   html = replaceAttributeById(html, 'link', 'seoCanonical', 'href', url);
+  html = replaceAttributeById(html, 'link', 'seoAlternateEs', 'href', spanishUrl);
+  html = replaceAttributeById(html, 'link', 'seoAlternateDefault', 'href', spanishUrl);
+  html = englishModelIds.has(model.id)
+    ? replaceAttributeById(html, 'link', 'seoAlternateEn', 'href', englishUrl)
+    : removeElementById(html, 'link', 'seoAlternateEn');
   html = replaceAttributeById(html, 'meta', 'seoOgTitle', 'content', title);
   html = replaceAttributeById(html, 'meta', 'seoOgDescription', 'content', description);
   html = replaceAttributeById(html, 'meta', 'seoOgUrl', 'content', url);
   html = replaceAttributeById(html, 'meta', 'seoTwitterTitle', 'content', title);
   html = replaceAttributeById(html, 'meta', 'seoTwitterDescription', 'content', description);
+  html = replaceAttributeById(html, 'meta', 'seoOgImageAlt', 'content', `${locale.imageAlt}: ${model.label}`);
   html = replaceMetaByProperty(html, 'og:type', 'article');
+  html = replaceMetaByProperty(html, 'og:locale', localeCode === 'en' ? 'en_GB' : 'es_ES');
   html = html.replace(
     /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
     `<meta name="robots" content="${indexable ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1' : 'noindex,follow'}">`
@@ -442,13 +718,72 @@ function renderModelPage(model, allModels, interactiveTemplate) {
     /<script\b[^>]*\bid=["']seoStructuredData["'][^>]*>[\s\S]*?<\/script>/i,
     `<script id="seoStructuredData" type="application/ld+json">${safeJsonForHtml(structuredData)}</script>`
   );
-  html = html.replace('</body>', `${renderNoScriptFallback(model, related)}\n</body>`);
+  const localeMetadata = [
+    ...(localeCode === 'en' ? ['<meta name="translation-status" content="reviewed">'] : []),
+    ...(englishModelIds.has(model.id)
+      ? [`<meta property="og:locale:alternate" content="${localeCode === 'en' ? 'es_ES' : 'en_GB'}">`]
+      : [])
+  ].join('\n  ');
+  if (localeMetadata) html = html.replace('</head>', `  ${localeMetadata}\n</head>`);
+  html = html.replace('</body>', `${renderNoScriptFallback(model, related, locale)}\n</body>`);
   return html;
 }
 
-function assertGeneratedPath(id) {
-  const target = path.resolve(MODELS_DIR, id);
-  const base = `${path.resolve(MODELS_DIR)}${path.sep}`;
+export function renderEnglishLibraryPage(interactiveTemplate) {
+  const url = `${BASE_URL}/en/models/`;
+  const spanishUrl = `${BASE_URL}/modelos/`;
+  const title = 'Psychotherapy Model Library | Tu Mentor Psicología';
+  const description = 'Explore psychotherapy models, schools, change processes, clinical techniques, influences, and evidence in a bilingual living library.';
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: title,
+    description,
+    inLanguage: 'en',
+    isPartOf: { '@id': `${BASE_URL}/#website` }
+  };
+
+  let html = interactiveTemplate;
+  html = html.replace(/<html\b([^>]*)\blang=(['"])[^'"]*\2/i, '<html$1lang="en"');
+  html = html.replace(/<html\b([^>]*)>/i, '<html$1 data-translation-status="reviewed">');
+  html = replaceElementTextById(html, 'title', 'seoTitle', title);
+  html = replaceAttributeById(html, 'meta', 'seoDescription', 'content', description);
+  html = replaceAttributeById(html, 'link', 'seoCanonical', 'href', url);
+  html = replaceAttributeById(html, 'link', 'seoAlternateEs', 'href', spanishUrl);
+  html = replaceAttributeById(html, 'link', 'seoAlternateEn', 'href', url);
+  html = replaceAttributeById(html, 'link', 'seoAlternateDefault', 'href', spanishUrl);
+  html = replaceAttributeById(html, 'meta', 'seoOgTitle', 'content', title);
+  html = replaceAttributeById(html, 'meta', 'seoOgDescription', 'content', description);
+  html = replaceAttributeById(html, 'meta', 'seoOgUrl', 'content', url);
+  html = replaceAttributeById(html, 'meta', 'seoTwitterTitle', 'content', title);
+  html = replaceAttributeById(html, 'meta', 'seoTwitterDescription', 'content', description);
+  html = replaceAttributeById(html, 'meta', 'seoOgImageAlt', 'content', 'Psychotherapy Model Library');
+  html = replaceMetaByProperty(html, 'og:type', 'website');
+  html = replaceMetaByProperty(html, 'og:locale', 'en_GB');
+  html = html.replace(
+    /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
+    '<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">'
+  );
+  html = html.replace(
+    /<script\b[^>]*\bid=["']seoStructuredData["'][^>]*>[\s\S]*?<\/script>/i,
+    `<script id="seoStructuredData" type="application/ld+json">${safeJsonForHtml(structuredData)}</script>`
+  );
+  html = html.replace('</head>', '  <meta name="translation-status" content="reviewed">\n  <meta property="og:locale:alternate" content="es_ES">\n</head>');
+  html = html.replace('</body>', `<noscript>
+    <article class="seo-noscript" lang="en">
+      <h1>Psychotherapy Model Library</h1>
+      <p>${escapeHtml(description)}</p>
+      <p>Enable JavaScript to search, filter, and open the reviewed English model profiles.</p>
+    </article>
+  </noscript>\n</body>`);
+  return html;
+}
+
+function assertGeneratedPath(id, outputDir = MODELS_DIR) {
+  const target = path.resolve(outputDir, id);
+  const base = `${path.resolve(outputDir)}${path.sep}`;
   if (!target.startsWith(base)) throw new Error(`Ruta de salida no segura: ${id}`);
   return target;
 }
@@ -457,60 +792,96 @@ async function readPreviousManifest() {
   try {
     const raw = await fs.readFile(MANIFEST_PATH, 'utf8');
     const manifest = JSON.parse(raw);
-    return Array.isArray(manifest?.models) ? manifest.models : [];
+    return {
+      es: Array.isArray(manifest?.locales?.es?.models)
+        ? manifest.locales.es.models
+        : (Array.isArray(manifest?.models) ? manifest.models : []),
+      en: Array.isArray(manifest?.locales?.en?.models) ? manifest.locales.en.models : []
+    };
   } catch {
-    return [];
+    return { es: [], en: [] };
   }
 }
 
-async function removePreviousGeneratedPages(ids) {
+async function removePreviousGeneratedPages(ids, outputDir) {
   await Promise.all(ids.map(async (id) => {
     const cleanId = cleanModelId(id);
     if (!cleanId) return;
-    await fs.rm(assertGeneratedPath(cleanId), { recursive: true, force: true });
+    await fs.rm(assertGeneratedPath(cleanId, outputDir), { recursive: true, force: true });
   }));
 }
 
-async function build() {
-  await fs.mkdir(MODELS_DIR, { recursive: true });
-  const models = await loadModels();
-  const uniqueModels = [...new Map(models.map((model) => [model.id, model])).values()]
-    .sort((a, b) => a.label.localeCompare(b.label, 'es'));
+function uniqueModels(models, localeCode) {
+  return [...new Map(models.map((model) => [model.id, model])).values()]
+    .sort((a, b) => a.label.localeCompare(b.label, localeCode));
+}
 
-  if (!uniqueModels.length) throw new Error('No hay modelos válidos para generar.');
-
-  const previousIds = await readPreviousManifest();
-  await removePreviousGeneratedPages(previousIds);
-  const interactiveTemplate = await prepareInteractiveTemplate();
-
-  for (const model of uniqueModels) {
-    const modelDir = assertGeneratedPath(model.id);
+async function writeLocalePages(models, outputDir, interactiveTemplate, localeCode, englishModelIds) {
+  await fs.mkdir(outputDir, { recursive: true });
+  for (const model of models) {
+    const modelDir = assertGeneratedPath(model.id, outputDir);
     await fs.mkdir(modelDir, { recursive: true });
     await fs.writeFile(
       path.join(modelDir, 'index.html'),
-      renderModelPage(model, uniqueModels, interactiveTemplate),
+      renderModelPage(model, models, interactiveTemplate, localeCode, englishModelIds),
       'utf8'
     );
   }
+}
+
+export async function build() {
+  await fs.mkdir(MODELS_DIR, { recursive: true });
+  const loaded = await loadModels();
+  const modelsByLocale = {
+    es: uniqueModels(loaded.es, 'es'),
+    en: uniqueModels(loaded.en, 'en')
+  };
+
+  if (!modelsByLocale.es.length) throw new Error('No hay modelos válidos para generar.');
+
+  const previous = await readPreviousManifest();
+  await Promise.all([
+    removePreviousGeneratedPages(previous.es, MODELS_DIR),
+    removePreviousGeneratedPages(previous.en, EN_MODELS_DIR)
+  ]);
+  const interactiveTemplate = await prepareInteractiveTemplate();
+  const englishModelIds = new Set(modelsByLocale.en.map((model) => model.id));
+
+  await writeLocalePages(modelsByLocale.es, MODELS_DIR, interactiveTemplate, 'es', englishModelIds);
+  await writeLocalePages(modelsByLocale.en, EN_MODELS_DIR, interactiveTemplate, 'en', englishModelIds);
+  await fs.writeFile(path.join(EN_MODELS_DIR, 'index.html'), renderEnglishLibraryPage(interactiveTemplate), 'utf8');
+
+  const manifestFor = (models) => ({
+    count: models.length,
+    models: models.map((model) => model.id),
+    indexableModels: models
+      .filter((model) => model.descripcion.length >= 160)
+      .map((model) => model.id)
+  });
 
   const manifest = {
+    version: 2,
     generatedAt: new Date().toISOString(),
     source: GITHUB_OWNER && GITHUB_REPO && GITHUB_TOKEN
       ? `github:${GITHUB_OWNER}/${GITHUB_REPO}:modelos-publicos`
       : (!FORCE_REMOTE && await fileExists(LOCAL_INDEX_PATH) ? 'local-index' : DATA_API_URL),
-    count: uniqueModels.length,
-    models: uniqueModels.map((model) => model.id),
-    indexableModels: uniqueModels
-      .filter((model) => model.descripcion.length >= 160)
-      .map((model) => model.id)
+    count: modelsByLocale.es.length,
+    models: modelsByLocale.es.map((model) => model.id),
+    indexableModels: manifestFor(modelsByLocale.es).indexableModels,
+    locales: {
+      es: manifestFor(modelsByLocale.es),
+      en: manifestFor(modelsByLocale.en)
+    }
   };
 
   await fs.writeFile(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
-  console.log(`Páginas HTML generadas: ${uniqueModels.length}.`);
+  console.log(`Páginas HTML generadas: ${modelsByLocale.es.length} es, ${modelsByLocale.en.length} en.`);
 }
 
-build().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  build().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
 

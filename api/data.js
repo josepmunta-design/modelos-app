@@ -208,6 +208,8 @@ function isPublicModelDataPath(path) {
     || /^core\/modelos-publicos\/[a-z0-9_-]+\/[a-z0-9_-]+\.json$/i.test(value);
 }
 
+export { isAllowedPath, isPublicModelDataPath };
+
 function isPrivateRootIndexPath(path) {
   const value = String(path || '').replace(/\/+$/, '');
   const lowerPath = value.toLowerCase();

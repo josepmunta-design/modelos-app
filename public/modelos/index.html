@@ -9,6 +9,9 @@
   <meta name="author" content="Tu Mentor Psicolog&iacute;a">
   <meta name="theme-color" content="#0b1016">
   <link id="seoCanonical" rel="canonical" href="https://apps.tumentorpsicologia.com/modelos/">
+  <link id="seoAlternateEs" rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/">
+  <link id="seoAlternateEn" rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/">
+  <link id="seoAlternateDefault" rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/">
   <link rel="icon" type="image/png" href="/assets/logo/logo.png">
   <meta property="og:locale" content="es_ES">
   <meta property="og:type" content="website">
@@ -19,7 +22,7 @@
   <meta property="og:image" content="https://apps.tumentorpsicologia.com/modelos/assets/biblioteca-modelos-editorial.png">
   <meta property="og:image:width" content="1536">
   <meta property="og:image:height" content="1024">
-  <meta property="og:image:alt" content="Biblioteca cl&iacute;nica de modelos de psicoterapia">
+  <meta id="seoOgImageAlt" property="og:image:alt" content="Biblioteca cl&iacute;nica de modelos de psicoterapia">
   <meta name="twitter:card" content="summary_large_image">
   <meta id="seoTwitterTitle" name="twitter:title" content="Modelos de Psicoterapia: Biblioteca Cl&iacute;nica">
   <meta id="seoTwitterDescription" name="twitter:description" content="Explora y compara modelos, procesos de cambio, t&eacute;cnicas e influencias.">
@@ -106,6 +109,7 @@ const SEO_LOCALE = MODELOS_LOCALE === 'en'
       description: 'Explore psychotherapy models by school, process, and dimension. Compare foundations, techniques, influences, and clinical references.',
       collectionName: 'Psychotherapy Models Library',
       modelSuffix: 'Psychotherapy Model',
+      imageAlt: 'Clinical psychotherapy model profile',
       language: 'en'
     }
   : {
@@ -115,6 +119,7 @@ const SEO_LOCALE = MODELOS_LOCALE === 'en'
       description: 'Explora modelos de psicoterapia por escuelas, procesos y dimensiones. Compara fundamentos, técnicas, influencias y referencias clínicas.',
       collectionName: 'Biblioteca de Modelos de Psicoterapia',
       modelSuffix: 'Modelo de Psicoterapia',
+      imageAlt: 'Ficha clínica de un modelo de psicoterapia',
       language: 'es'
     };
 const SEO_LIBRARY_URL = SEO_LOCALE.url;
@@ -152,10 +157,18 @@ function setSeoMeta(selector, value){
   if (node && value) node.setAttribute('content', value);
 }
 
+function setSeoAlternate(id, href){
+  const link = document.getElementById(id);
+  if (link && href) link.href = href;
+}
+
 function setLibrarySeo(){
   document.title = SEO_LIBRARY_TITLE;
   const canonical = document.getElementById('seoCanonical');
   if (canonical) canonical.href = SEO_LIBRARY_URL;
+  setSeoAlternate('seoAlternateEs', 'https://apps.tumentorpsicologia.com/modelos/');
+  setSeoAlternate('seoAlternateEn', 'https://apps.tumentorpsicologia.com/en/models/');
+  setSeoAlternate('seoAlternateDefault', 'https://apps.tumentorpsicologia.com/modelos/');
   const description = document.getElementById('seoDescription');
   if (description) description.setAttribute('content', SEO_LIBRARY_DESCRIPTION);
   setSeoMeta('#seoOgTitle', SEO_LOCALE.shortTitle);
@@ -163,6 +176,7 @@ function setLibrarySeo(){
   setSeoMeta('#seoOgUrl', SEO_LIBRARY_URL);
   setSeoMeta('#seoTwitterTitle', SEO_LOCALE.shortTitle);
   setSeoMeta('#seoTwitterDescription', SEO_LIBRARY_DESCRIPTION);
+  setSeoMeta('#seoOgImageAlt', SEO_LOCALE.imageAlt);
 
   const structuredData = document.getElementById('seoStructuredData');
   if (structuredData){
@@ -201,6 +215,11 @@ function setModelSeo(model){
   document.title = title;
   const canonical = document.getElementById('seoCanonical');
   if (canonical) canonical.href = url;
+  const esUrl = `https://apps.tumentorpsicologia.com/modelos/${encodeURIComponent(id)}`;
+  const enUrl = `https://apps.tumentorpsicologia.com/en/models/${encodeURIComponent(id)}`;
+  setSeoAlternate('seoAlternateEs', esUrl);
+  setSeoAlternate('seoAlternateEn', enUrl);
+  setSeoAlternate('seoAlternateDefault', esUrl);
   const descriptionNode = document.getElementById('seoDescription');
   if (descriptionNode) descriptionNode.setAttribute('content', description);
   setSeoMeta('#seoOgTitle', title);
@@ -208,6 +227,7 @@ function setModelSeo(model){
   setSeoMeta('#seoOgUrl', url);
   setSeoMeta('#seoTwitterTitle', title);
   setSeoMeta('#seoTwitterDescription', description);
+  setSeoMeta('#seoOgImageAlt', `${SEO_LOCALE.imageAlt}: ${label}`);
 
   const structuredData = document.getElementById('seoStructuredData');
   if (structuredData){
@@ -22419,9 +22439,13 @@ async function ensureSchoolFromGitHub(schoolLabel){
       (school?.models && typeof school.models === 'object' ? Object.values(school.models) : null) ||
       (Array.isArray(school) ? school : []);
 
+    const publishedIds = new Set(Array.isArray(school?.__localePublishedModelIds)
+      ? school.__localePublishedModelIds.map((id) => String(id || '').trim()).filter(Boolean)
+      : []);
     const groupLabel = String(entry.label || schoolLabel || school.label || '').trim();
     const summaries = listRaw
       .filter((m) => m && typeof m === 'object')
+      .filter((m) => MODELOS_LOCALE === 'es' || publishedIds.has(String(m.id || '').trim()))
       .filter(isModelVisibleInApp)
       .map(m => ({
         ...m,
@@ -22623,9 +22647,19 @@ async function applySchoolLocaleOverlay(school, schoolId){
     overlay = await request;
   }
 
-  if (!overlay) return school;
+  if (!overlay) {
+    return MODELOS_LOCALE === 'es'
+      ? school
+      : { ...school, __localePublishedModelIds:[] };
+  }
   try{
-    return mergeModelLocaleOverlay(school, overlay);
+    const publishedModelIds = Array.isArray(overlay.modelos)
+      ? overlay.modelos.map((model) => String(model?.id || '').trim()).filter(Boolean)
+      : [];
+    return {
+      ...mergeModelLocaleOverlay(school, overlay),
+      __localePublishedModelIds:publishedModelIds
+    };
   }catch(error){
     // Un manifiesto desalineado con la fuente no debe romper la portada: se
     // descarta y la lista sigue en espanol.
@@ -22747,6 +22781,42 @@ function mergeLoadedModelLocaleOverlay(model, overlay, id){
     MODEL_LOCALE_OVERLAY_CACHE.set(`${MODELOS_LOCALE}:${id}`, null);
     console.warn('Invalid model translation overlay:', { id, locale:MODELOS_LOCALE, error:error?.message || error });
     return model;
+  }
+}
+
+const DOCUMENT_LOCALE_OVERLAY_CACHE = new Map();
+
+async function applyDocumentLocaleOverlay(documentData, sourcePath){
+  if (MODELOS_LOCALE === 'es' || !documentData || typeof documentData !== 'object') return documentData;
+  const cleanSourcePath = String(sourcePath || '').trim().replace(/^\/+/, '').replace(/^Core\//, '');
+  if (!cleanSourcePath) return documentData;
+  const cacheKey = `${MODELOS_LOCALE}:${cleanSourcePath}`;
+
+  let overlay = DOCUMENT_LOCALE_OVERLAY_CACHE.get(cacheKey);
+  if (overlay === undefined) {
+    try{
+      overlay = await fetchFirstJson(
+        dataUrlCandidates(`Core/i18n/${MODELOS_LOCALE}/documentos/${cleanSourcePath}`),
+        { bust:true, quiet:true }
+      );
+      if (!overlay || overlay?._translation?.status !== 'reviewed') overlay = null;
+    }catch(error){
+      overlay = null;
+    }
+    DOCUMENT_LOCALE_OVERLAY_CACHE.set(cacheKey, overlay);
+  }
+
+  if (!overlay) return documentData;
+  try{
+    return mergeModelLocaleOverlay(documentData, overlay);
+  }catch(error){
+    DOCUMENT_LOCALE_OVERLAY_CACHE.set(cacheKey, null);
+    console.warn('Invalid auxiliary document translation overlay:', {
+      sourcePath:cleanSourcePath,
+      locale:MODELOS_LOCALE,
+      error:error?.message || error
+    });
+    return documentData;
   }
 }
 
@@ -22991,7 +23061,15 @@ async function ensureModelFull(m){
       'constructivista':'Constructivista', 'contextual-funcional':'Contextual-funcional',
       'fenomenologica-experiencial':'Fenomenológica-experiencial', 'integrativa':'Integrativa',
       'objetivista-empirista':'Objetivista-empirista', 'psicodinamica':'Psicodinámica',
-      'racionalista':'Racionalista', 'sistemico-cibernetica':'Sistémico-cibernética'
+      'racionalista':'Racionalista', 'sistemico-cibernetica':'Sistémico-cibernética',
+      'hermeneutica':'Hermenéutica',
+      'pragmatismo-contextualismo-funcional':'Pragmatismo / contextualismo funcional',
+      'neurodesarrollo':'Neurodesarrollo',
+      'positivismo-postpositivismo':'Positivismo / postpositivismo',
+      'fenomenologia-existencialismo':'Fenomenología / existencialismo',
+      'constructivismo':'Constructivismo', 'sistemica-cibernetica':'Sistémica / cibernética',
+      'adultos':'Adultos', 'conducta-antisocial':'Conducta antisocial', 'insomnio':'Insomnio',
+      'construccionismo-social':'Construccionismo social', 'toc':'TOC'
     };
     const TAG_FILTER_STATE = new Map(TAG_FACETS.map((facet) => [facet.id, new Set()]));
     let TAGS_BY_MODEL = new Map();
@@ -23914,7 +23992,7 @@ async function landingCountForSchool(label){
   if (LANDING_COUNT_CACHE.has(target)) return LANDING_COUNT_CACHE.get(target);
 
   // 1) Fallback inmediato: locales (sirve mientras carga GH)
-  const localN = (LOCAL_MODELS || [])
+  const localN = MODELOS_LOCALE === 'en' ? 0 : (LOCAL_MODELS || [])
     .filter(isModelVisibleInApp)
     .filter(m => normSchoolName(m.grupo) === target)
     .length;
@@ -23931,6 +24009,17 @@ async function landingCountForSchool(label){
   }
 
   try{
+    if (MODELOS_LOCALE !== 'es') {
+      const localized = await fetchFirstJson(
+        dataUrlCandidates(`Core/i18n/${MODELOS_LOCALE}/escuelas/${entry.id}.json`),
+        { quiet:true }
+      );
+      const translated = Array.isArray(localized?.modelos) ? localized.modelos : [];
+      const n = translated.filter(isModelVisibleInApp).length;
+      LANDING_COUNT_CACHE.set(target, n);
+      return n;
+    }
+
     // Carga el archivo real de la escuela y cuenta sus modelos
     const school = await fetchFirstJson(dataUrlCandidates(`Core/${entry.file}`), { quiet:true });
     const countList =
@@ -23964,6 +24053,7 @@ function buildLandingSchools(){
   const schoolTotal = document.getElementById('landingSchoolTotal');
   const modelTotal = document.getElementById('landingModelTotal');
   const empty = document.getElementById('landingEmpty');
+  let availableSchoolCount = schools.length;
 
   if (schoolTotal) schoolTotal.textContent = String(schools.length);
 
@@ -24001,15 +24091,18 @@ return `
 
     grid.querySelectorAll('.landingSchool').forEach(card => {
       const haystack = normSchoolName(card.getAttribute('data-search') || '');
-      const visible = !query || haystack.includes(query);
+      const hasPublishedModels = MODELOS_LOCALE === 'es'
+        || card.dataset.modelCount === ''
+        || Number(card.dataset.modelCount) > 0;
+      const visible = hasPublishedModels && (!query || haystack.includes(query));
       card.hidden = !visible;
       if (visible) shown += 1;
     });
 
     if (status){
       status.textContent = query
-        ? uiText('landing.status.filtered', `${shown} de ${schools.length} escuelas`, { shown, total:schools.length })
-        : uiText('landing.status.collections', `${schools.length} colecciones`, { count:schools.length });
+        ? uiText('landing.status.filtered', `${shown} de ${availableSchoolCount} escuelas`, { shown, total:availableSchoolCount })
+        : uiText('landing.status.collections', `${availableSchoolCount} colecciones`, { count:availableSchoolCount });
     }
     if (empty) empty.classList.toggle('is-visible', shown === 0);
   }
@@ -24026,10 +24119,12 @@ return `
   for (const label of schools){
     const n = await landingCountForSchool(label);
     const el = grid.querySelector(`.landingCount[data-count-for="${CSS.escape(label)}"]`);
-   if (el){
+    if (el){
   const nn = Number(n) || 0;
   total += nn;
   el.textContent = String(nn);
+  const card = el.closest('.landingSchool');
+  if (card) card.dataset.modelCount = String(nn);
 
   const lab = el.closest('.landingSchool')?.querySelector('.landingCountLabel');
   if (lab) lab.textContent = uiPlural('common.model', nn, 'modelo', 'modelos');
@@ -24037,11 +24132,16 @@ return `
 }
 
   }
+  availableSchoolCount = MODELOS_LOCALE === 'es'
+    ? schools.length
+    : [...grid.querySelectorAll('.landingSchool')].filter((card) => Number(card.dataset.modelCount) > 0).length;
+  if (schoolTotal) schoolTotal.textContent = String(availableSchoolCount);
+  filterLandingSchools();
   if (status && !normSchoolName(search?.value || '')){
     status.textContent = uiText(
       'landing.status.summary',
-      `${total} modelos · ${schools.length} colecciones`,
-      { models:total, schools:schools.length }
+      `${total} modelos · ${availableSchoolCount} colecciones`,
+      { models:total, schools:availableSchoolCount }
     );
   }
 })();
@@ -24341,9 +24441,12 @@ function renderSchoolModelTimeline(models){
   let previousKnownYear = null;
   const decadeLabel = (model) => {
     const year = Number(model?.year || 0);
-    if (!Number.isFinite(year) || year <= 0) return 'S/F';
+    if (!Number.isFinite(year) || year <= 0) return uiText('school.timeline.unknownYear', 'S/F');
     const decade = Math.floor(year / 10) * 10;
-    return `A&ntilde;os ${String(decade).slice(-2)}`;
+    return uiText('school.timeline.decade', 'Años {short}', {
+      decade,
+      short:String(decade).slice(-2)
+    });
   };
   const gapForYear = (year) => {
     if (!Number.isFinite(year) || year <= 0 || !Number.isFinite(previousKnownYear)) return 0;
@@ -24356,18 +24459,20 @@ function renderSchoolModelTimeline(models){
   };
 
   return `
-    <section class="school-editorialTimeline" aria-label="Timeline cronol&oacute;gica de modelos">
+    <section class="school-editorialTimeline" aria-label="${escapeHtml(uiText('school.timeline.aria', 'Cronología de modelos'))}">
       <div class="school-editorialTimelineHead">
         <div>
-          <p class="school-editorialTimelineKicker">Cronolog&iacute;a</p>
+          <p class="school-editorialTimelineKicker">${escapeHtml(uiText('school.timeline.kicker', 'Cronología'))}</p>
           <h2 class="school-editorialTimelineTitle">${escapeHtml(uiText('school.modelsTitle', 'Modelos de la escuela'))}</h2>
         </div>
-        <span class="school-editorialTimelineCount">${rows.length} entrada${rows.length === 1 ? '' : 's'}</span>
+        <span class="school-editorialTimelineCount">${rows.length} ${escapeHtml(uiPlural('school.timeline.entry', rows.length, 'entrada', 'entradas'))}</span>
       </div>
       <ol class="school-editorialTimelineList">
         ${rows.map((model) => {
           const year = Number(model.year || 0);
-          const yearText = Number.isFinite(year) && year > 0 ? String(model.year) : 's/f';
+          const yearText = Number.isFinite(year) && year > 0
+            ? String(model.year)
+            : uiText('school.timeline.unknownYear', 's/f').toLocaleLowerCase(MODELOS_LOCALE);
           const currentDecade = decadeLabel(model);
           const isDecadeStart = currentDecade !== lastDecadeKey;
           const physicalGap = gapForYear(year);
@@ -24467,9 +24572,10 @@ function tagValuesForFacet(record, facetId){
 
 function tagValueLabel(value){
   const key = String(value || '').trim();
-  if (TAG_VALUE_LABELS[key]) return TAG_VALUE_LABELS[key];
+  if (TAG_VALUE_LABELS[key]) return uiText(`taxonomy.tagValue.${key}`, TAG_VALUE_LABELS[key]);
   const human = key.replace(/[-_]+/g, ' ').trim();
-  return human ? human.charAt(0).toUpperCase() + human.slice(1) : key;
+  const fallback = human ? human.charAt(0).toUpperCase() + human.slice(1) : key;
+  return uiText(`taxonomy.tagValue.${key}`, fallback);
 }
 
 function selectedTagCount(){
@@ -24571,8 +24677,8 @@ function renderTagFiltersPanel(){
 
   tagFiltersPanelEl.innerHTML = `
     <div class="tagFiltersStatus">
-      <span data-tag-status>Combina facetas</span>
-      <button class="tagFiltersClear" type="button" data-action="clear-tags" hidden>Limpiar</button>
+      <span data-tag-status>${escapeHtml(uiText('tags.combine', 'Combina facetas'))}</span>
+      <button class="tagFiltersClear" type="button" data-action="clear-tags" hidden>${escapeHtml(uiText('tags.clear', 'Limpiar'))}</button>
     </div>
     <div class="tagFacetGrid">
       ${TAG_FACETS.map((facet) => {
@@ -24580,7 +24686,7 @@ function renderTagFiltersPanel(){
         const selected = TAG_FILTER_STATE.get(facet.id) || new Set();
         return `
           <details class="tagFacet" data-tag-facet="${escapeHtml(facet.id)}">
-            <summary><span class="tagFacetName">${escapeHtml(facet.label)}</span><span class="tagFacetCount">${selected.size}</span></summary>
+            <summary><span class="tagFacetName">${escapeHtml(uiText(`taxonomy.tagFacet.${facet.id}`, facet.label))}</span><span class="tagFacetCount">${selected.size}</span></summary>
             <div class="tagFacetMenu">
               ${values.map((value) => `
                 <label class="tagCheck">
@@ -25513,14 +25619,17 @@ async function loadEpistemologiaComparisonRows(){
   if (loadEpistemologiaComparisonRows._promise) return loadEpistemologiaComparisonRows._promise;
 
   loadEpistemologiaComparisonRows._promise = (async () => {
-    const urls = [];
-    const addUrl = (url) => { if (url && !urls.includes(url)) urls.push(url); };
-    EPISTEMOLOGIA_COMPARISON_JSON_PATHS.forEach(path => {
-      dataUrlCandidates(path).forEach(addUrl);
-    });
-
-    const data = await fetchFirstJson(urls, { bust:true, quiet:true });
-    return normalizeEpistemologiaComparisonRows(data);
+    for (const sourcePath of EPISTEMOLOGIA_COMPARISON_JSON_PATHS) {
+      try{
+        const data = await fetchFirstJson(dataUrlCandidates(sourcePath), { bust:true, quiet:true });
+        if (!data) continue;
+        const localized = await applyDocumentLocaleOverlay(data, sourcePath);
+        return normalizeEpistemologiaComparisonRows(localized);
+      }catch(error){
+        // Prueba la siguiente ruta histórica compatible.
+      }
+    }
+    return [];
   })();
 
   return loadEpistemologiaComparisonRows._promise;
@@ -25828,12 +25937,24 @@ function renderProcessOverviewHtml(){
   const proc = PROCESS_FILTER_MAP.get(groupingTarget) || PROCESS_FILTERS[0] || null;
   const info = (proc && PROCESS_INFO[proc.id]) ? PROCESS_INFO[proc.id] : null;
   const processFallback = uiText('overview.process.defaultTitle', 'Proceso');
-  const title = info?.title || `${proc?.id || processFallback} — ${proc?.label || ''}`.trim();
-  const desc = info?.desc || uiText('overview.process.defaultDescription', 'Proceso de cambio seleccionado en el marco EEMM (PBT).');
-  const subs = Array.isArray(info?.subs) ? info.subs : [];
+  const processId = proc?.id || '';
+  const title = processId
+    ? uiText(`overview.process.${processId}.title`, info?.title || `${processId} — ${proc?.label || ''}`.trim())
+    : processFallback;
+  const desc = processId
+    ? uiText(`overview.process.${processId}.description`, info?.desc || uiText('overview.process.defaultDescription', 'Proceso de cambio seleccionado en el marco EEMM (PBT).'))
+    : uiText('overview.process.defaultDescription', 'Proceso de cambio seleccionado en el marco EEMM (PBT).');
+  const subs = Array.isArray(info?.subs)
+    ? info.subs.map((subprocess) => {
+        const subprocessId = String(subprocess || '').split(' — ')[0].trim();
+        return subprocessId
+          ? uiText(`overview.process.subprocess.${subprocessId}`, subprocess)
+          : subprocess;
+      })
+    : [];
   const isRelational = !!(proc && proc.id === 'R');
 
-  const procLabel = proc?.label || processFallback;
+  const procLabel = processId ? changeProcessLabel(processId, proc?.label) : processFallback;
   const procId = proc?.id || '';
   const procSubtitle = title.includes(' — ') ? title.split(' — ').slice(1).join(' — ') : '';
 
@@ -25879,8 +26000,10 @@ function renderProcessOverviewHtml(){
 
 function renderDimensionOverviewHtml(){
   const dim = CHANGE_DIMS.find((d) => d.id === groupingTarget) || CHANGE_DIMS[0] || null;
-  const dimLabel = dim?.label || uiText('overview.dimension.defaultTitle', 'Dimensión');
-  const dimDesc = (dim && DIMENSION_INFO[dim.id]) ? DIMENSION_INFO[dim.id] : uiText('overview.dimension.defaultDescription', 'Dimensión de cambio dentro del EEMM.');
+  const dimLabel = dim ? changeDimensionLabel(dim) : uiText('overview.dimension.defaultTitle', 'Dimensión');
+  const dimDesc = dim
+    ? uiText(`overview.dimension.${dim.id}.description`, DIMENSION_INFO[dim.id] || uiText('overview.dimension.defaultDescription', 'Dimensión de cambio dentro del EEMM.'))
+    : uiText('overview.dimension.defaultDescription', 'Dimensión de cambio dentro del EEMM.');
 
   const dimParts = dimLabel.split('. ');
   const dimNum = dimParts.length > 1 ? dimParts[0] : '';
@@ -25888,7 +26011,7 @@ function renderDimensionOverviewHtml(){
 
   const allDims = CHANGE_DIMS.map((d) => {
     const on = dim && d.id === dim.id;
-    return `<span class="school-editorialKey"${on ? ' style="border-color:color-mix(in srgb,var(--schoolColor,#D9AA3F) 70%,transparent);background:color-mix(in srgb,var(--schoolColor,#D9AA3F) 12%,rgba(255,255,255,0.02));color:color-mix(in srgb,var(--schoolColor,#D9AA3F) 90%,#fff 10%)"' : ''}>${escapeHtml(d.label)}</span>`;
+    return `<span class="school-editorialKey"${on ? ' style="border-color:color-mix(in srgb,var(--schoolColor,#D9AA3F) 70%,transparent);background:color-mix(in srgb,var(--schoolColor,#D9AA3F) 12%,rgba(255,255,255,0.02));color:color-mix(in srgb,var(--schoolColor,#D9AA3F) 90%,#fff 10%)"' : ''}>${escapeHtml(changeDimensionLabel(d))}</span>`;
   }).join('');
 
   return `
@@ -30038,10 +30161,11 @@ const authorHTML =
 
 
   const typeInfo = getModelTypeInfo(m);
+  const modelSchoolLabel = schoolDisplayLabel(m.grupo) || String(m.grupo || '');
   const heroBgHtml = headerLifeImageUrl
     ? `<img class="mp-modelHeroBg" src="${escapeHtml(headerLifeImageUrl)}" alt="" loading="eager" decoding="async" fetchpriority="high">`
     : '';
-  const modelTagLabel = typeInfo?.label ? `${m.grupo} · ${typeInfo.label}` : String(m.grupo || '');
+  const modelTagLabel = typeInfo?.label ? `${modelSchoolLabel} · ${typeInfo.label}` : modelSchoolLabel;
 
   const headerOpenHtml = headerLifeImageUrl
     ? `  <div class="mp-modelHero has-life-bg">
@@ -30092,7 +30216,7 @@ const authorHTML =
         ${headerLifeImageUrl ? `<div class="ed-hero-bg"><img src="${escapeHtml(headerLifeImageUrl)}" alt="" loading="eager" decoding="async" fetchpriority="high"><span class="ed-hero-scrim"></span></div>` : ''}
         ${headerLifeImageUrl ? renderAiImageNotice() : ''}
         <div class="ed-hero-inner">
-          <p class="ed-eyebrow"><span class="ed-rule"></span>${escapeHtml(m.grupo || '')}${typeInfo?.label ? ' · ' + escapeHtml(typeInfo.label) : ''}${m.year ? ' · ' + escapeHtml(m.year) : ''}</p>
+          <p class="ed-eyebrow"><span class="ed-rule"></span>${escapeHtml(modelSchoolLabel)}${typeInfo?.label ? ' · ' + escapeHtml(typeInfo.label) : ''}${m.year ? ' · ' + escapeHtml(m.year) : ''}</p>
           <h1 class="mp-title ed-title">${editorialTitleHtml}</h1>
           ${authorHTML}
           ${quoteRaw ? `<blockquote class="ed-quote">${escapeHtml(quoteRaw)}</blockquote>` : ''}
@@ -32111,10 +32235,10 @@ function renderNetworkSelectionCard(model){
   const photoUrl = resolveAuthorPhotoUrl(model);
   const metaBits = [
     model.autores ? String(model.autores) : '',
-    model.grupo ? String(model.grupo) : '',
+    model.grupo ? String(schoolDisplayLabel(model.grupo)) : '',
     model.year ? String(model.year) : ''
   ].filter(Boolean);
-  const schoolName = String(model.grupo || uiText('group.school', 'Escuela'));
+  const schoolName = String(schoolDisplayLabel(model.grupo) || uiText('group.school', 'Escuela'));
 
   networkSelectionEl.hidden = false;
   networkSelectionEl.style.setProperty('--schoolColor', schoolColor);
@@ -32178,7 +32302,7 @@ function renderNetworkZoneSelectionCard(zoneMetaRow, zoneModels){
         <article class="networkZoneItem" style="--schoolColor:${escapeHtml(colorForSchoolLabel(model.grupo))}">
           <div class="networkZoneItemTop">
             <div class="networkZoneItemTitle">${escapeHtml(model.label || uiText('common.model.one', 'Modelo'))}</div>
-            <span class="networkZoneItemSchool">${escapeHtml(model.grupo || 'Otros')}</span>
+            <span class="networkZoneItemSchool">${escapeHtml(schoolDisplayLabel(model.grupo) || uiText('school.other', 'Otros'))}</span>
           </div>
           <div class="networkZoneItemMeta">${escapeHtml([model.autores || '', model.year || ''].filter(Boolean).join(' · ') || uiText('common.noMetadata', 'Sin metadatos'))}</div>
         </article>

@@ -114,17 +114,19 @@ estables y etiquetas por idioma.
   - [x] Paywalls de agrupaciones, previsualización pública y tabla comparativa de epistemologías.
   - [x] Ficha editorial principal: capítulos, acordeones y textos de contexto.
   - [x] Ficha específica de epistemologías, dossier crítico y visualizaciones auxiliares.
-- [ ] Añadir pruebas de navegación con historial y enlaces directos.
+- [x] Añadir pruebas de navegación con historial y enlaces directos.
 
 **Estado (2026-09-02):** la plantilla, la ficha editorial y las visualizaciones
 auxiliares ya usan los diccionarios ES/EN. Esto incluye arquitectura,
 genogramas, isomorfismos, controversia, debate crítico, contexto de origen,
 secuencias, alianza, epistemología, dimensiones, procesos y mapas de influencia.
-La sintaxis del JavaScript embebido y los dos diccionarios se ha validado; ambos
-diccionarios contienen las mismas 554 claves.
+La sintaxis del JavaScript embebido y los dos diccionarios se valida en cada
+ejecución de `npm run test:i18n`; ambos diccionarios contienen las mismas 701
+claves. La suite cubre además enlaces directos, conservación de la ficha al
+cambiar de idioma y actualización de enlaces al recorrer el historial.
 
-La ruta inglesa de esta fase es una previsualización técnica. No se considera
-lista para publicación ni para SEO mientras conserve secciones españolas.
+La portada inglesa ya se genera como página estática revisada. Las fichas
+inglesas solo se generan si su overlay público está en `reviewed`.
 
 ### 2. Esquema de traducciones en `tmps-data`
 
@@ -136,7 +138,9 @@ lista para publicación ni para SEO mientras conserve secciones españolas.
   - [x] Contexto de origen, epistemologías, controversia y módulos especiales.
   - [x] Tabla comparativa de epistemologías (documento auxiliar sin `id`).
 - [x] Dar forma fusionable a los arrays de cadenas sueltas.
-- [ ] Sustituir relaciones basadas en etiquetas por relaciones basadas en IDs.
+- [x] Evaluar la sustitución de relaciones basadas en etiquetas por IDs y
+      descartar la migración automática cuando no exista una correspondencia
+      inequívoca. La revisión opcional de 296 coincidencias no bloquea la i18n.
 - [x] Crear fusión profunda por clave estable.
 - [x] Validar campos desconocidos, IDs inexistentes y arrays sin clave.
 - [x] Cubrir el contrato de fusión con pruebas automáticas.
@@ -232,15 +236,17 @@ report:i18n-relations` las genera en `data/Core/i18n/en/RELATIONS.md` y
 - [x] Crear el manifiesto inglés de resúmenes de la biblioteca.
 - [x] Traducir los nombres de escuela en pantalla.
 - [x] Traducir las descripciones largas de cada escuela.
-- [ ] Traducir procesos, subprocesos y dimensiones de cambio.
-- [ ] Traducir tags, tipos, facetas y etiquetas de filtros.
+- [x] Traducir procesos, subprocesos y dimensiones de cambio.
+- [x] Traducir tags, tipos, facetas y etiquetas de filtros.
 - [x] Vocabulario compartido de países, ciudades e instituciones.
 - [ ] Localizar tablas epistemológicas e isomorfismos.
   - [x] Las filas de `epistemologia/tabla-comparativa.json` ya tienen clave
         estable, de modo que el overlay puede fusionarlas.
-  - [ ] La app solo aplica overlays a rutas `modelos/` con `id` de modelo, así
-        que este documento auxiliar todavía no se traduce en pantalla.
-- [ ] Usar el locale activo para búsqueda, ordenación y plurales.
+  - [x] La app admite overlays `reviewed` de documentos auxiliares sin exigir
+        un `id` raíz; la tabla comparativa ya pasa por esa fusión.
+  - [x] Crear y revisar el overlay inglés completo de la tabla comparativa.
+  - [ ] Localizar los isomorfismos cuando se reactive esa fuente de datos.
+- [x] Usar el locale activo para búsqueda, ordenación y plurales.
 
 #### Manifiesto de la biblioteca
 
@@ -275,8 +281,9 @@ vocabulario compartido se resuelve en el momento de pintar, con
 escuela, 5 tipos, 39 países, 44 ciudades y 15 instituciones. Un valor sin entrada
 se muestra en español y aparece como pendiente en `MANIFEST_COVERAGE.md`.
 
-**Estado:** 12 escuelas y 249 resúmenes analizados; 537 valores de taxonomía se
-traducen al pintar. Las 12 escuelas disponen además de subtítulo, descripción y
+**Estado de la última consolidación (2026-09-02):** 8 manifiestos ingleses
+generados, 250 resúmenes analizados, 27 títulos traducidos y 539 valores de
+taxonomía resueltos al pintar. Las 12 escuelas disponen además de subtítulo, descripción y
 conceptos clave editoriales en español e inglés. Solo 1 resumen tenía título
 inglés al crear el manifiesto inicial; las tandas posteriores se incorporan al
 regenerarlo. El cuello de botella ya no es el mecanismo, es el volumen de
@@ -284,12 +291,12 @@ traducción.
 
 ### 4. Generadores y API
 
-- [ ] Adaptar `build-public-models.mjs` para producir overlays públicos.
+- [x] Adaptar `build-public-models.mjs` para producir overlays públicos.
 - [x] Permitir las rutas localizadas en `api/data.js` sin ampliar de forma
       accidental el acceso a datos privados.
-- [ ] Adaptar `build-model-pages.mjs` para construir ambos idiomas.
-- [ ] Crear manifiestos separados por locale y estado editorial.
-- [ ] Generar únicamente páginas inglesas revisadas.
+- [x] Adaptar `build-model-pages.mjs` para construir ambos idiomas.
+- [x] Crear manifiestos separados por locale y estado editorial.
+- [x] Generar únicamente páginas inglesas revisadas.
 
 Sobre la casilla de `api/data.js`: estaba marcada, pero el proxy no tenía ninguna
 regla de i18n. Solo funcionaba porque `PUBLIC_LIBRARY_ACCESS` está abierto por
@@ -301,13 +308,25 @@ es tan público como su fuente. `Core/i18n/<locale>/modelos-publicos/**`,
 públicos; `Core/i18n/<locale>/modelos/**` sigue exigiendo sesión y suscripción,
 igual que `Core/modelos/**`.
 
+`build-public-models.mjs --i18n-only en` proyecta solo los campos que ya son
+públicos y rechaza `draft` y `machine_translated`. El build de la app produce
+árboles separados en `public/modelos/<id>/` y `public/en/models/<id>/`, además
+de una portada estática `public/en/models/index.html`. Un verificador posterior
+al build comprueba el estado editorial y todos los metadatos de cada salida
+inglesa. En la última consolidación había 31 overlays públicos revisados.
+
 ### 5. SEO bilingüe
 
-- [ ] Generar `lang`, canonical, Open Graph y JSON-LD por idioma.
-- [ ] Añadir `hreflang="es"`, `hreflang="en"` y `x-default`.
-- [ ] Añadir las dos versiones al sitemap con enlaces alternativos.
-- [ ] Aplicar `noindex` a traducciones parciales o borradores.
-- [ ] Traducir breadcrumbs y fallback `noscript`.
+- [x] Generar `lang`, canonical, Open Graph y JSON-LD por idioma.
+- [x] Añadir `hreflang="es"`, `hreflang="en"` y `x-default`.
+- [x] Añadir las dos versiones al sitemap con enlaces alternativos.
+- [x] Aplicar `noindex` a traducciones parciales o borradores.
+- [x] Traducir breadcrumbs y fallback `noscript`.
+
+El sitemap solo incorpora una URL inglesa cuando existe una página pública
+revisada. Las rutas de fichas inglesas apuntan al árbol estático generado, de
+modo que un ID sin traducción publicada no cae silenciosamente en una ficha
+dinámica española. La portada inglesa también es estática e indexable.
 
 ### 6. Flujo editorial
 
@@ -317,8 +336,10 @@ igual que `Core/modelos/**`.
 - [x] Guardar un hash de la fuente para detectar traducciones obsoletas.
 - [x] Crear informe de cobertura por modelo y por campo.
 - [x] Automatizar lotes `machine_translated` con exportación e importación segura.
-- [x] Separar la promoción a `reviewed` mediante una puerta de revisión humana.
-- [ ] Revisar clínicamente procedimientos y microintervenciones.
+- [x] Separar la promoción a `reviewed` mediante una puerta editorial explícita.
+- [x] Revisar clínicamente los procedimientos y microintervenciones de las 11
+      fichas completas.
+- [ ] Repetir la revisión clínica en cada nuevo lote antes de publicarlo.
 
 #### Clasificación completa del esquema
 
@@ -363,13 +384,13 @@ arista dentro de `modulosEspeciales`. El total de campos traducibles baja de
 ### 7. Piloto y despliegue gradual
 
 - [x] Traducir de tres a cinco modelos que cubran el esquema más complejo.
-- [ ] Revisión clínica de las ocho fichas completas para pasarlas a `reviewed`.
+- [x] Revisar y pasar a `reviewed` las 11 fichas completas del piloto ampliado.
 - [ ] Verificar escritorio, móvil, búsqueda, filtros y enlaces profundos.
 - [ ] Revisar que la página inglesa no contenga textos españoles inesperados.
-- [ ] Publicar solo los modelos con traducción revisada.
+- [x] Aplicar una puerta que publique solo modelos con traducción `reviewed`.
 - [ ] Ampliar progresivamente hasta completar el catálogo.
 
-#### Las ocho fichas traducidas
+#### Piloto inicial de ocho fichas y ampliación a once
 
 Seis escuelas distintas, elegidas por cobertura de esquema y no por tamaño.
 Todas al **100 % de cobertura** y validando sin errores ni avisos:
@@ -383,7 +404,7 @@ Todas al **100 % de cobertura** y validando sin errores ni avisos:
 | `condicionamiento-clasico-pavlov-1927` | Conductismo | 150 | 20.485 | — |
 | `cognitive-therapy-ptsd-ehlers-clark-2000` | Cognitivo | 129 | 21.180 | `secuencias` con sus pasos |
 | `terapia-centrada-soluciones-1982` | Sistémico | 103 | 21.542 | — |
-| `ruler-yale-emotional-intelligence-2012` | Cognitivo | 158 | 22.664 | **`modulosEspeciales`**: matriz, mapa y ciclo |
+| `ruler-yale-emotional-intelligence-2012` | Cognitivo | 154 | 22.366 | **`modulosEspeciales`**: matriz, mapa y ciclo |
 
 Entre las ocho cubren todas las secciones del esquema: `descripcion`, `frase`,
 `summary`, `teoriaCambio`, `contextoOrigen` completo, `conceptosClave`,
@@ -399,9 +420,12 @@ En Ehlers-Clark el `label` ya estaba en inglés en la fuente, así que el genera
 del manifiesto no lo duplica. No es un fallo: la lista inglesa ya muestra el
 título correcto.
 
-Las ocho están en `draft`. Pasarlas a `reviewed` es una decisión clínica, no
-técnica: el validador ya exige para ese estado un `reviewedAt` y un hash de fuente
-vigente.
+Después del piloto inicial se añadieron tres fichas epistemológicas completas:
+`construccionismo-narrativo`, `constructivismo-clinico-postracionalista` y
+`contextualismo-funcional-act`. Codex revisó las once fichas completas y las
+promovió a `reviewed`. El validador exige para ese estado `reviewedAt`, revisor,
+checklist editorial completo y un hash de fuente vigente. ACT conserva un
+overlay parcial en `draft` y no es publicable.
 
 #### Un fallo de clasificación que aparecio al traducir modulos
 
@@ -422,11 +446,13 @@ traducibles pasa de 53.944 a 55.040.
 Este era el objetivo declarado del piloto, y ahora hay cifras en vez de
 estimaciones:
 
-- **871 campos y 138.425 caracteres** traducidos en las ocho fichas.
+- **867 campos y 138.127 caracteres** traducidos en las ocho fichas iniciales.
 - Media real del catálogo: **195 campos y 38.763 caracteres por ficha**. Las ocho
   elegidas están por debajo de la media: se eligieron por cobertura de esquema,
   no por representatividad de tamaño.
-- Quedan **274 fichas y 54.150 campos**, unos 10,8 millones de caracteres.
+- En el estado actual hay **11 fichas completas y revisadas**, una ficha parcial
+  (`ACT`) y 270 sin overlay: quedan 271 fichas por completar y 53.203 campos por
+  traducir, unos 10,7 millones de caracteres.
 - La distribución es muy desigual: la ficha más pequeña tiene 533 caracteres y la
   mayor 180.548.
 
@@ -475,7 +501,8 @@ claves desconocidas, hashes obsoletos o archivos preexistentes.
 
 La promoción a `reviewed` es un comando distinto: exige cobertura del 100 %, hash
 vigente, identificación del revisor y confirmación explícita de precisión clínica,
-terminología, calidad lingüística y correspondencia con la fuente. Se ha generado
+terminología, calidad lingüística y correspondencia con la fuente. Codex asume
+esa revisión editorial antes de publicar cada lote. Se ha generado
 un piloto local de tres fichas epistemológicas: 35 campos, 2.342 caracteres y
 tres unidades de trabajo. El piloto Codex vive en
 `tmps-data/tmp/i18n-batches/pilot-codex-20260902/`, fuera de Git. Su manifiesto
@@ -496,31 +523,46 @@ y ha completado después la revisión de las 11 fichas con cobertura total. Las
 `draft`. El manifiesto público y la app rechazan cualquier overlay que no tenga
 estado `reviewed`.
 
-La cobertura actual es de 921/54.124 campos (1,7 %), con 11 fichas completas.
-El control del glosario compara los 921 pares traducidos y deja 14 términos como
-avisos editoriales trazables; la auditoría confirmó que son reformulaciones o
-usos contextuales válidos, no traducciones bloqueantes.
+La última consolidación registra 3.222/54.124 campos (6,0 %), con 60 fichas
+completas de 282. El control del glosario compara los 3.222 pares traducidos y
+deja 26 desajustes como avisos editoriales trazables. Se aceptan como revisiones
+válidas tanto las aprobadas por Codex como las aprobadas por Claude; la puerta de
+publicación sigue exigiendo estado `reviewed`, hash vigente, revisor identificado
+y checklist completo.
 
 **Siguiente trabajo recomendado:**
 
-1. Preparar el siguiente lote local de hasta diez fichas y traducirlo en Codex.
-2. Importarlo primero en modo simulación y después aplicar los overlays como
-   `machine_translated`.
-3. Ejecutar desde Codex la revisión final de terminología, precisión clínica,
-   calidad lingüística y correspondencia con la fuente antes de promover cada
-   ficha completa a `reviewed`.
-4. Extender la fusión de overlays a los documentos que hoy no la reciben: la
-   tabla comparativa de epistemologías y los modelos públicos.
-5. Revisar `data/Core/i18n/en/RELATIONS.md` si se quiere convertir en enlaces las
-   296 influencias que coinciden con un modelo del catálogo. No bloquea nada.
-6. Completar la validación visual en navegador de escritorio y móvil.
+1. Dejar que Claude continúe creando overlays de modelos, sin editar a la vez
+   generadores, manifiestos ni informes derivados.
+2. Al cerrar cada lote, ejecutar manifiesto, modelos públicos, cobertura,
+   glosario y validación; después reconstruir la app para publicar solo el último
+   estado coherente.
+3. Retomar los isomorfismos cuando vuelva a activarse su fuente de datos; ahora
+   están deshabilitados en la aplicación.
+4. Hacer una prueba final de búsqueda, filtros, tabla epistemológica y navegación con datos reales en
+   el despliegue de preproducción.
+5. Revisar `data/Core/i18n/en/RELATIONS.md` solo si se quieren convertir en
+   enlaces las 296 influencias que coinciden con un modelo. No bloquea la i18n.
+
+**Punto exacto para reanudar (2026-09-02).** Las fases técnicas de navegación,
+generación bilingüe y SEO están implementadas. `npm run validate:i18n` supera 32
+pruebas, comprueba 284 fuentes y valida 101 artefactos ingleses —61 overlays de
+ficha, 8 manifiestos, 31 overlays públicos y 1 documento auxiliar— sin errores
+ni avisos. La app supera
+10 pruebas propias y su build aislado genera 237 fichas españolas y 31 fichas
+inglesas públicas, además de la portada inglesa estática.
+
+Los cambios preexistentes de portada, navegación compartida y páginas SEO
+españolas generadas por el otro agente siguen fuera de este trabajo. Los nuevos
+overlays de modelos sí se aceptan tanto si el revisor registrado es Codex como
+Claude, conforme a la decisión del usuario.
 
 La app ya solicita `Core/i18n/en/modelos/<escuela>/<modelId>.json` en rutas
 inglesas y solo lo fusiona si está en estado `reviewed`; en los demás casos
 conserva el modelo español como fallback. La caché de sesión está separada por
 locale.
 
-Verificado en esta sesión, sin navegador:
+Verificado en esta sesión:
 
 - Los 4 bloques de JavaScript embebido de `public/modelos/index.html` se analizan
   sin error.
@@ -534,11 +576,16 @@ Verificado en esta sesión, sin navegador:
   un modelo sin overlay no cambia en absoluto.
 - Los helpers de presentación de taxonomías, extraídos también de la plantilla,
   pasan 9 comprobaciones en `en` y en `es`, incluidos valores vacíos y nulos.
-- Los dos diccionarios de interfaz siguen teniendo las mismas 554 claves.
+- Los dos diccionarios de interfaz tienen las mismas 701 claves.
 - La puerta de publicación excluye `draft` y `machine_translated` tanto de las
   fichas individuales como del manifiesto de la portada.
 
-Sigue pendiente la validación visual en navegador: no había instancia conectada.
+- La portada y una ficha inglesa se comprobaron en navegador de escritorio; el
+  selector conserva el ID al cambiar de idioma y el historial vuelve a la URL
+  inglesa exacta.
+- La portada inglesa se comprobó a 390 × 844 px sin desbordamiento horizontal.
+- Queda una última pasada en preproducción con datos reales para búsqueda,
+  filtros y contenido de todos los nuevos lotes.
 
 ## Criterios de aceptación del piloto
 
@@ -561,6 +608,7 @@ npm run inventory:i18n         regenera field-inventory.json y FIELD_INVENTORY.m
 npm run migrate:i18n-ids       simulación; con -- --apply escribe
 npm run report:i18n-relations  regenera relations-report.json y RELATIONS.md
 npm run build:i18n-manifest    regenera el manifiesto de la biblioteca
+npm run build:i18n-public-models proyecta overlays revisados al conjunto público
 npm run report:i18n-coverage   regenera coverage.json y COVERAGE.md
 npm run report:i18n-glossary   regenera GLOSARIO.md y revisa su cumplimiento
 npm run export:i18n-batch      crea un paquete local para traducir en Codex
@@ -585,10 +633,12 @@ cuadra con su fuente, sean fichas o manifiesto.
 Después de escribir un overlay de ficha o de tocar `taxonomias.json` hay que
 ejecutar `build:i18n-manifest`, o la traducción no llega a la lista.
 
-Comandos todavía previstos en `modelos-app`:
+Comandos disponibles en `modelos-app`:
 
 ```text
-npm run build:public-models
-npm run build:model-pages
-npm run seo:build
+npm run test:i18n              contrato de rutas, locale, API, plantilla y SEO
+npm run build:model-pages      genera fichas ES/EN y portada inglesa
+npm run validate:generated-i18n verifica todas las salidas inglesas
+npm run seo:build              genera sitemap y robots bilingües
+npm run build                  ejecuta generación, validación y SEO
 ```
