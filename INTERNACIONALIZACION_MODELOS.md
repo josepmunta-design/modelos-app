@@ -282,7 +282,7 @@ escuela, 5 tipos, 39 países, 44 ciudades y 15 instituciones. Un valor sin entra
 se muestra en español y aparece como pendiente en `MANIFEST_COVERAGE.md`.
 
 **Estado de la última consolidación (2026-09-02):** 8 manifiestos ingleses
-generados, 250 resúmenes analizados, 27 títulos traducidos y 539 valores de
+generados, 250 resúmenes analizados, 28 títulos traducidos y 539 valores de
 taxonomía resueltos al pintar. Las 12 escuelas disponen además de subtítulo, descripción y
 conceptos clave editoriales en español e inglés. Solo 1 resumen tenía título
 inglés al crear el manifiesto inicial; las tandas posteriores se incorporan al
@@ -313,7 +313,7 @@ públicos y rechaza `draft` y `machine_translated`. El build de la app produce
 árboles separados en `public/modelos/<id>/` y `public/en/models/<id>/`, además
 de una portada estática `public/en/models/index.html`. Un verificador posterior
 al build comprueba el estado editorial y todos los metadatos de cada salida
-inglesa. En la última consolidación había 31 overlays públicos revisados.
+inglesa. En la última consolidación había 32 overlays públicos revisados.
 
 ### 5. SEO bilingüe
 
@@ -523,9 +523,9 @@ y ha completado después la revisión de las 11 fichas con cobertura total. Las
 `draft`. El manifiesto público y la app rechazan cualquier overlay que no tenga
 estado `reviewed`.
 
-La última consolidación registra 3.222/54.124 campos (6,0 %), con 60 fichas
-completas de 282. El control del glosario compara los 3.222 pares traducidos y
-deja 26 desajustes como avisos editoriales trazables. Se aceptan como revisiones
+La última consolidación registra 3.439/54.124 campos (6,4 %), con 63 fichas
+completas de 282. El control del glosario compara los 3.439 pares traducidos y
+deja 27 desajustes como avisos editoriales trazables. Se aceptan como revisiones
 válidas tanto las aprobadas por Codex como las aprobadas por Claude; la puerta de
 publicación sigue exigiendo estado `reviewed`, hash vigente, revisor identificado
 y checklist completo.
@@ -544,10 +544,17 @@ y checklist completo.
 5. Revisar `data/Core/i18n/en/RELATIONS.md` solo si se quieren convertir en
    enlaces las 296 influencias que coinciden con un modelo. No bloquea la i18n.
 
+**Último lote Codex (2026-09-02).** Se han traducido íntegramente y revisado las
+fichas `posestructuralismo-discurso`,
+`psicoterapia-basada-psicologia-india-1990` y
+`terapia-pareja-conductual-tradicional-1979`: 217 campos y 42.971 caracteres de
+fuente. Las tres están en estado `reviewed`, con cobertura del 100 %, hash
+vigente y checklist editorial completo. No se ha iniciado ningún lote posterior.
+
 **Punto exacto para reanudar (2026-09-02).** Las fases técnicas de navegación,
 generación bilingüe y SEO están implementadas. `npm run validate:i18n` supera 32
-pruebas, comprueba 284 fuentes y valida 101 artefactos ingleses —61 overlays de
-ficha, 8 manifiestos, 31 overlays públicos y 1 documento auxiliar— sin errores
+pruebas, comprueba 284 fuentes y valida 105 artefactos ingleses —64 overlays de
+ficha, 8 manifiestos, 32 overlays públicos y 1 documento auxiliar— sin errores
 ni avisos. La app supera
 10 pruebas propias y su build aislado genera 237 fichas españolas y 31 fichas
 inglesas públicas, además de la portada inglesa estática.
