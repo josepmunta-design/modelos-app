@@ -22505,47 +22505,74 @@ async function ensureModelPublic(m){
   const CACHE = ensureModelPublic._cache;
   const PENDING = ensureModelPublic._pending;
 
-  if (CACHE.has(id)) {
+  // La ficha publica cacheada ya lleva el idioma aplicado, asi que la clave
+  // incluye el locale y nunca se sirve texto de un idioma en el otro.
+  const cacheKey = `${MODELOS_LOCALE}:${id}`;
+
+  if (CACHE.has(cacheKey)) {
     return {
       ...m,
-      ...CACHE.get(id),
+      ...CACHE.get(cacheKey),
       file: m.file
     };
   }
 
-  if (PENDING.has(id)) {
-    return PENDING.get(id);
+  if (PENDING.has(cacheKey)) {
+    return PENDING.get(cacheKey);
   }
 
   const promise = (async () => {
     const tryUrls = dataUrlCandidates(`Core/${publicFile}`);
-    const publicData = await fetchFirstJson(tryUrls, { bust:true });
+    // Ficha publica y su traduccion se piden a la vez: el overlay no anade un
+    // segundo viaje en serie y la primera pintura ya sale en el idioma actual.
+    const [publicData, localeOverlay] = await Promise.all([
+      fetchFirstJson(tryUrls, { bust:true }),
+      fetchPublicModelLocaleOverlay(publicFile, id)
+    ]);
 
     if (!publicData || typeof publicData !== 'object') {
       return m;
     }
 
+    let localizedPublicData = publicData;
+    if (localeOverlay){
+      try{
+        localizedPublicData = mergeModelLocaleOverlay(publicData, localeOverlay);
+      }catch(error){
+        // Un overlay desalineado con la fuente no debe romper la ficha: se
+        // descarta y la vista publica sigue en espanol hasta la ficha completa.
+        PUBLIC_MODEL_LOCALE_OVERLAY_CACHE.set(cacheKey, null);
+        console.warn('Invalid public model translation overlay:', { id, locale:MODELOS_LOCALE, error:error?.message || error });
+        localizedPublicData = publicData;
+      }
+    }
+
     const merged = {
       ...m,
-      ...publicData,
+      ...localizedPublicData,
 
       // Mantener siempre el puntero privado original:
       id: m.id,
       file: m.file,
 
-      __publicLoaded: true
+      __publicLoaded: true,
+
+      // No se marca __locale a proposito: applyModelLocaleOverlay lo usa para
+      // saltarse el trabajo ya hecho, y la ficha completa necesita aplicar
+      // despues su propio overlay, mucho mas amplio que el publico.
+      __localePublic: localeOverlay ? MODELOS_LOCALE : null
     };
 
-    CACHE.set(id, publicData);
+    CACHE.set(cacheKey, localizedPublicData);
     return merged;
   })();
 
-  PENDING.set(id, promise);
+  PENDING.set(cacheKey, promise);
 
   try {
     return await promise;
   } finally {
-    PENDING.delete(id);
+    PENDING.delete(cacheKey);
   }
 }
 
@@ -22818,6 +22845,52 @@ async function applyDocumentLocaleOverlay(documentData, sourcePath){
     });
     return documentData;
   }
+}
+
+// Overlay de la ficha publica. La primera pintura del modelo se hace con la
+// ficha publica, asi que sin este overlay el usuario en ingles ve espanol y solo
+// despues, cuando llega la ficha completa, el texto cambia de idioma. Se resuelve
+// en paralelo con la ficha publica espanola para no anadir una segunda espera.
+const PUBLIC_MODEL_LOCALE_OVERLAY_CACHE = new Map();
+
+async function fetchPublicModelLocaleOverlay(publicFile, id){
+  if (MODELOS_LOCALE === 'es') return null;
+  const clean = String(publicFile || '').trim().replace(/^\/+/, '').replace(/^Core\//, '');
+  if (!clean.startsWith('modelos-publicos/')) return null;
+
+  const cacheKey = `${MODELOS_LOCALE}:${id}`;
+  if (PUBLIC_MODEL_LOCALE_OVERLAY_CACHE.has(cacheKey)){
+    return PUBLIC_MODEL_LOCALE_OVERLAY_CACHE.get(cacheKey);
+  }
+
+  // Los resumenes de escuela no siempre escriben la carpeta con la misma
+  // capitalizacion que el arbol de fichas (`otros` frente a `Otros`), y GitHub
+  // distingue mayusculas. Se prueban las dos formas, como en ensureModelFull.
+  const tryUrls = dataUrlCandidates(`Core/i18n/${MODELOS_LOCALE}/${clean}`);
+  const parts = clean.split('/');
+  if (parts[1]){
+    const fixedFolder = parts[1].charAt(0).toUpperCase() + parts[1].slice(1);
+    const altFile = ['modelos-publicos', fixedFolder, ...parts.slice(2)].join('/');
+    dataUrlCandidates(`Core/i18n/${MODELOS_LOCALE}/${altFile}`).forEach((u) => {
+      if (!tryUrls.includes(u)) tryUrls.push(u);
+    });
+  }
+
+  let overlay = null;
+  try{
+    const data = await fetchFirstJson(tryUrls, { bust:true, quiet:true });
+    // Un modelo sin ficha publica traducida es lo normal: se queda en espanol.
+    const valid = data
+      && typeof data === 'object'
+      && String(data.id || '').trim() === id
+      && data?._translation?.status === 'reviewed';
+    overlay = valid ? data : null;
+  }catch(error){
+    overlay = null;
+  }
+
+  PUBLIC_MODEL_LOCALE_OVERLAY_CACHE.set(cacheKey, overlay);
+  return overlay;
 }
 
 async function applyModelLocaleOverlay(model, sourceFile = ''){
