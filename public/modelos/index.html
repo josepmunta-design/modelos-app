@@ -137,6 +137,23 @@ function uiPlural(key, count, fallbackOne, fallbackMany, variables = {}){
   return uiText(`${key}.${form}`, fallback, { count:numericCount, ...variables });
 }
 
+function syncPersistentUiTranslations(){
+  document.getElementById('btnModelClose')?.setAttribute(
+    'aria-label',
+    uiText('model.closeProfile', 'Cerrar ficha')
+  );
+  document.getElementById('btnInfoFull')?.setAttribute(
+    'aria-label',
+    document.body.classList.contains('infoFull')
+      ? uiText('common.close', 'Cerrar')
+      : uiText('auth.fullscreen', 'Pantalla completa')
+  );
+  document.getElementById('smhNav')?.setAttribute(
+    'aria-label',
+    uiText('model.sections', 'Secciones del modelo')
+  );
+}
+
 function compactSeoText(value){
   return String(value || '')
     .replace(/<[^>]*>/g, ' ')
@@ -15257,6 +15274,10 @@ body.network-mode .networkSelectionMeta{
   line-height:1.45;
 }
 
+html[lang="en"] .accessEditorialAside::after{
+  content:"Fig. 01 · Clinical library";
+}
+
 body.network-mode .networkSelectionDesc{
   padding-top:14px;
   border-top:1px solid rgba(244,238,228,0.10);
@@ -17790,7 +17811,7 @@ html.public-library-access [data-action="subscribe-public-model"]{
           </div>
 
           <div id="groupTargetWrap" class="schoolControl schoolControl-target groupTargetWrap" hidden>
-            <label id="groupTargetLabel" class="compactLabel" for="groupTargetSelect">Escuela</label>
+            <label id="groupTargetLabel" class="compactLabel" for="groupTargetSelect" data-i18n="group.school">Escuela</label>
             <select id="groupTargetSelect"></select>
           </div>
 
@@ -20203,10 +20224,9 @@ function getModelAuthorsById(modelId){
 
 function formatTechniqueTypeLabel(type){
   const value = String(type || '').trim().toLowerCase();
-  if (value === 'micro') return 'Micro';
-  if (value === 'tecnica') return 'Técnica';
-  if (value === 'procedimiento') return 'Procedimiento';
-  return 'Técnica';
+  if (value === 'micro') return uiText('technique.type.micro', 'Microintervención');
+  if (value === 'procedimiento') return uiText('technique.type.procedure', 'Procedimiento');
+  return uiText('technique.type.technique', 'Técnica');
 }
 
 function getIsomorphismEquivalences(row, currentModelId){
@@ -21440,8 +21460,8 @@ function bindSpecialModelModules(host){
       if(!reader) return;
       reader.hidden=false;
       reader.querySelector(':scope > span').textContent=kind;
-      reader.querySelector('h5').textContent=title || 'Relación conceptual';
-      reader.querySelector('p').textContent=description || 'Sin explicación adicional.';
+      reader.querySelector('h5').textContent=title || uiText('architecture.conceptualRelationship', 'Relación conceptual');
+      reader.querySelector('p').textContent=description || uiText('architecture.noDescription', 'Sin explicación adicional.');
     };
     const clearFocus=() => {
       map.classList.remove('is-focus-active');
@@ -21452,13 +21472,13 @@ function bindSpecialModelModules(host){
       clearFocus(); map.classList.add('is-focus-active'); edge.classList.add('is-focus');
       nodes.filter(node => node.dataset.archNode===edge.dataset.edgeFrom || node.dataset.archNode===edge.dataset.edgeTo).forEach(node => node.classList.add('is-focus'));
       labels.filter(label => label.dataset.edgeId===edge.dataset.edgeId).forEach(label => label.classList.add('is-focus'));
-      showReader('Relación',edge.dataset.relationTitle,edge.dataset.relationDescription);
+      showReader(uiText('fiche.relationship', 'Relación'),edge.dataset.relationTitle,edge.dataset.relationDescription);
     };
     const focusNode=(node) => {
       clearFocus(); map.classList.add('is-focus-active'); node.classList.add('is-focus');
       const direct=edges.filter(edge => edge.dataset.edgeFrom===node.dataset.archNode || edge.dataset.edgeTo===node.dataset.archNode);
       direct.forEach(edge => { edge.classList.add('is-focus'); nodes.find(item => item.dataset.archNode===(edge.dataset.edgeFrom===node.dataset.archNode?edge.dataset.edgeTo:edge.dataset.edgeFrom))?.classList.add('is-focus'); labels.find(label => label.dataset.edgeId===edge.dataset.edgeId)?.classList.add('is-focus'); });
-      showReader('Nodo',node.dataset.nodeTitle,node.dataset.nodeDescription);
+      showReader(uiText('architecture.node', 'Nodo'),node.dataset.nodeTitle,node.dataset.nodeDescription);
     };
     nodes.forEach(node => { node.addEventListener('click',event => { event.stopPropagation(); focusNode(node); }); node.addEventListener('keydown',event => { if(event.key==='Enter'||event.key===' '){ event.preventDefault(); focusNode(node); } }); });
     edges.forEach(edge => { edge.addEventListener('click',event => { event.stopPropagation(); focusEdge(edge); }); edge.addEventListener('keydown',event => { if(event.key==='Enter'||event.key===' '){ event.preventDefault(); focusEdge(edge); } }); });
@@ -21492,8 +21512,8 @@ function bindSpecialModelModules(host){
       if(!reader) return;
       reader.hidden=false;
       reader.querySelector(':scope > span').textContent=kind;
-      reader.querySelector('h5').textContent=title || 'Elemento';
-      reader.querySelector('p').textContent=description || 'Sin explicación adicional.';
+      reader.querySelector('h5').textContent=title || uiText('architecture.item', 'Elemento');
+      reader.querySelector('p').textContent=description || uiText('architecture.noDescription', 'Sin explicación adicional.');
     };
     const clearFocus=() => {
       stage.classList.remove('is-focus-active');
@@ -21504,13 +21524,13 @@ function bindSpecialModelModules(host){
       clearFocus(); stage.classList.add('is-focus-active'); edge.classList.add('is-focus');
       people.filter(node => node.dataset.genoNode===edge.dataset.edgeFrom || node.dataset.genoNode===edge.dataset.edgeTo).forEach(node => node.classList.add('is-focus'));
       labels.filter(label => label.dataset.edgeId===edge.dataset.edgeId).forEach(label => label.classList.add('is-focus'));
-      showReader('Relación',edge.dataset.relationTitle,edge.dataset.relationDescription);
+      showReader(uiText('fiche.relationship', 'Relación'),edge.dataset.relationTitle,edge.dataset.relationDescription);
     };
     const focusNode=(node) => {
       clearFocus(); stage.classList.add('is-focus-active'); node.classList.add('is-focus');
       const direct=edges.filter(edge => edge.dataset.edgeFrom===node.dataset.genoNode || edge.dataset.edgeTo===node.dataset.genoNode);
       direct.forEach(edge => { edge.classList.add('is-focus'); people.find(item => item.dataset.genoNode===(edge.dataset.edgeFrom===node.dataset.genoNode?edge.dataset.edgeTo:edge.dataset.edgeFrom))?.classList.add('is-focus'); labels.find(label => label.dataset.edgeId===edge.dataset.edgeId)?.classList.add('is-focus'); });
-      showReader('Persona',node.dataset.nodeTitle,node.dataset.nodeDescription);
+      showReader(uiText('architecture.person', 'Persona'),node.dataset.nodeTitle,node.dataset.nodeDescription);
     };
     people.forEach(node => { node.addEventListener('click',event => { event.stopPropagation(); focusNode(node); }); node.addEventListener('keydown',event => { if(event.key==='Enter'||event.key===' '){ event.preventDefault(); focusNode(node); } }); });
     edges.forEach(edge => { edge.addEventListener('click',event => { event.stopPropagation(); focusEdge(edge); }); edge.addEventListener('keydown',event => { if(event.key==='Enter'||event.key===' '){ event.preventDefault(); focusEdge(edge); } }); });
@@ -22352,12 +22372,13 @@ function getContextOriginData(model){
 // Carga index de escuelas de GitHub (si falla, no pasa nada)
 async function loadGhSchoolsIndex(){
   try{
-    // El diccionario de taxonomias se pide en paralelo: hace falta antes de
-    // pintar la primera cabecera de escuela.
-    const [idx] = await Promise.all([
-      fetchFirstJson(dataUrlCandidates('Core/escuelas/index.json'), { bust:true }),
-      loadLocaleTaxonomies()
-    ]);
+    // El vocabulario localizado se carga de forma explícita durante init.
+    // Mantener aquí solo el índice evita acceder a sus variables antes de que
+    // se inicialicen cuando esta precarga temprana corre en DOMContentLoaded.
+    const idx = await fetchFirstJson(
+      dataUrlCandidates('Core/escuelas/index.json'),
+      { bust:true }
+    );
     GH_SCHOOLS = Array.isArray(idx) ? idx : (Array.isArray(idx?.escuelas) ? idx.escuelas : []);
   }catch(e){
     console.warn('No se pudo cargar index de escuelas desde GitHub:', e);
@@ -23505,7 +23526,7 @@ function closeMobileModelInfoToList(){
   btn.id = 'btnModelClose';
   btn.className = 'modelCloseBtn';
   btn.type = 'button';
-  btn.setAttribute('aria-label', 'Cerrar ficha');
+  btn.setAttribute('aria-label', uiText('model.closeProfile', 'Cerrar ficha'));
   btn.innerHTML = `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M15 6l-6 6 6 6M10 12h9"
@@ -23527,7 +23548,7 @@ function closeMobileModelInfoToList(){
   btn.id = 'btnInfoFull';
   btn.className = 'mp-fullBtn';
   btn.type = 'button';
-  btn.setAttribute('aria-label', 'Pantalla completa');
+  btn.setAttribute('aria-label', uiText('auth.fullscreen', 'Pantalla completa'));
 
   const iconExpand = `
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -23543,7 +23564,9 @@ function closeMobileModelInfoToList(){
   function syncIcon(){
     const on = document.body.classList.contains('infoFull');
     btn.innerHTML = on ? iconClose : iconExpand;
-    btn.setAttribute('aria-label', on ? 'Cerrar' : 'Pantalla completa');
+    btn.setAttribute('aria-label', on
+      ? uiText('common.close', 'Cerrar')
+      : uiText('auth.fullscreen', 'Pantalla completa'));
   }
 
 btn.addEventListener('click', () => {
@@ -24424,7 +24447,8 @@ async function openSchoolTimeline(schoolLabel = ''){
 if (leftListHintEl){
   leftListHintEl.addEventListener('click', async (event) => {
     event.preventDefault();
-    if (leftListHintEl.textContent.trim().toLowerCase() !== 'abrir timeline') return;
+    const timelineLabel = uiText('list.openTimeline', 'abrir timeline').trim().toLowerCase();
+    if (leftListHintEl.textContent.trim().toLowerCase() !== timelineLabel) return;
     await openSchoolTimeline();
   });
 }
@@ -24947,7 +24971,7 @@ function syncGroupingTargetOptions(){
       .filter(Boolean);
 
     groupTargetSelectEl.innerHTML = schools
-      .map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`)
+      .map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(schoolDisplayLabel(s) || s)}</option>`)
       .join('');
 
     if (!schools.includes(String(currentSchool || ''))){
@@ -24973,7 +24997,7 @@ function syncGroupingTargetOptions(){
     groupTargetLabelEl.textContent = uiText('group.process', 'Proceso');
     groupTargetWrapEl.hidden = false;
     groupTargetSelectEl.innerHTML = PROCESS_FILTERS
-      .map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(`${p.id} · ${p.label}`)}</option>`)
+      .map((p) => `<option value="${escapeHtml(p.id)}">${escapeHtml(`${p.id} · ${changeProcessLabel(p.id, p.label)}`)}</option>`)
       .join('');
     if (!PROCESS_FILTER_MAP.has(groupingTarget)){
       groupingTarget = PROCESS_FILTERS[0]?.id || '';
@@ -24995,7 +25019,7 @@ function syncGroupingTargetOptions(){
     );
     groupTargetWrapEl.hidden = false;
     groupTargetSelectEl.innerHTML = CHANGE_DIMS
-      .map((d) => `<option value="${escapeHtml(d.id)}">${escapeHtml(d.label)}</option>`)
+      .map((d) => `<option value="${escapeHtml(d.id)}">${escapeHtml(changeDimensionLabel(d))}</option>`)
       .join('');
     if (!CHANGE_DIMS.some((d) => d.id === groupingTarget)){
       groupingTarget = CHANGE_DIMS[0]?.id || '';
@@ -25108,7 +25132,7 @@ function bindPremiumGroupingPaywallAction(){
       return;
     }
     if (typeof window.openSubscriptionLogin === 'function'){
-      window.openSubscriptionLogin('Inicia sesi\u00f3n o crea una cuenta para suscribirte.');
+      window.openSubscriptionLogin(uiText('auth.signInToSubscribe', 'Inicia sesión o crea una cuenta para suscribirte.'));
     }
   });
 }
@@ -25437,7 +25461,9 @@ function renderModelsList(){
   }else if (groupingMode === 'process'){
     setLeftListMeta(uiText('list.models', 'Modelos'), uiText('list.openTimeline', 'abrir timeline'));
     const proc = PROCESS_FILTER_MAP.get(groupingTarget) || PROCESS_FILTERS[0];
-    const procLabel = proc ? `${proc.id} · ${proc.label}` : 'Proceso';
+    const procLabel = proc
+      ? `${proc.id} · ${changeProcessLabel(proc.id, proc.label)}`
+      : uiText('group.process', 'Proceso');
     countLine.innerHTML = `
       <span class="count-n">${list.length}</span>
       <span class="count-txt">${escapeHtml(uiText('list.levelFourIn', 'con nivel 4 en'))}</span>
@@ -25446,7 +25472,9 @@ function renderModelsList(){
   }else if (groupingMode === 'dimension'){
     setLeftListMeta(uiText('list.models', 'Modelos'), uiText('list.openTimeline', 'abrir timeline'));
     const dim = CHANGE_DIMS.find((d) => d.id === groupingTarget) || CHANGE_DIMS[0];
-    const dimLabel = dim ? `${dim.label} (>=${SIGNIFICANT_DIMENSION_PCT}%)` : 'Dimensión';
+    const dimLabel = dim
+      ? `${changeDimensionLabel(dim)} (>=${SIGNIFICANT_DIMENSION_PCT}%)`
+      : uiText('overview.dimension.defaultTitle', 'Dimensión');
     countLine.innerHTML = `
       <span class="count-n">${list.length}</span>
       <span class="count-txt">${escapeHtml(uiText('list.significantWeightIn', 'con peso significativo en'))}</span>
@@ -25470,7 +25498,7 @@ function renderModelsList(){
       <span class="count-txt">${escapeHtml((list.length === baseList.length)
         ? uiText('list.in', 'en')
         : uiText('list.fromIn', `de ${baseList.length} en`, { total:baseList.length }))}</span>
-      <span class="count-school">“${escapeHtml(currentSchool)}”</span>
+      <span class="count-school">“${escapeHtml(schoolDisplayLabel(currentSchool) || currentSchool)}”</span>
     `;
   }
 
@@ -27477,7 +27505,7 @@ async function renderNetworkGraph(){
       .style('cursor', 'pointer')
       .on('mouseenter', (evt, d) => {
         if (!tooltip) return;
-        tooltip.innerHTML = `<strong>${escapeHtml(d.label)}</strong><br>${escapeHtml(String(d.count))} modelos`;
+        tooltip.innerHTML = `<strong>${escapeHtml(d.label)}</strong><br>${escapeHtml(String(d.count))} ${escapeHtml(uiPlural('common.model', d.count, 'modelo', 'modelos'))}`;
         tooltip.classList.add('is-on');
       })
       .on('mousemove', (evt) => {
@@ -28056,7 +28084,7 @@ function bindNetworkCompactControls(){
       }
 
       if (typeof window.openSubscriptionLogin === 'function'){
-        window.openSubscriptionLogin('Inicia sesion o crea una cuenta para suscribirte.');
+        window.openSubscriptionLogin(uiText('auth.signInToSubscribe', 'Inicia sesión o crea una cuenta para suscribirte.'));
       }
     });
   }
@@ -30147,7 +30175,7 @@ function markModelAsPublicView(model){
         const img = document.createElement('img');
         img.className = 'mp-author-photo';
         img.setAttribute('data-photo-url', lateUrl);
-        img.alt = epAutoresList(m).join(' - ') || 'Autor';
+        img.alt = epAutoresList(m).join(' - ') || uiText('fiche.authorFallback', 'Autor');
         img.loading = 'eager';
         img.decoding = 'async';
         img.fetchPriority = 'high';
@@ -30443,7 +30471,7 @@ modelInfoEl.querySelectorAll('[data-action="subscribe-public-model"]').forEach((
     }
 
     if (typeof window.openSubscriptionLogin === 'function'){
-      window.openSubscriptionLogin('Inicia sesion o crea una cuenta para suscribirte.');
+      window.openSubscriptionLogin(uiText('auth.signInToSubscribe', 'Inicia sesión o crea una cuenta para suscribirte.'));
     }
   });
 });
@@ -30543,7 +30571,7 @@ if (!fotoUrl){
     const img = document.createElement('img');
     img.className = 'mp-author-photo';
     img.setAttribute('data-photo-url', lateUrl);
-    img.alt = autoresDisplay || 'Autor';
+    img.alt = autoresDisplay || uiText('fiche.authorFallback', 'Autor');
     img.loading = 'eager';
     img.decoding = 'async';
     img.fetchPriority = 'high';
@@ -30733,7 +30761,7 @@ function contextOriginTimeline(model){
     .join('');
 
   return `
-    <div class="mp-co-timeline" aria-label="A&ntilde;o del modelo: ${escapeHtml(String(year))}">
+    <div class="mp-co-timeline" aria-label="${escapeHtml(uiText('context.modelYearAria', 'Año del modelo: {year}', { year }))}">
       <span class="mp-co-timelineTrack"></span>
       ${ticks}
       <span class="mp-co-timelineYear" style="left:${position.toFixed(2)}%">${escapeHtml(String(year))}</span>
@@ -32826,6 +32854,10 @@ if(window.IS_EMBED){
 (async function init(){
   try{
     await window.TMPS_MODELOS_I18N?.ready;
+    syncPersistentUiTranslations();
+    // Las taxonomías traducen etiquetas funcionales (escuelas, países, etc.).
+    // Deben estar listas incluso cuando el índice de escuelas ya viene precargado.
+    await loadLocaleTaxonomies();
     // 1) índice de escuelas GH
     if (!Array.isArray(GH_SCHOOLS) || !GH_SCHOOLS.length){
       await loadGhSchoolsIndex();
