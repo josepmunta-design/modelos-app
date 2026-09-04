@@ -25,6 +25,9 @@ const GITHUB_OWNER = String(process.env.GITHUB_OWNER || '').trim();
 const GITHUB_REPO = String(process.env.GITHUB_REPO || '').trim();
 const GITHUB_TOKEN = String(process.env.GITHUB_TOKEN || '').trim();
 const GITHUB_REF = String(process.env.GITHUB_REF_NAME || process.env.GITHUB_DATA_REF || 'main').trim();
+const GITHUB_REQUEST_ATTEMPTS = Math.max(1, Number(process.env.GITHUB_REQUEST_ATTEMPTS || 4));
+const GITHUB_REQUEST_TIMEOUT_MS = Math.max(1000, Number(process.env.GITHUB_REQUEST_TIMEOUT_MS || 30000));
+const GITHUB_RETRY_BASE_MS = Math.max(100, Number(process.env.GITHUB_RETRY_BASE_MS || 750));
 
 const LOCALES = {
   es: {
@@ -251,7 +254,26 @@ async function fetchJson(dataPath) {
   return response.json();
 }
 
-async function githubRequest(repoPath, { raw = false } = {}) {
+function isRetryableGitHubStatus(status) {
+  return status === 408 || status === 425 || status === 429 || status >= 500;
+}
+
+function githubRetryDelay(response, attempt) {
+  const retryAfter = String(response?.headers?.get?.('retry-after') || '').trim();
+  if (retryAfter) {
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds)) return Math.min(10000, Math.max(0, seconds * 1000));
+    const retryDate = Date.parse(retryAfter);
+    if (Number.isFinite(retryDate)) return Math.min(10000, Math.max(0, retryDate - Date.now()));
+  }
+  return Math.min(10000, GITHUB_RETRY_BASE_MS * (2 ** Math.max(0, attempt - 1)));
+}
+
+function wait(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
+}
+
+export async function githubRequest(repoPath, { raw = false } = {}) {
   const encodedPath = String(repoPath)
     .split('/')
     .map(encodeURIComponent)
@@ -259,20 +281,42 @@ async function githubRequest(repoPath, { raw = false } = {}) {
   const url = new URL(`https://api.github.com/repos/${encodeURIComponent(GITHUB_OWNER)}/${encodeURIComponent(GITHUB_REPO)}/contents/${encodedPath}`);
   url.searchParams.set('ref', GITHUB_REF);
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
-      'User-Agent': 'tu-mentor-model-pages/1.0',
-      'X-GitHub-Api-Version': '2022-11-28'
+  let lastError = null;
+  let attemptsMade = 0;
+  for (let attempt = 1; attempt <= GITHUB_REQUEST_ATTEMPTS; attempt += 1) {
+    attemptsMade = attempt;
+    let response;
+    try {
+      response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${GITHUB_TOKEN}`,
+          Accept: raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json',
+          'User-Agent': 'tu-mentor-model-pages/1.0',
+          'X-GitHub-Api-Version': '2022-11-28'
+        },
+        signal: AbortSignal.timeout(GITHUB_REQUEST_TIMEOUT_MS)
+      });
+    } catch (error) {
+      lastError = error;
+      if (attempt === GITHUB_REQUEST_ATTEMPTS) break;
+      const delay = githubRetryDelay(null, attempt);
+      console.warn(`[reintento ${attempt}/${GITHUB_REQUEST_ATTEMPTS - 1}] ${repoPath}: ${error.message}; esperando ${delay} ms`);
+      await wait(delay);
+      continue;
     }
-  });
 
-  if (!response.ok) {
-    throw new Error(`GitHub no pudo leer ${repoPath}: HTTP ${response.status}`);
+    if (response.ok) return response.json();
+
+    lastError = new Error(`HTTP ${response.status}`);
+    if (!isRetryableGitHubStatus(response.status) || attempt === GITHUB_REQUEST_ATTEMPTS) break;
+
+    const delay = githubRetryDelay(response, attempt);
+    await response.body?.cancel?.().catch(() => {});
+    console.warn(`[reintento ${attempt}/${GITHUB_REQUEST_ATTEMPTS - 1}] ${repoPath}: HTTP ${response.status}; esperando ${delay} ms`);
+    await wait(delay);
   }
 
-  return response.json();
+  throw new Error(`GitHub no pudo leer ${repoPath} tras ${attemptsMade} intento${attemptsMade === 1 ? '' : 's'}: ${lastError?.message || 'error de red'}`);
 }
 
 async function mapWithConcurrency(items, limit, worker) {
