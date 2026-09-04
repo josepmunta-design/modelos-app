@@ -25338,6 +25338,7 @@ async function handleGroupingModeChange(nextMode){
     resetRightPanelToTop();
     await ensureAllSchoolsLoadedForGrouping();
     renderModelsList();
+    renderModelInfo(null);
     return;
   }
 
@@ -26302,6 +26303,105 @@ if (window.__SMH){
   if (shouldShowEpistemologiaTable){
     hydrateEpistemologiaComparisonTable(modelInfoEl);
   }
+}
+
+function renderAllModelsOverviewHtml(){
+  const models = MODELS
+    .filter(isTherapyModel)
+    .sort((a,b) => (+a.year||0) - (+b.year||0));
+  const datedModels = models.filter((model) => Number(model?.year) > 0);
+  const first = datedModels[0] || null;
+  const latest = datedModels[datedModels.length - 1] || null;
+  const coverage = first && latest
+    ? `${first.year} — ${latest.year}`
+    : uiText('overview.all.coveragePending', 'Cronología en construcción');
+  const overviewCards = [
+    {
+      title:uiText('overview.all.chronology.title', 'Cronología'),
+      copy:uiText('overview.all.chronology.copy', 'La lista recorre los modelos desde sus antecedentes históricos hasta los desarrollos contemporáneos.'),
+      meta:uiText('overview.all.chronology.meta', 'Orden temporal')
+    },
+    {
+      title:uiText('library.group.school', 'Escuelas'),
+      copy:uiText('overview.all.schools.copy', 'Siete tradiciones canónicas permiten seguir las grandes genealogías de la psicoterapia.'),
+      meta:uiText('overview.all.schools.meta', '7 escuelas canónicas')
+    },
+    {
+      title:uiText('library.group.collection', 'Colecciones'),
+      copy:uiText('overview.all.collections.copy', 'Agrupan desarrollos transversales, psicodélicos, fronterizos y tradiciones culturales sin convertirlos en escuelas.'),
+      meta:uiText('overview.all.collections.meta', '4 colecciones temáticas')
+    },
+    {
+      title:uiText('library.group.tags', 'Tags'),
+      copy:uiText('overview.all.tags.copy', 'Cruzan la biblioteca por foco clínico, población, formato, ola, mecanismo y epistemología.'),
+      meta:uiText('overview.all.tags.meta', '6 facetas combinables')
+    },
+    {
+      title:uiText('library.group.epistemology', 'Epistemologías'),
+      copy:uiText('overview.all.epistemologies.copy', 'Hacen visibles los supuestos sobre conocimiento, sujeto, cambio y relación terapéutica.'),
+      meta:uiText('overview.all.epistemologies.meta', 'Marcos de comprensión')
+    },
+    {
+      title:uiText('library.view.network', 'Red'),
+      copy:uiText('overview.all.network.copy', 'La vista de red compara afinidades entre modelos a partir de procesos y dimensiones de cambio.'),
+      meta:uiText('overview.all.network.meta', 'Vista relacional')
+    }
+  ];
+
+  return `
+    <article class="school-editorial tags-editorial" style="--schoolColor:#D9AA3F">
+      <div class="school-editorialHero">
+        <div class="school-editorialMain">
+          <p class="school-editorialKicker">${escapeHtml(uiText('overview.all.kicker', 'Biblioteca completa'))}</p>
+          <h1 class="school-editorialTitle">${escapeHtml(uiText('overview.all.title', 'Todos los modelos'))}</h1>
+          <p class="school-editorialSubtitle">${escapeHtml(uiText('overview.all.subtitle', 'Historia, escuelas y conexiones en una sola mirada.'))}</p>
+        </div>
+
+        <div class="school-editorialSide">
+          <p class="school-editorialIntro">${escapeHtml(uiText('overview.all.intro', 'Este índice reúne el conjunto de modelos psicoterapéuticos de la biblioteca y los presenta en orden histórico. Es el punto de partida para recorrer el campo completo antes de acotar la búsqueda.'))}</p>
+
+          <div class="school-editorialKeys" aria-label="${escapeHtml(uiText('overview.all.summary', 'Resumen de la biblioteca'))}">
+            <span class="school-editorialKey">${escapeHtml(`${models.length} ${uiPlural('common.model', models.length, 'modelo', 'modelos')}`)}</span>
+            <span class="school-editorialKey">${escapeHtml(uiText('overview.all.schools.meta', '7 escuelas canónicas'))}</span>
+            <span class="school-editorialKey">${escapeHtml(uiText('overview.all.collections.meta', '4 colecciones temáticas'))}</span>
+            <span class="school-editorialKey">${escapeHtml(uiText('overview.all.twoViews', '2 vistas'))}</span>
+          </div>
+
+          <div class="school-editorialFacts">
+            <div class="school-editorialFact">
+              <span class="school-editorialFactLabel">${escapeHtml(uiText('overview.all.coverage', 'Recorrido histórico'))}</span>
+              <span class="school-editorialFactValue">${escapeHtml(coverage)}</span>
+            </div>
+            <div class="school-editorialFact">
+              <span class="school-editorialFactLabel">${escapeHtml(uiText('overview.all.organization', 'Organización'))}</span>
+              <span class="school-editorialFactValue">${escapeHtml(uiText('overview.all.organizationValue', 'Escuelas · Colecciones · Tags · Epistemologías'))}</span>
+            </div>
+          </div>
+          <div class="school-editorialCta">${escapeHtml(uiText('overview.all.cta', 'Recorre la cronología de la izquierda o elige otra clasificación para cambiar el punto de vista.'))}</div>
+        </div>
+      </div>
+
+      <section class="school-editorialBody tags-editorialBody">
+        <div class="school-editorialSectionHead">
+          <div>
+            <p class="school-editorialSectionKicker">${escapeHtml(uiText('overview.all.guide', 'Guía de lectura'))}</p>
+            <h2 class="school-editorialSectionTitle">${escapeHtml(uiText('overview.all.entryPoints', 'Seis formas de entrar en la biblioteca'))}</h2>
+          </div>
+        </div>
+
+        <div class="tags-editorialFacets">
+          ${overviewCards.map((card, index) => `
+            <article class="tags-editorialFacet">
+              <span class="tags-editorialFacetNum">${String(index + 1).padStart(2, '0')}</span>
+              <h3 class="tags-editorialFacetTitle">${escapeHtml(card.title)}</h3>
+              <p class="tags-editorialFacetText">${escapeHtml(card.copy)}</p>
+              <span class="tags-editorialFacetMeta">${escapeHtml(card.meta)}</span>
+            </article>
+          `).join('')}
+        </div>
+      </section>
+    </article>
+  `;
 }
 
 function renderProcessOverviewHtml(){
@@ -30293,6 +30393,20 @@ function markModelAsPublicView(model){
     }
 
     disposeNetworkGraph();
+
+    if (groupingMode === 'all'){
+      const allColor = '#D9AA3F';
+      setSchoolToneClass('');
+      modelInfoEl.classList.add('school-view');
+      modelInfoEl.style.setProperty('--schoolColor', allColor);
+      document.documentElement.style.setProperty('--schoolColor', allColor);
+      document.documentElement.style.setProperty('--panelGlow', hexToRgba(allColor, 0.16));
+      if (rightPanel){
+        rightPanel.style.setProperty('--panelGlow', hexToRgba(allColor, 0.18));
+      }
+      modelInfoEl.innerHTML = renderAllModelsOverviewHtml();
+      return;
+    }
 
     if (groupingMode === 'tags'){
       const tagColor = TAG_FILTER_COLOR;
