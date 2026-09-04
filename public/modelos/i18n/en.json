@@ -5,10 +5,15 @@
   "library.eyebrow": "Psychotherapy",
   "library.title": "Models",
   "library.classifyBy": "Group by",
+  "library.group.all": "All",
   "library.group.school": "Schools",
+  "library.group.collection": "Collections",
   "library.group.epistemology": "Epistemologies",
   "library.group.tags": "Tags",
   "library.group.network": "Network view",
+  "library.view.label": "View",
+  "library.view.list": "List",
+  "library.view.network": "Network",
   "library.models": "Models",
   "library.openTimeline": "open timeline",
   "library.search": "Search models",
@@ -17,10 +22,10 @@
   "welcome.eyebrow": "Living library",
   "welcome.title": "Psychotherapy models",
   "welcome.description": "Explore how different schools understand change, distress, and clinical intervention.",
-  "welcome.step1": "1) Choose a school",
+  "welcome.step1": "1) Choose how to explore",
   "welcome.step2": "2) Select a model",
   "welcome.step3": "3) Explore influences, procedures, and micro-interventions",
-  "welcome.hint": "Choose a school and then a model to view its full information.",
+  "welcome.hint": "Choose an exploration path and then a model to view its full information.",
   "landing.field": "Clinical psychology",
   "landing.kicker": "Library",
   "landing.titleMain": "Psychotherapy",
@@ -51,8 +56,8 @@
   ,"model.closeProfile": "Close profile"
   ,"landing.schoolDefaultDescription": "A collection of related models and clinical developments."
   ,"landing.status.filtered": "{shown} of {total} schools"
-  ,"landing.status.collections": "{count} collections"
-  ,"landing.status.summary": "{models} models · {schools} collections"
+  ,"landing.status.collections": "{count} schools"
+  ,"landing.status.summary": "{models} models · {schools} schools"
   ,"tags.loadError": "Tags could not be loaded."
   ,"tags.emptyIndex": "The tag index is empty."
   ,"tags.active.one": "1 active filter"
@@ -62,6 +67,11 @@
   ,"tags.loading": "Loading tag classification…"
   ,"tags.preparing": "Preparing filters…"
   ,"group.school": "School"
+  ,"group.collection": "Collection"
+  ,"collection.transversal": "Cross-cutting"
+  ,"collection.psychedelic": "Psychedelic"
+  ,"collection.frontiers": "Frontiers"
+  ,"collection.culturalTraditions": "Cultural traditions"
   ,"group.process": "Process"
   ,"group.dimensionThreshold": "Dimension (>={percent}%)"
   ,"list.models": "Models"
@@ -69,6 +79,7 @@
   ,"list.epistemologies": "Epistemologies"
   ,"list.classification": "Classification"
   ,"list.openTimeline": "open timeline"
+  ,"list.orderedByYear": "ordered by year"
   ,"list.crossFilter": "cross-category filtering"
   ,"list.subscriptionContent": "subscription content"
   ,"list.chooseGraphMode": "choose graph mode"
@@ -90,6 +101,8 @@
   ,"list.in": "in"
   ,"list.fromIn": "{total} total in"
   ,"empty.search": "No models were found for \"{query}\"."
+  ,"empty.all": "No models are available yet."
+  ,"empty.collection": "There are no models in this collection yet."
   ,"empty.school": "There are no models in this school yet."
   ,"empty.epistemology": "No epistemologies are available yet."
   ,"empty.process": "No models have level 4 in that process."
@@ -109,6 +122,7 @@
   ,"overview.school.epistemologies": "Epistemologies"
   ,"overview.school.epistemologicalFramework": "Epistemological framework"
   ,"overview.school.psychotherapySchool": "Psychotherapy school"
+  ,"overview.collection.kicker": "Thematic collection"
   ,"overview.school.keyConcepts": "Key concepts"
   ,"overview.school.library": "Library"
   ,"overview.school.firstModel": "First model"
@@ -153,6 +167,7 @@
   ,"overview.tags.facet.mechanism": "The main pathway through which the model aims to produce change."
   ,"overview.tags.facet.epistemology": "The view of knowledge and change that underpins the approach."
   ,"network.showAllSchools": "Show all schools"
+  ,"network.showAllGroups": "Show all groups"
   ,"network.showAll": "Show all"
   ,"network.currentView": "Current view"
   ,"network.graphMode": "Graph mode"

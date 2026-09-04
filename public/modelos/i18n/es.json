@@ -5,10 +5,15 @@
   "library.eyebrow": "Biblioteca de",
   "library.title": "Modelos",
   "library.classifyBy": "Clasificar por",
+  "library.group.all": "Todos",
   "library.group.school": "Escuelas",
+  "library.group.collection": "Colecciones",
   "library.group.epistemology": "Epistemologías",
   "library.group.tags": "Tags",
   "library.group.network": "Vista red",
+  "library.view.label": "Vista",
+  "library.view.list": "Lista",
+  "library.view.network": "Red",
   "library.models": "Modelos",
   "library.openTimeline": "abrir timeline",
   "library.search": "Buscar modelos",
@@ -17,10 +22,10 @@
   "welcome.eyebrow": "Biblioteca viva",
   "welcome.title": "Modelos psicoterapéuticos",
   "welcome.description": "Explora cómo distintas escuelas entienden el cambio, el sufrimiento y la intervención clínica.",
-  "welcome.step1": "1) Elige una escuela",
+  "welcome.step1": "1) Elige cómo explorar",
   "welcome.step2": "2) Haz clic en un modelo",
   "welcome.step3": "3) Lee influencias, procedimientos y micros",
-  "welcome.hint": "Selecciona una escuela y luego un modelo para ver toda su información.",
+  "welcome.hint": "Elige una vía de exploración y después un modelo para ver toda su información.",
   "landing.field": "Psicología clínica",
   "landing.kicker": "Biblioteca",
   "landing.titleMain": "Modelos",
@@ -51,8 +56,8 @@
   ,"model.closeProfile": "Cerrar ficha"
   ,"landing.schoolDefaultDescription": "Colección de modelos y desarrollos clínicos relacionados."
   ,"landing.status.filtered": "{shown} de {total} escuelas"
-  ,"landing.status.collections": "{count} colecciones"
-  ,"landing.status.summary": "{models} modelos · {schools} colecciones"
+  ,"landing.status.collections": "{count} escuelas"
+  ,"landing.status.summary": "{models} modelos · {schools} escuelas"
   ,"tags.loadError": "No se han podido cargar los tags."
   ,"tags.emptyIndex": "El índice de tags está vacío."
   ,"tags.active.one": "1 filtro activo"
@@ -62,6 +67,11 @@
   ,"tags.loading": "Cargando clasificación por tags…"
   ,"tags.preparing": "Preparando filtros…"
   ,"group.school": "Escuela"
+  ,"group.collection": "Colección"
+  ,"collection.transversal": "Transversales"
+  ,"collection.psychedelic": "Psicodélicos"
+  ,"collection.frontiers": "Fronteras"
+  ,"collection.culturalTraditions": "Tradiciones culturales"
   ,"group.process": "Proceso"
   ,"group.dimensionThreshold": "Dimensión (>={percent}%)"
   ,"list.models": "Modelos"
@@ -69,6 +79,7 @@
   ,"list.epistemologies": "Epistemologías"
   ,"list.classification": "Clasificación"
   ,"list.openTimeline": "abrir timeline"
+  ,"list.orderedByYear": "ordenados por año"
   ,"list.crossFilter": "filtrado transversal"
   ,"list.subscriptionContent": "contenido de suscripción"
   ,"list.chooseGraphMode": "elige modo del grafo"
@@ -90,6 +101,8 @@
   ,"list.in": "en"
   ,"list.fromIn": "de {total} en"
   ,"empty.search": "No se han encontrado modelos para \"{query}\"."
+  ,"empty.all": "No hay modelos disponibles todavía."
+  ,"empty.collection": "No hay modelos en esta colección todavía."
   ,"empty.school": "No hay modelos en esta escuela todavía."
   ,"empty.epistemology": "No hay epistemologías disponibles todavía."
   ,"empty.process": "No hay modelos con nivel 4 en ese proceso."
@@ -109,6 +122,7 @@
   ,"overview.school.epistemologies": "Epistemologías"
   ,"overview.school.epistemologicalFramework": "Marco epistemológico"
   ,"overview.school.psychotherapySchool": "Escuela psicoterapéutica"
+  ,"overview.collection.kicker": "Colección temática"
   ,"overview.school.keyConcepts": "Conceptos clave"
   ,"overview.school.library": "Biblioteca"
   ,"overview.school.firstModel": "Primer modelo"
@@ -153,6 +167,7 @@
   ,"overview.tags.facet.mechanism": "La vía principal por la que el modelo intenta producir cambio."
   ,"overview.tags.facet.epistemology": "La concepción del conocimiento y del cambio que sostiene la propuesta."
   ,"network.showAllSchools": "Mostrar todas las escuelas"
+  ,"network.showAllGroups": "Mostrar todos los grupos"
   ,"network.showAll": "Mostrar todas"
   ,"network.currentView": "Vista actual"
   ,"network.graphMode": "Modo del grafo"

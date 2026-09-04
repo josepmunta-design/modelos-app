@@ -1088,6 +1088,53 @@ body.embedMode .appsHomeLink{
       display:none !important;
     }
 
+    .libraryViewControl{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      grid-column:1 / -1;
+      padding-top:2px;
+    }
+
+    .libraryViewControl .compactLabel{
+      margin:0;
+      flex:0 0 auto;
+    }
+
+    .libraryViewToggle{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(72px,1fr));
+      gap:3px;
+      width:min(100%,190px);
+      padding:3px;
+      border:1px solid rgba(244,238,228,0.11);
+      border-radius:11px;
+      background:#111015;
+    }
+
+    .libraryViewToggle button{
+      min-height:30px;
+      padding:5px 10px;
+      border:0;
+      border-radius:8px;
+      background:transparent;
+      color:rgba(244,238,228,0.55);
+      font:700 0.7rem/1 'Hanken Grotesk',system-ui,sans-serif;
+      cursor:pointer;
+      transition:background-color .16s ease,color .16s ease,box-shadow .16s ease;
+    }
+
+    .libraryViewToggle button:hover{
+      color:#f4eee4;
+    }
+
+    .libraryViewToggle button.is-active{
+      background:color-mix(in srgb,var(--schoolColor,#D9AA3F) 18%,#17151a);
+      color:#fff;
+      box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--schoolColor,#D9AA3F) 34%,transparent);
+    }
+
     .mobileTypeSlot{
       display:none;
     }
@@ -17803,16 +17850,25 @@ html.public-library-access [data-action="subscribe-public-model"]{
             </div>
             <label class="compactLabel" for="groupBySelect" data-i18n="library.classifyBy">Clasificar por</label>
             <select id="groupBySelect">
+              <option value="all" data-i18n="library.group.all">Todos</option>
               <option value="school" data-i18n="library.group.school">Escuelas</option>
-              <option value="epistemology" data-i18n="library.group.epistemology">Epistemologías</option>
+              <option value="collection" data-i18n="library.group.collection">Colecciones</option>
               <option value="tags" data-i18n="library.group.tags">Tags</option>
-              <option value="network" data-i18n="library.group.network">Vista red</option>
+              <option value="epistemology" data-i18n="library.group.epistemology">Epistemologías</option>
             </select>
           </div>
 
           <div id="groupTargetWrap" class="schoolControl schoolControl-target groupTargetWrap" hidden>
             <label id="groupTargetLabel" class="compactLabel" for="groupTargetSelect" data-i18n="group.school">Escuela</label>
             <select id="groupTargetSelect"></select>
+          </div>
+
+          <div class="libraryViewControl" aria-labelledby="libraryViewLabel">
+            <span id="libraryViewLabel" class="compactLabel" data-i18n="library.view.label">Vista</span>
+            <div class="libraryViewToggle" role="group" data-i18n-aria-label="library.view.label" aria-label="Vista">
+              <button id="libraryListViewButton" class="is-active" type="button" data-view-mode="list" aria-pressed="true" data-i18n="library.view.list">Lista</button>
+              <button id="libraryNetworkViewButton" type="button" data-view-mode="network" aria-pressed="false" data-i18n="library.view.network">Red</button>
+            </div>
           </div>
 
         </div>
@@ -17856,13 +17912,13 @@ html.public-library-access [data-action="subscribe-public-model"]{
     </div>
 
     <div class="mp-hero-steps">
-      <div class="mp-step"><span class="mp-step-dot"></span><span data-i18n="welcome.step1">1) Elige una escuela</span></div>
+      <div class="mp-step"><span class="mp-step-dot"></span><span data-i18n="welcome.step1">1) Elige cómo explorar</span></div>
       <div class="mp-step"><span class="mp-step-dot"></span><span data-i18n="welcome.step2">2) Haz clic en un modelo</span></div>
       <div class="mp-step"><span class="mp-step-dot"></span><span data-i18n="welcome.step3">3) Lee influencias, procedimientos y micros</span></div>
     </div>
   </div>
 
-  <div class="mp-hint" data-i18n="welcome.hint">Selecciona una escuela y luego un modelo para ver toda su información.</div>
+  <div class="mp-hint" data-i18n="welcome.hint">Elige una vía de exploración y después un modelo para ver toda su información.</div>
 </div>
 
     </main>
@@ -22647,6 +22703,54 @@ function schoolDisplayLabel(value){
   return localeTaxonomyLabel('escuelas', value);
 }
 
+function isCanonicalSchoolName(value){
+  return CANONICAL_SCHOOL_KEYS.has(normalizeModelDataKey(value));
+}
+
+function collectionDefinitionForSchool(value){
+  const key = normalizeModelDataKey(value);
+  return COLLECTION_DEFS.find((collection) => collection.sourceKeys.includes(key)) || null;
+}
+
+function collectionDefinitionById(value){
+  const id = String(value || '').trim();
+  return COLLECTION_DEFS.find((collection) => collection.id === id) || null;
+}
+
+function collectionDisplayLabel(collectionOrId){
+  const collection = typeof collectionOrId === 'object'
+    ? collectionOrId
+    : collectionDefinitionById(collectionOrId);
+  return collection ? uiText(collection.labelKey, collection.fallback) : '';
+}
+
+function collectionSourceLabel(collectionOrId){
+  const collection = typeof collectionOrId === 'object'
+    ? collectionOrId
+    : collectionDefinitionById(collectionOrId);
+  if (!collection) return '';
+  const candidates = uniq([
+    ...(GH_SCHOOLS || []).map((school) => school?.label || school?.id || ''),
+    ...(LOCAL_MODELS || []).map((model) => model?.grupo || '')
+  ]);
+  return String(candidates.find((label) => collection.sourceKeys.includes(normalizeModelDataKey(label))) || '').trim();
+}
+
+function groupingModeForSchool(value){
+  if (isEpistemologiaSchoolName(value)) return 'epistemology';
+  if (collectionDefinitionForSchool(value)) return 'collection';
+  return 'school';
+}
+
+function navigationGroupDisplayLabel(value){
+  const collection = collectionDefinitionForSchool(value);
+  return collection ? collectionDisplayLabel(collection) : (schoolDisplayLabel(value) || String(value || ''));
+}
+
+function isTherapyModel(model){
+  return isModelVisibleInApp(model) && !isEpistemologiaModel(model);
+}
+
 function cityDisplayLabel(value){
   return localeTaxonomyLabel('ciudades', value);
 }
@@ -23114,6 +23218,8 @@ async function ensureModelFull(m){
     const groupTargetWrapEl = document.getElementById('groupTargetWrap');
     const groupTargetLabelEl = document.getElementById('groupTargetLabel');
     const groupTargetSelectEl = document.getElementById('groupTargetSelect');
+    const libraryListViewButtonEl = document.getElementById('libraryListViewButton');
+    const libraryNetworkViewButtonEl = document.getElementById('libraryNetworkViewButton');
     const modelsListEl = document.getElementById('modelsList');
     const networkSelectionEl = document.getElementById('networkSelectionCard');
     const countLine = document.getElementById('countLine');
@@ -23125,10 +23231,26 @@ async function ensureModelFull(m){
     const modelSearchInputEl = document.getElementById('modelSearchInput');
     const modelSearchClearEl = document.getElementById('modelSearchClear');
     const tagFiltersPanelEl = document.getElementById('tagFiltersPanel');
-    let groupingMode = 'school';
+    let groupingMode = 'all';
+    let listGroupingMode = 'all';
     let groupingTarget = '';
     let modelSearchQuery = '';
     const TAG_FILTER_COLOR = '#8BAA9A';
+    const CANONICAL_SCHOOL_KEYS = new Set([
+      'psicoanalisis',
+      'conductismo',
+      'cognitivo',
+      'humanista',
+      'constructivista',
+      'sistemico',
+      'integrativo'
+    ]);
+    const COLLECTION_DEFS = [
+      { id:'transversal', sourceKeys:['transversal'], labelKey:'collection.transversal', fallback:'Transversales' },
+      { id:'psychedelic', sourceKeys:['psicodelicos'], labelKey:'collection.psychedelic', fallback:'Psicodélicos' },
+      { id:'frontiers', sourceKeys:['fronteras'], labelKey:'collection.frontiers', fallback:'Fronteras' },
+      { id:'cultural-traditions', sourceKeys:['otros'], labelKey:'collection.culturalTraditions', fallback:'Tradiciones culturales' }
+    ];
     const TAG_FACETS = [
       { id:'foco', label:'Foco' },
       { id:'poblacion', label:'Población' },
@@ -23511,7 +23633,7 @@ function closeMobileModelInfoToList(){
   updateLibraryUrl();
   setLibrarySeo();
   setMobileModelPanelLowered(false);
-  if (groupingMode === 'school' || groupingMode === 'epistemology'){
+  if (groupingMode === 'school' || groupingMode === 'collection' || groupingMode === 'epistemology'){
     renderSchoolInfo(currentSchool);
   }else{
     renderModelInfo(null);
@@ -24198,7 +24320,7 @@ return `
     if (status){
       status.textContent = query
         ? uiText('landing.status.filtered', `${shown} de ${availableSchoolCount} escuelas`, { shown, total:availableSchoolCount })
-        : uiText('landing.status.collections', `${availableSchoolCount} colecciones`, { count:availableSchoolCount });
+        : uiText('landing.status.collections', `${availableSchoolCount} escuelas`, { count:availableSchoolCount });
     }
     if (empty) empty.classList.toggle('is-visible', shown === 0);
   }
@@ -24236,7 +24358,7 @@ return `
   if (status && !normSchoolName(search?.value || '')){
     status.textContent = uiText(
       'landing.status.summary',
-      `${total} modelos · ${availableSchoolCount} colecciones`,
+      `${total} modelos · ${availableSchoolCount} escuelas`,
       { models:total, schools:availableSchoolCount }
     );
   }
@@ -24254,9 +24376,11 @@ return `
 
       // 1) seleccionar en el desplegable
       schoolSelect.value = label;
+      currentSchool = label;
+      groupingTarget = label;
 
       // 2) disparar el flujo normal
-      schoolSelect.dispatchEvent(new Event('change', { bubbles:true }));
+      await handleGroupingModeChange('school');
 
       // 3) ocultar landing
       hideLanding();
@@ -24270,7 +24394,7 @@ function buildSchoolOptions(){
 
   // unión sin duplicados
   const set = new Set(
-    [...localSchools, ...ghSchools].filter((school) => !isEpistemologiaSchoolName(school))
+    [...localSchools, ...ghSchools].filter(isCanonicalSchoolName)
   );
  const schoolOrder = [
   'Psicoanálisis',
@@ -24279,11 +24403,7 @@ function buildSchoolOptions(){
   'Cognitivo',
   'Sistémico',
   'Constructivista',
-  'Integrativo',
-  'Transversal',
-  'Psicodélicos',
-  'Fronteras',
-  'Otros'
+  'Integrativo'
 ];
 
 const orderMap = new Map(schoolOrder.map((s,i)=>[s,i]));
@@ -24418,18 +24538,21 @@ async function openSchoolTimeline(schoolLabel = ''){
   const school = String(schoolLabel || currentSchool || (groupingMode === 'school' ? groupingTarget : '') || '').trim();
   if (!school) return false;
 
-  const nextGroupingMode = isEpistemologiaSchoolName(school) ? 'epistemology' : 'school';
+  const nextGroupingMode = groupingModeForSchool(school);
+  const collection = collectionDefinitionForSchool(school);
 
   currentSchool = school;
   groupingMode = nextGroupingMode;
-  groupingTarget = school;
+  listGroupingMode = nextGroupingMode;
+  groupingTarget = collection?.id || school;
   currentModelId = null;
   window.__CURRENT_MODEL_ID = '';
 
   if (schoolSelect && nextGroupingMode === 'school') schoolSelect.value = school;
-  if (groupBySelectEl) groupBySelectEl.value = nextGroupingMode;
+  if (groupBySelectEl) groupBySelectEl.value = listGroupingMode;
+  syncLibraryViewControls();
   syncGroupingTargetOptions();
-  if (groupTargetSelectEl && nextGroupingMode === 'school') groupTargetSelectEl.value = school;
+  if (groupTargetSelectEl && nextGroupingMode !== 'epistemology') groupTargetSelectEl.value = groupingTarget;
 
   setInfoFullscreen(isMobileViewport());
   setModelInfoOpen(false);
@@ -24850,8 +24973,28 @@ function setupTagFilters(){
 }
 
 function baseListByGroupingMode(){
+  if (groupingMode === 'all'){
+    return MODELS
+      .filter(isTherapyModel)
+      .sort((a,b) =>
+        (+a.year||0) - (+b.year||0) ||
+        String(a.label || '').localeCompare(String(b.label || ''), MODELOS_LOCALE)
+      );
+  }
+
   if (groupingMode === 'school'){
     return filteredModelsBySchool(currentSchool);
+  }
+
+  if (groupingMode === 'collection'){
+    const collection = collectionDefinitionById(groupingTarget) || COLLECTION_DEFS[0];
+    return MODELS
+      .filter(isTherapyModel)
+      .filter((model) => collection?.sourceKeys.includes(normalizeModelDataKey(model?.grupo)))
+      .sort((a,b) =>
+        (+a.year||0) - (+b.year||0) ||
+        String(a.label || '').localeCompare(String(b.label || ''), MODELOS_LOCALE)
+      );
   }
 
   if (groupingMode === 'epistemology'){
@@ -24865,7 +25008,7 @@ function baseListByGroupingMode(){
 
   if (groupingMode === 'tags'){
     return MODELS
-      .filter(isModelVisibleInApp)
+      .filter(isTherapyModel)
       .sort((a,b) =>
         String(a.label || '').localeCompare(String(b.label || ''), MODELOS_LOCALE) ||
         (+a.year||0) - (+b.year||0)
@@ -24962,6 +25105,11 @@ function syncGroupingTargetOptions(){
     tagFiltersPanelEl.hidden = groupingMode !== 'tags';
   }
 
+  if (groupingMode === 'all'){
+    groupTargetWrapEl.hidden = true;
+    groupTargetSelectEl.innerHTML = '';
+    return;
+  }
   if (groupingMode === 'school'){
     groupTargetLabelEl.textContent = uiText('group.school', 'Escuela');
     groupTargetWrapEl.hidden = false;
@@ -24979,6 +25127,20 @@ function syncGroupingTargetOptions(){
       if (schoolSelect && currentSchool) schoolSelect.value = currentSchool;
     }
     groupTargetSelectEl.value = currentSchool || '';
+    return;
+  }
+
+  if (groupingMode === 'collection'){
+    groupTargetLabelEl.textContent = uiText('group.collection', 'Colección');
+    groupTargetWrapEl.hidden = false;
+    groupTargetSelectEl.innerHTML = COLLECTION_DEFS
+      .map((collection) => `<option value="${escapeHtml(collection.id)}">${escapeHtml(collectionDisplayLabel(collection))}</option>`)
+      .join('');
+    if (!collectionDefinitionById(groupingTarget)){
+      groupingTarget = COLLECTION_DEFS[0]?.id || '';
+    }
+    groupTargetSelectEl.value = groupingTarget;
+    currentSchool = collectionSourceLabel(groupingTarget) || '';
     return;
   }
 
@@ -25137,9 +25299,23 @@ function bindPremiumGroupingPaywallAction(){
   });
 }
 
+function syncLibraryViewControls(){
+  const networkActive = groupingMode === 'network';
+  if (libraryListViewButtonEl){
+    libraryListViewButtonEl.classList.toggle('is-active', !networkActive);
+    libraryListViewButtonEl.setAttribute('aria-pressed', networkActive ? 'false' : 'true');
+  }
+  if (libraryNetworkViewButtonEl){
+    libraryNetworkViewButtonEl.classList.toggle('is-active', networkActive);
+    libraryNetworkViewButtonEl.setAttribute('aria-pressed', networkActive ? 'true' : 'false');
+  }
+}
+
 async function handleGroupingModeChange(nextMode){
-  groupingMode = String(nextMode || 'school');
-  if (groupBySelectEl) groupBySelectEl.value = groupingMode;
+  groupingMode = String(nextMode || 'all');
+  if (groupingMode !== 'network') listGroupingMode = groupingMode;
+  if (groupBySelectEl) groupBySelectEl.value = listGroupingMode;
+  syncLibraryViewControls();
   if (groupingMode === 'epistemology'){
     currentSchool = getEpistemologiaSchoolLabel();
     groupingTarget = currentSchool;
@@ -25151,6 +25327,16 @@ async function handleGroupingModeChange(nextMode){
   setInfoFullscreen(false);
   setMobileModelPanelLowered(false);
 
+  if (groupingMode === 'all'){
+    document.documentElement.style.setProperty('--schoolColor', '#D9AA3F');
+    renderModelInfo(null);
+    renderModelsList();
+    resetRightPanelToTop();
+    await ensureAllSchoolsLoadedForGrouping();
+    renderModelsList();
+    return;
+  }
+
   if (groupingMode === 'school'){
     const nextSchool = String(groupTargetSelectEl?.value || currentSchool || '').trim();
     if (nextSchool){
@@ -25161,6 +25347,26 @@ async function handleGroupingModeChange(nextMode){
       renderModelsList();
     }
     resetRightPanelToTop();
+    return;
+  }
+
+  if (groupingMode === 'collection'){
+    const collection = collectionDefinitionById(groupingTarget) || COLLECTION_DEFS[0];
+    groupingTarget = collection?.id || '';
+    currentSchool = collectionSourceLabel(collection) || '';
+    if (currentSchool){
+      renderSchoolInfo(currentSchool);
+      renderModelsList();
+      resetRightPanelToTop();
+      await ensureSchoolFromGitHub(currentSchool).catch((error) => {
+        console.warn('No se pudo cargar la colección:', error);
+      });
+      renderSchoolInfo(currentSchool);
+      renderModelsList();
+    }else{
+      renderModelInfo(null);
+      renderModelsList();
+    }
     return;
   }
 
@@ -25248,6 +25454,24 @@ async function handleGroupingTargetChange(nextTarget){
     }
     return;
   }
+  if (groupingMode === 'collection'){
+    const collection = collectionDefinitionById(groupingTarget) || COLLECTION_DEFS[0];
+    groupingTarget = collection?.id || '';
+    currentSchool = collectionSourceLabel(collection) || '';
+    currentModelId = null;
+    window.__CURRENT_MODEL_ID = '';
+    setModelInfoOpen(false);
+    setInfoFullscreen(false);
+    if (currentSchool){
+      renderSchoolInfo(currentSchool);
+      renderModelsList();
+      resetRightPanelToTop();
+      await ensureSchoolFromGitHub(currentSchool).catch(() => {});
+      renderSchoolInfo(currentSchool);
+      renderModelsList();
+    }
+    return;
+  }
   if (['tags','dimension','process'].includes(groupingMode) && !hasPremiumGroupingAccess()){
     renderModelInfo(null);
     renderModelsList();
@@ -25270,12 +25494,27 @@ function setupGroupingControls(){
   groupBySelectEl.__bound = true;
 
   setupTagFilters();
-  groupBySelectEl.value = groupingMode;
+  groupBySelectEl.value = listGroupingMode;
+  syncLibraryViewControls();
   syncGroupingTargetOptions();
 
   groupBySelectEl.addEventListener('change', async () => {
-    await handleGroupingModeChange(groupBySelectEl.value || 'school');
+    await handleGroupingModeChange(groupBySelectEl.value || 'all');
   });
+
+  if (libraryListViewButtonEl && !libraryListViewButtonEl.__bound){
+    libraryListViewButtonEl.__bound = true;
+    libraryListViewButtonEl.addEventListener('click', async () => {
+      if (groupingMode === 'network') await handleGroupingModeChange(listGroupingMode || 'all');
+    });
+  }
+
+  if (libraryNetworkViewButtonEl && !libraryNetworkViewButtonEl.__bound){
+    libraryNetworkViewButtonEl.__bound = true;
+    libraryNetworkViewButtonEl.addEventListener('click', async () => {
+      if (groupingMode !== 'network') await handleGroupingModeChange('network');
+    });
+  }
 
   if (groupTargetSelectEl && !groupTargetSelectEl.__bound){
     groupTargetSelectEl.__bound = true;
@@ -25425,7 +25664,9 @@ function renderModelsList(){
   const searchActive = !!normSchoolName(modelSearchQuery);
   const baseList = searchActive
     ? MODELS
-        .filter(isModelVisibleInApp)
+        .filter(groupingMode === 'epistemology'
+          ? (model) => isModelVisibleInApp(model) && isEpistemologiaModel(model)
+          : isTherapyModel)
         .sort((a,b) => String(a.label || '').localeCompare(String(b.label || ''), MODELOS_LOCALE))
     : baseListByGroupingMode();
   let list = baseList;
@@ -25436,7 +25677,10 @@ function renderModelsList(){
     list = applyGroupingFilterAndSort(list);
   }
 
-  modelsListEl.style.setProperty('--schoolColor', groupingMode === 'tags' ? TAG_FILTER_COLOR : colorForSchoolLabel(currentSchool));
+  modelsListEl.style.setProperty(
+    '--schoolColor',
+    groupingMode === 'tags' ? TAG_FILTER_COLOR : (groupingMode === 'all' ? '#D9AA3F' : colorForSchoolLabel(currentSchool))
+  );
 
 
   if (searchActive){
@@ -25491,6 +25735,21 @@ function renderModelsList(){
       ))}</span>
       <span class="count-school">&ldquo;${escapeHtml(uiText('list.epistemologies', 'Epistemologías'))}&rdquo;</span>
     `;
+  }else if (groupingMode === 'all'){
+    setLeftListMeta(uiText('list.models', 'Modelos'), uiText('list.orderedByYear', 'ordenados por año'));
+    countLine.innerHTML = `
+      <span class="count-n">${list.length}</span>
+      <span class="count-txt">${escapeHtml(uiText('list.modelsIn', 'modelos en', { models:uiPlural('common.model', list.length, 'modelo', 'modelos') }))}</span>
+      <span class="count-school">&ldquo;${escapeHtml(uiText('library.group.all', 'Todos'))}&rdquo;</span>
+    `;
+  }else if (groupingMode === 'collection'){
+    const collectionLabel = collectionDisplayLabel(groupingTarget) || uiText('library.group.collection', 'Colecciones');
+    setLeftListMeta(uiText('list.models', 'Modelos'), uiText('list.openTimeline', 'abrir timeline'));
+    countLine.innerHTML = `
+      <span class="count-n">${list.length}</span>
+      <span class="count-txt">${escapeHtml(uiText('list.in', 'en'))}</span>
+      <span class="count-school">&ldquo;${escapeHtml(collectionLabel)}&rdquo;</span>
+    `;
   }else{
     setLeftListMeta(uiText('list.models', 'Modelos'), uiText('list.openTimeline', 'abrir timeline'));
     countLine.innerHTML = `
@@ -25511,7 +25770,11 @@ function renderModelsList(){
       ))}</div>`;
       return;
     }
-    const emptyByGrouping = (groupingMode === 'school')
+    const emptyByGrouping = (groupingMode === 'all')
+      ? uiText('empty.all', 'No hay modelos disponibles todavía.')
+      : (groupingMode === 'collection'
+        ? uiText('empty.collection', 'No hay modelos en esta colección todavía.')
+      : (groupingMode === 'school')
       ? uiText('empty.school', 'No hay modelos en esta escuela todavía.')
       : (groupingMode === 'epistemology'
         ? uiText('empty.epistemology', 'No hay epistemologías disponibles todavía.')
@@ -25521,7 +25784,7 @@ function renderModelsList(){
           ? uiText('empty.dimension', `No hay modelos con >=${SIGNIFICANT_DIMENSION_PCT}% en esa dimensión.`, { percent:SIGNIFICANT_DIMENSION_PCT })
           : (groupingMode === 'tags'
             ? uiText('empty.tags', 'No hay modelos que combinen los tags seleccionados.')
-            : uiText('empty.network', 'No hay modelos para la vista red.')))));
+            : uiText('empty.network', 'No hay modelos para la vista red.'))))));
     modelsListEl.innerHTML =
       `<div class="subtitle" style="margin:10px 0 0 0">${escapeHtml(emptyByGrouping)}</div>`;
     return;
@@ -25938,9 +26201,10 @@ const subtitle = info.subtitle || '—';
 const desc = info.desc || uiText('overview.school.defaultDescription', 'Aún no has definido la descripción de esta escuela.');
 const keys = info.keys || [];
 const shouldShowEpistemologiaTable = isEpistemologiaSchoolName(grupo);
+const collection = collectionDefinitionForSchool(grupo);
 const editorialTitle = shouldShowEpistemologiaTable
   ? uiText('overview.school.epistemologies', 'Epistemologías')
-  : (schoolDisplayLabel(grupo) || grupo);
+  : (collection ? collectionDisplayLabel(collection) : (schoolDisplayLabel(grupo) || grupo));
 const epistemologiaTable = shouldShowEpistemologiaTable ? renderEpistemologiaComparisonPlaceholder() : '';
 
   // Tinte del panel derecho como ya haces con modelos
@@ -25982,7 +26246,9 @@ if (window.__SMH){
         <div class="school-editorialMain">
           <p class="school-editorialKicker">${shouldShowEpistemologiaTable
             ? escapeHtml(uiText('overview.school.epistemologicalFramework', 'Marco epistemológico'))
-            : escapeHtml(uiText('overview.school.psychotherapySchool', 'Escuela psicoterapéutica'))}</p>
+            : (collection
+              ? escapeHtml(uiText('overview.collection.kicker', 'Colección temática'))
+              : escapeHtml(uiText('overview.school.psychotherapySchool', 'Escuela psicoterapéutica')))}</p>
           <h1 class="school-editorialTitle">${escapeHtml(editorialTitle)}</h1>
           <p class="school-editorialSubtitle">${escapeHtml(subtitle)}</p>
         </div>
@@ -26325,23 +26591,15 @@ function buildNetworkOverviewHtml(){
   const legends = schools.map((s) => {
     const c = colorForSchoolLabel(s);
     const on = NETWORK_FILTER_STATE.activeSchools.has(s);
-    return `<button type="button" class="chip ${on ? 'is-on' : 'is-off'}" data-school="${escapeHtml(s)}" aria-pressed="${on ? 'true' : 'false'}"><span class="dot" style="background:${escapeHtml(c)}"></span>${escapeHtml(s)}</button>`;
+    return `<button type="button" class="chip ${on ? 'is-on' : 'is-off'}" data-school="${escapeHtml(s)}" aria-pressed="${on ? 'true' : 'false'}"><span class="dot" style="background:${escapeHtml(c)}"></span>${escapeHtml(navigationGroupDisplayLabel(s))}</button>`;
   }).join('');
-  const resetLegend = `<button type="button" class="chip reset" title="${escapeHtml(uiText('network.showAllSchools', 'Mostrar todas las escuelas'))}">${escapeHtml(uiText('network.showAll', 'Mostrar todas'))}</button>`;
+  const resetLegend = `<button type="button" class="chip reset" title="${escapeHtml(uiText('network.showAllGroups', 'Mostrar todos los grupos'))}">${escapeHtml(uiText('network.showAll', 'Mostrar todas'))}</button>`;
 
   return `
     <div class="networkView">
       <div class="networkHeader">
         <div class="networkLegend">${legends}${resetLegend}</div>
         <div class="networkControlsBar">
-          <div class="networkControl">
-            <select id="networkGroupBySelect" aria-label="${escapeHtml(uiText('network.currentView', 'Vista actual'))}">
-              <option value="school">${escapeHtml(uiText('library.group.school', 'Escuelas'))}</option>
-              <option value="epistemology">${escapeHtml(uiText('library.group.epistemology', 'Epistemologías'))}</option>
-              <option value="tags">Tags</option>
-              <option value="network" selected>${escapeHtml(uiText('library.group.network', 'Vista red'))}</option>
-            </select>
-          </div>
           <div class="networkControl">
             <select id="networkProfileModeSelect" aria-label="${escapeHtml(uiText('network.graphMode', 'Modo del grafo'))}">
               <option value="process" ${String(NETWORK_FILTER_STATE.profileMode || 'mixed') === 'process' ? 'selected' : ''}>${escapeHtml(uiText('network.processes', 'Procesos'))}</option>
@@ -28086,15 +28344,6 @@ function bindNetworkCompactControls(){
       if (typeof window.openSubscriptionLogin === 'function'){
         window.openSubscriptionLogin(uiText('auth.signInToSubscribe', 'Inicia sesión o crea una cuenta para suscribirte.'));
       }
-    });
-  }
-
-  const viewSelect = document.getElementById('networkGroupBySelect');
-  if (viewSelect && viewSelect.dataset.bound !== '1'){
-    viewSelect.dataset.bound = '1';
-    viewSelect.value = groupingMode;
-    viewSelect.addEventListener('change', async () => {
-      await handleGroupingModeChange(viewSelect.value || 'network');
     });
   }
 
@@ -30091,13 +30340,13 @@ function markModelAsPublicView(model){
         </div>
 
         <div class="mp-hero-steps">
-          <div class="mp-step"><span class="mp-step-dot"></span>${escapeHtml(uiText('welcome.step1', '1) Elige una escuela'))}</div>
+          <div class="mp-step"><span class="mp-step-dot"></span>${escapeHtml(uiText('welcome.step1', '1) Elige cómo explorar'))}</div>
           <div class="mp-step"><span class="mp-step-dot"></span>${escapeHtml(uiText('welcome.step2', '2) Haz clic en un modelo'))}</div>
           <div class="mp-step"><span class="mp-step-dot"></span>${escapeHtml(uiText('welcome.step3', '3) Lee influencias, procedimientos y micros'))}</div>
         </div>
       </div>
 
-      <div class="mp-hint">${escapeHtml(uiText('welcome.hint', 'Selecciona una escuela y luego un modelo para ver toda su información.'))}</div>
+      <div class="mp-hint">${escapeHtml(uiText('welcome.hint', 'Elige una vía de exploración y después un modelo para ver toda su información.'))}</div>
     `;
     return;
   }
@@ -32431,17 +32680,19 @@ async function openModelFromNetworkSelection(id){
   }
   if (!baseModel) return;
 
-  groupingMode = isEpistemologiaSchoolName(baseModel.grupo) ? 'epistemology' : 'school';
-  if (groupBySelectEl) groupBySelectEl.value = groupingMode;
+  groupingMode = groupingModeForSchool(baseModel.grupo);
+  listGroupingMode = groupingMode;
+  if (groupBySelectEl) groupBySelectEl.value = listGroupingMode;
   currentSchool = String(baseModel.grupo || currentSchool || '').trim();
-  groupingTarget = currentSchool;
+  groupingTarget = collectionDefinitionForSchool(currentSchool)?.id || currentSchool;
+  syncLibraryViewControls();
   NETWORK_FILTER_STATE.selectedNodeId = '';
   renderNetworkSelectionCard(null);
   syncGroupingTargetOptions();
 
   if (currentSchool){
     if (schoolSelect && groupingMode === 'school') schoolSelect.value = currentSchool;
-    if (groupTargetSelectEl && groupingMode === 'school') groupTargetSelectEl.value = currentSchool;
+    if (groupTargetSelectEl && groupingMode !== 'epistemology') groupTargetSelectEl.value = groupingTarget;
     renderSchoolInfo(currentSchool);
     renderModelsList();
     resetRightPanelToTop();
@@ -32869,7 +33120,12 @@ if(window.IS_EMBED){
     setupMobileSchoolSwipe();
 
     // 3) precarga escuela inicial (si procede) + pinta
-    if (currentSchool){
+    if (groupingMode === 'all'){
+      await ensureAllSchoolsLoadedForGrouping();
+      renderModelsList();
+      renderModelInfo(null);
+      resetRightPanelToTop();
+    }else if (currentSchool){
       await ensureSchoolFromGitHub(currentSchool);
       renderModelsList();
       renderSchoolInfo(currentSchool);
@@ -32894,12 +33150,12 @@ if (window.OPEN_ID){
   if (window.OPEN_SCHOOL){
     try{
       currentSchool = window.OPEN_SCHOOL;
-      if (isEpistemologiaSchoolName(currentSchool)){
-        groupingMode = 'epistemology';
-        groupingTarget = currentSchool;
-        if (groupBySelectEl) groupBySelectEl.value = groupingMode;
-        syncGroupingTargetOptions();
-      }
+      groupingMode = groupingModeForSchool(currentSchool);
+      listGroupingMode = groupingMode;
+      groupingTarget = collectionDefinitionForSchool(currentSchool)?.id || currentSchool;
+      if (groupBySelectEl) groupBySelectEl.value = listGroupingMode;
+      syncLibraryViewControls();
+      syncGroupingTargetOptions();
 
       // si tienes selector de escuelas, déjalo coherente
       if (typeof schoolSelect !== "undefined" && schoolSelect && groupingMode === 'school'){
@@ -33182,11 +33438,7 @@ window.addEventListener("resize", ()=> setTimeout(sendEmbedHeight, 50));
     networkBtn.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const select = document.getElementById('groupBySelect');
-      if (select){
-        select.value = 'network';
-        select.dispatchEvent(new Event('change', { bubbles:true }));
-      }
+      document.getElementById('libraryNetworkViewButton')?.click();
       setOpen(false);
     });
   }
