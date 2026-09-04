@@ -2246,6 +2246,40 @@ button.school-editorialTimelineLabel:focus-visible{
   font-weight:520;
   line-height:1.35;
 }
+.school-editorialTimeline--all .school-editorialTimelineItem::before{
+  background:color-mix(in srgb,var(--timeline-item-color,var(--schoolColor,#D9AA3F)) 72%,rgba(244,238,228,0.34));
+}
+.school-editorialTimeline--all .school-editorialTimelineItem.is-decade-start::before{
+  border-color:var(--timeline-item-color,var(--schoolColor,#D9AA3F));
+  background:#0c0a0d;
+}
+.school-editorialTimeline--all button.school-editorialTimelineLabel:hover,
+.school-editorialTimeline--all button.school-editorialTimelineLabel:focus-visible{
+  color:color-mix(in srgb,var(--timeline-item-color,var(--schoolColor,#D9AA3F)) 72%,#ffffff 28%);
+  text-shadow:0 0 24px color-mix(in srgb,var(--timeline-item-color,var(--schoolColor,#D9AA3F)) 20%,transparent);
+}
+.school-editorialTimelineSource{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  width:fit-content;
+  margin-top:10px;
+  color:color-mix(in srgb,var(--timeline-item-color,var(--schoolColor,#D9AA3F)) 72%,rgba(244,238,228,0.58));
+  font-family:'Space Grotesk',monospace;
+  font-size:.58rem;
+  font-weight:650;
+  letter-spacing:.12em;
+  line-height:1.35;
+  text-transform:uppercase;
+}
+.school-editorialTimelineSource::before{
+  content:"";
+  width:6px;
+  height:6px;
+  flex:0 0 auto;
+  border-radius:50%;
+  background:var(--timeline-item-color,var(--schoolColor,#D9AA3F));
+}
 .school-editorialTimelineMore{
   display:grid;
   grid-template-columns:228px 104px minmax(0,1fr);
@@ -24641,7 +24675,7 @@ function setupModelSearch(){
 
 setupModelSearch();
 
-function renderSchoolModelTimeline(models){
+function renderSchoolModelTimeline(models, options = {}){
   const rows = (Array.isArray(models) ? models : [])
     .filter((m) => m && String(m.label || '').trim())
     .slice()
@@ -24677,13 +24711,18 @@ function renderSchoolModelTimeline(models){
     if (delta < 40) return 176;
     return 248;
   };
+  const timelineClass = options.variant === 'all' ? ' school-editorialTimeline--all' : '';
+  const timelineAria = options.aria || uiText('school.timeline.aria', 'Cronología de modelos');
+  const timelineKicker = options.kicker || uiText('school.timeline.kicker', 'Cronología');
+  const timelineTitle = options.title || uiText('school.modelsTitle', 'Modelos de la escuela');
+  const showGroup = options.showGroup === true;
 
   return `
-    <section class="school-editorialTimeline" aria-label="${escapeHtml(uiText('school.timeline.aria', 'Cronología de modelos'))}">
+    <section class="school-editorialTimeline${timelineClass}" aria-label="${escapeHtml(timelineAria)}">
       <div class="school-editorialTimelineHead">
         <div>
-          <p class="school-editorialTimelineKicker">${escapeHtml(uiText('school.timeline.kicker', 'Cronología'))}</p>
-          <h2 class="school-editorialTimelineTitle">${escapeHtml(uiText('school.modelsTitle', 'Modelos de la escuela'))}</h2>
+          <p class="school-editorialTimelineKicker">${escapeHtml(timelineKicker)}</p>
+          <h2 class="school-editorialTimelineTitle">${escapeHtml(timelineTitle)}</h2>
         </div>
         <span class="school-editorialTimelineCount">${rows.length} ${escapeHtml(uiPlural('school.timeline.entry', rows.length, 'entrada', 'entradas'))}</span>
       </div>
@@ -24696,15 +24735,20 @@ function renderSchoolModelTimeline(models){
           const currentDecade = decadeLabel(model);
           const isDecadeStart = currentDecade !== lastDecadeKey;
           const physicalGap = gapForYear(year);
+          const itemStyles = [
+            physicalGap ? `--timeline-gap:${physicalGap}px` : '',
+            showGroup ? `--timeline-item-color:${colorForSchoolLabel(model.grupo)}` : ''
+          ].filter(Boolean).join(';');
           if (Number.isFinite(year) && year > 0) previousKnownYear = year;
           lastDecadeKey = currentDecade;
           return `
-            <li class="school-editorialTimelineItem${isDecadeStart ? ' is-decade-start' : ''}"${physicalGap ? ` style="--timeline-gap:${physicalGap}px"` : ''}>
+            <li class="school-editorialTimelineItem${isDecadeStart ? ' is-decade-start' : ''}"${itemStyles ? ` style="${escapeHtml(itemStyles)}"` : ''}>
               <span class="school-editorialTimelineDecade">${isDecadeStart ? currentDecade : ''}</span>
               <span class="school-editorialTimelineYear">${escapeHtml(yearText)}</span>
               <span>
                 <button type="button" class="school-editorialTimelineLabel" data-action="open-school-timeline-model" data-id="${escapeHtml(String(model.id || ''))}">${escapeHtml(model.label || uiText('common.model.one', 'Modelo'))}</button>
                 ${model.autores ? `<span class="school-editorialTimelineAuthors">${escapeHtml(model.autores)}</span>` : ''}
+                ${showGroup ? `<span class="school-editorialTimelineSource">${escapeHtml(navigationGroupDisplayLabel(model.grupo))}</span>` : ''}
               </span>
             </li>
           `;
@@ -24712,6 +24756,18 @@ function renderSchoolModelTimeline(models){
       </ol>
     </section>
   `;
+}
+
+function bindEditorialModelTimeline(root = modelInfoEl){
+  if (!root) return;
+  root.querySelectorAll('[data-action="open-school-timeline-model"]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const id = String(button.getAttribute('data-id') || '').trim();
+      if (!id) return;
+      await openModel(id);
+    });
+  });
+  hydrateTimelineMotion(root, document.querySelector('.panel.right'));
 }
 
 function normalizeScoreToFour(raw){
@@ -26287,15 +26343,7 @@ if (window.__SMH){
     </article>
   `;
 
-  modelInfoEl.querySelectorAll('[data-action="open-school-timeline-model"]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const id = String(btn.getAttribute('data-id') || '').trim();
-      if (!id) return;
-      await openModel(id);
-    });
-  });
-
-  hydrateTimelineMotion(modelInfoEl, document.querySelector('.panel.right'));
+  bindEditorialModelTimeline(modelInfoEl);
 
   modelInfoEl.classList.remove('is-loading', 'school-swipe-out-left', 'school-swipe-out-right');
   resetRightPanelToTop();
@@ -26347,6 +26395,13 @@ function renderAllModelsOverviewHtml(){
       meta:uiText('overview.all.network.meta', 'Vista relacional')
     }
   ];
+  const timeline = renderSchoolModelTimeline(models, {
+    variant:'all',
+    showGroup:true,
+    aria:uiText('overview.all.timeline.aria', 'Cronología de todos los modelos'),
+    kicker:uiText('overview.all.timeline.kicker', 'Historia de la psicoterapia'),
+    title:uiText('overview.all.timeline.title', 'Timeline general')
+  });
 
   return `
     <article class="school-editorial tags-editorial" style="--schoolColor:#D9AA3F">
@@ -26380,6 +26435,8 @@ function renderAllModelsOverviewHtml(){
           <div class="school-editorialCta">${escapeHtml(uiText('overview.all.cta', 'Recorre la cronología de la izquierda o elige otra clasificación para cambiar el punto de vista.'))}</div>
         </div>
       </div>
+
+      ${timeline}
 
       <section class="school-editorialBody tags-editorialBody">
         <div class="school-editorialSectionHead">
@@ -30405,6 +30462,7 @@ function markModelAsPublicView(model){
         rightPanel.style.setProperty('--panelGlow', hexToRgba(allColor, 0.18));
       }
       modelInfoEl.innerHTML = renderAllModelsOverviewHtml();
+      bindEditorialModelTimeline(modelInfoEl);
       return;
     }
 
