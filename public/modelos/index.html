@@ -24954,6 +24954,10 @@ function setupTagFilters(){
     if (input.checked) selected.add(input.value);
     else selected.delete(input.value);
     updateTagFilterUi();
+    if (input.checked){
+      const facet = input.closest('.tagFacet');
+      if (facet) facet.open = false;
+    }
     applyTagFilterChange();
   });
 
