@@ -93,10 +93,11 @@
   }
 
   function updateLanguageLinks(root = document) {
-    const modelId = getModelId();
+    const params = new URLSearchParams(location.search || '');
+    const modelId = getModelId() || params.get('open') || '';
     root.querySelectorAll('[data-locale-link]').forEach((link) => {
       const targetLocale = normalizeLocale(link.dataset.localeLink);
-      link.href = buildModelPath(modelId, targetLocale);
+      link.href = buildModelPath(modelId, targetLocale) + (params.toString() ? `?${params}` : '');
       if (targetLocale === currentLocale) {
         link.setAttribute('aria-current', 'page');
       } else {

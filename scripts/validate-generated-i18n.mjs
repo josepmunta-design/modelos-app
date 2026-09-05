@@ -33,7 +33,7 @@ async function validate() {
     requireText(libraryHtml, 'property="og:locale" content="en_GB"', 'biblioteca inglesa', errors);
     requireText(libraryHtml, '"@type": "CollectionPage"', 'biblioteca inglesa', errors);
     requireText(libraryHtml, '"inLanguage": "en"', 'biblioteca inglesa', errors);
-    requireText(libraryHtml, '<h1>Psychotherapy Model Library</h1>', 'biblioteca inglesa', errors);
+    requireText(libraryHtml, '<h1>Atlas of psychotherapy</h1>', 'biblioteca inglesa', errors);
   } catch (error) {
     errors.push(`biblioteca inglesa: no se puede leer ${libraryPath}: ${error.message}`);
   }

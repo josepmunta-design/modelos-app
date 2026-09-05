@@ -1,0 +1,55 @@
+/* Card geometry and connection styles from the original Genealogy. */
+  .atlas-view-genealogy .tnode{cursor:pointer;transition:opacity .18s}
+  .atlas-view-genealogy .tnode rect{transition:.18s}
+  .atlas-view-genealogy .tnode .node-card{transition:width .34s cubic-bezier(.22,.8,.24,1);
+    filter:drop-shadow(0 3px 7px rgba(0,0,0,.32))}
+  .atlas-view-genealogy .tnode .tlabel{transition:opacity .16s ease}
+  .atlas-view-genealogy .tnode:hover .node-card{stroke-opacity:.95;filter:drop-shadow(0 5px 12px rgba(0,0,0,.42)) brightness(1.12)}
+  .atlas-view-genealogy .tlabel{font-family:'Spectral',serif;fill:var(--atlas-ink);pointer-events:none}
+  .atlas-view-genealogy .tsub{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;fill:var(--atlas-muted);
+    pointer-events:none;letter-spacing:.01em}
+  .atlas-view-genealogy .tsub .tsub-year{font-weight:600}
+  .atlas-view-genealogy .tyear{font-family:'Archivo',sans-serif;font-weight:600;fill:var(--bg);pointer-events:none}
+  .atlas-view-genealogy .tedge{fill:none;stroke-opacity:.55;stroke-width:1.4;transition:stroke-opacity .18s,opacity .18s}
+  .atlas-view-genealogy .tedge.sec{stroke-opacity:.24;stroke-width:1;stroke-dasharray:3 4}
+  .atlas-view-genealogy .tnode.dim{opacity:.14}
+  .atlas-view-genealogy .tedge.dim{opacity:.04}
+  .atlas-view-genealogy .tedge.lit{stroke-opacity:.95;stroke-width:2;stroke-dasharray:none;opacity:1}
+  .atlas-view-genealogy .tnode.lit{opacity:1}
+  .atlas-view-genealogy .tnode.lit rect{stroke:#fff;stroke-width:2}
+  .atlas-view-genealogy .cross-layer{pointer-events:none}
+  .atlas-view-genealogy .cross-link{fill:none;stroke-width:1.7;stroke-opacity:.82;stroke-dasharray:5 4}
+  .atlas-view-genealogy .cross-card{filter:drop-shadow(0 7px 12px rgba(0,0,0,.4));
+    transition:transform .34s cubic-bezier(.22,.8,.24,1)}
+  .atlas-view-genealogy .cross-card-bg{transition:width .34s cubic-bezier(.22,.8,.24,1)}
+  .atlas-view-genealogy .cross-layer.pinned-cross .cross-card{pointer-events:auto;cursor:pointer}
+  .atlas-view-genealogy .cross-kicker{font-family:'Archivo',sans-serif;font-size:8px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;fill:var(--atlas-muted)}
+  .atlas-view-genealogy .cross-label{font-family:'Spectral',serif;font-size:10.5px;fill:var(--atlas-ink);
+    transition:opacity .16s ease}
+  /* influencias externas al repo: mismo formato pero en tono más leve */
+  .atlas-view-genealogy .cross-link.external{stroke-opacity:.45}
+  .atlas-view-genealogy .cross-kicker.external{fill:var(--atlas-muted)}
+  .atlas-view-genealogy .cross-label.external{fill:var(--atlas-muted)}
+  .atlas-view-genealogy .cross-layer.pinned-cross .cross-card.external{cursor:default}
+
+
+.atlas-view-genealogy { --genealogy-card:#191e25; }
+.atlas-view-genealogy .tlabel, .atlas-view-genealogy .cross-label { font-family:'Inter',-apple-system,'Segoe UI',sans-serif; font-weight:500; }
+.atlas-view-genealogy .cross-kicker { font-family:'Inter',-apple-system,'Segoe UI',sans-serif; }
+.theme-light .atlas-view-genealogy { --genealogy-card:#fffdf7; }
+.atlas-view-genealogy .school { position:absolute; top:0; overflow:visible; }
+.atlas-view-genealogy .school.cross-active { z-index:2; }
+.atlas-view-genealogy .school > svg { display:block; max-width:none; overflow:visible; }
+.atlas-view-genealogy .genealogy-school-heading { position:absolute; top:22px; left:50%; transform:translateX(-50%); width:500px; max-width:100%; color:var(--atlas-ink); }
+.atlas-view-genealogy .genealogy-school-heading > span { color:var(--school-accent); font:700 12px 'Inter',sans-serif; letter-spacing:.15em; }
+.atlas-view-genealogy .genealogy-school-heading h2 { font:400 38px 'Instrument Serif',Georgia,serif; margin:6px 0; color:inherit; }
+.atlas-view-genealogy .genealogy-school-heading p { font:11px 'Inter',sans-serif; color:var(--atlas-muted); }
+.atlas-view-genealogy .atlas-year line { stroke-dasharray:none; opacity:.45; }
+.atlas-view-genealogy .open-ficha-btn { cursor:pointer; }
+.atlas-view-genealogy .open-ficha-btn rect { fill:var(--atlas-accent); stroke:none; }
+.atlas-view-genealogy .open-ficha-btn text { fill:var(--atlas-bg); font:600 10px 'Inter',sans-serif; }
+.atlas-view-genealogy [role="button"]:focus-visible .node-card,
+.atlas-view-genealogy [role="button"]:focus-visible .cross-card-bg { stroke:var(--atlas-accent); stroke-width:3; stroke-opacity:1; }
+.theme-light .atlas-view-genealogy .tnode.lit .node-card { stroke:#635024; }
+.atlas-view-genealogy .atlas-genealogy-scroll { touch-action:pan-x pan-y; }

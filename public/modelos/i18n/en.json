@@ -13,7 +13,7 @@
   "library.group.network": "Network view",
   "library.view.label": "View",
   "library.view.list": "List",
-  "library.view.network": "Network",
+  "library.view.network": "Affinity network",
   "library.models": "Models",
   "library.openTimeline": "open timeline",
   "library.search": "Search models",
@@ -753,5 +753,8 @@
   ,"taxonomy.tagValue.insomnio": "Insomnia"
   ,"taxonomy.tagValue.construccionismo-social": "Social constructionism"
   ,"taxonomy.tagValue.toc": "OCD"
-  ,"school.other": "Other"
+  ,"school.other": "Other",
+  "atlas.library": "Library",
+  "atlas.theme": "Change theme",
+  "atlas.view": "Atlas view"
 }

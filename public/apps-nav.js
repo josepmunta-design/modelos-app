@@ -1,11 +1,27 @@
 (() => {
+  if (document.documentElement.classList.contains('atlas-enabled')) return;
   const NAV_ID = 'tmpsAppsNav';
   if (document.getElementById(NAV_ID)) return;
 
+  const isEnglish = String(location.pathname || '').startsWith('/en/');
+  const copy = isEnglish
+    ? {
+        navigation: 'Application navigation',
+        heading: 'Switch application',
+        current: 'Current',
+        home: 'Back to Home'
+      }
+    : {
+        navigation: 'Navegación entre aplicaciones',
+        heading: 'Cambiar de aplicación',
+        current: 'Actual',
+        home: 'Volver a la Home'
+      };
+
   const apps = [
-    { id: 'modelos', label: 'Biblioteca', href: '/modelos/' },
-    { id: 'genealogia', label: 'Genealogía', href: '/genealogia/' },
-    { id: 'mapamundi', label: 'Mapamundi', href: '/mapamundi/' },
+    { id: 'modelos', label: isEnglish ? 'Library' : 'Biblioteca', href: isEnglish ? '/en/models/' : '/modelos/' },
+    { id: 'genealogia', label: isEnglish ? 'Genealogy' : 'Genealogía', href: '/modelos/?view=genealogy' },
+    { id: 'mapamundi', label: isEnglish ? 'World map' : 'Mapamundi', href: '/modelos/?view=map' },
     { id: 'metamodelos', label: 'Metamodelos', href: '/metamodelos/' }
   ];
 
@@ -15,23 +31,23 @@
   const nav = document.createElement('nav');
   nav.id = NAV_ID;
   nav.dataset.open = 'false';
-  nav.setAttribute('aria-label', 'Navegación entre aplicaciones');
+  nav.setAttribute('aria-label', copy.navigation);
 
   const links = apps.map((app) => {
     const current = app.id === currentApp;
     return `
       <a class="tmps-apps-nav__link" href="${app.href}" role="menuitem"${current ? ' aria-current="page"' : ''}>
         <span>${app.label}</span>
-        ${current ? '<span class="tmps-apps-nav__current">Actual</span>' : ''}
+        ${current ? `<span class="tmps-apps-nav__current">${copy.current}</span>` : ''}
       </a>`;
   }).join('');
 
   nav.innerHTML = `
     <div class="tmps-apps-nav__panel" id="tmpsAppsNavPanel" role="menu" aria-labelledby="tmpsAppsNavButton">
-      <p class="tmps-apps-nav__heading">Cambiar de aplicación</p>
+      <p class="tmps-apps-nav__heading">${copy.heading}</p>
       <div class="tmps-apps-nav__links">${links}</div>
       <div class="tmps-apps-nav__home">
-        <a class="tmps-apps-nav__link" href="/" role="menuitem"><span>Volver a la Home</span></a>
+        <a class="tmps-apps-nav__link" href="/" role="menuitem"><span>${copy.home}</span></a>
       </div>
     </div>
     <button class="tmps-apps-nav__button" id="tmpsAppsNavButton" type="button"

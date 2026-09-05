@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev:atlas": "node scripts/dev-atlas.mjs",
+    "test:atlas": "node --test scripts/atlas.test.mjs",
     "build": "node scripts/build-model-pages.mjs && node scripts/validate-generated-i18n.mjs && node scripts/build-seo.mjs",
     "build:model-pages": "node scripts/build-model-pages.mjs",
     "validate:generated-i18n": "node scripts/validate-generated-i18n.mjs",

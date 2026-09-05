@@ -13,7 +13,7 @@
   "library.group.network": "Vista red",
   "library.view.label": "Vista",
   "library.view.list": "Lista",
-  "library.view.network": "Red",
+  "library.view.network": "Red de afinidades",
   "library.models": "Modelos",
   "library.openTimeline": "abrir timeline",
   "library.search": "Buscar modelos",
@@ -753,5 +753,8 @@
   ,"taxonomy.tagValue.insomnio": "Insomnio"
   ,"taxonomy.tagValue.construccionismo-social": "Construccionismo social"
   ,"taxonomy.tagValue.toc": "TOC"
-  ,"school.other": "Otros"
+  ,"school.other": "Otros",
+  "atlas.library": "Biblioteca",
+  "atlas.theme": "Cambiar tema",
+  "atlas.view": "Vista del Atlas"
 }

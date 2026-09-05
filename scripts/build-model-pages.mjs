@@ -631,7 +631,10 @@ async function prepareInteractiveTemplate() {
   let styleIndex = 0;
   let scriptIndex = 0;
 
-  if (!html.includes('getModelIdFromPath')) {
+  const bootstrap = html.includes('/modelos/legacy/bootstrap.js')
+    ? await fs.readFile(path.join(SOURCE_PUBLIC_DIR, 'modelos', 'legacy', 'bootstrap.js'), 'utf8')
+    : html;
+  if (!bootstrap.includes('getModelIdFromPath')) {
     throw new Error('La plantilla de la biblioteca no reconoce las rutas individuales de modelos.');
   }
 
@@ -776,8 +779,8 @@ export function renderModelPage(model, allModels, interactiveTemplate, localeCod
 export function renderEnglishLibraryPage(interactiveTemplate) {
   const url = `${BASE_URL}/en/models/`;
   const spanishUrl = `${BASE_URL}/modelos/`;
-  const title = 'Psychotherapy Model Library | Tu Mentor Psicología';
-  const description = 'Explore psychotherapy models, schools, change processes, clinical techniques, influences, and evidence in a bilingual living library.';
+  const title = 'Atlas of psychotherapy | Tu Mentor Psicología';
+  const description = 'Explore psychotherapy models through a shared library, world map, genealogy, and affinity network.';
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -817,7 +820,7 @@ export function renderEnglishLibraryPage(interactiveTemplate) {
   html = html.replace('</head>', '  <meta name="translation-status" content="reviewed">\n  <meta property="og:locale:alternate" content="es_ES">\n</head>');
   html = html.replace('</body>', `<noscript>
     <article class="seo-noscript" lang="en">
-      <h1>Psychotherapy Model Library</h1>
+      <h1>Atlas of psychotherapy</h1>
       <p>${escapeHtml(description)}</p>
       <p>Enable JavaScript to search, filter, and open the reviewed English model profiles.</p>
     </article>

@@ -66,12 +66,12 @@ test('la página inglesa genera metadatos, hreflang y noscript localizados', () 
 test('la portada inglesa se genera como página estática indexable', () => {
   const html = renderEnglishLibraryPage(TEMPLATE);
   assert.match(html, /<html lang="en" data-translation-status="reviewed">/);
-  assert.match(html, /Psychotherapy Model Library \| Tu Mentor Psicología/);
+  assert.match(html, /Atlas of psychotherapy \| Tu Mentor Psicología/);
   assert.match(html, /rel="canonical" href="https:\/\/apps\.tumentorpsicologia\.com\/en\/models\/"/);
   assert.match(html, /hreflang="es" href="https:\/\/apps\.tumentorpsicologia\.com\/modelos\/"/);
   assert.match(html, /hreflang="en" href="https:\/\/apps\.tumentorpsicologia\.com\/en\/models\/"/);
   assert.match(html, /"@type": "CollectionPage"/);
-  assert.match(html, /<h1>Psychotherapy Model Library<\/h1>/);
+  assert.match(html, /<h1>Atlas of psychotherapy<\/h1>/);
 });
 
 test('la fusión usada por el build conserva orden y claves canónicas', () => {
@@ -123,7 +123,7 @@ test('los diccionarios ES y EN conservan exactamente las mismas claves', async (
 
 test('todos los valores de tag declarados por la app tienen etiqueta localizada', async () => {
   const [html, es, en] = await Promise.all([
-    fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'index.html'), 'utf8'),
+    fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'legacy', 'library.js'), 'utf8'),
     fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'i18n', 'es.json'), 'utf8').then(JSON.parse),
     fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'i18n', 'en.json'), 'utf8').then(JSON.parse)
   ]);
@@ -137,12 +137,15 @@ test('todos los valores de tag declarados por la app tienen etiqueta localizada'
   assert.deepEqual(missing, []);
 });
 
-test('todos los scripts embebidos de la plantilla mantienen sintaxis válida', async () => {
+test('los scripts de la plantilla y sus archivos externos mantienen sintaxis válida', async () => {
   const html = await fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'index.html'), 'utf8');
   const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
     .filter(([, attributes, body]) => !/\bsrc\s*=/i.test(attributes) && !/application\/ld\+json/i.test(attributes) && body.trim())
     .map((match) => match[2]);
-  assert.ok(scripts.length >= 1);
+  for (const match of html.matchAll(/<script\b[^>]*src="(\/modelos\/legacy\/[^"?]+)(?:\?[^"]*)?"[^>]*><\/script>/g)) {
+    scripts.push(await fs.readFile(path.join(process.cwd(), 'public', match[1]), 'utf8'));
+  }
+  assert.ok(scripts.length >= 4);
   for (const script of scripts) assert.doesNotThrow(() => new Function(script));
 });
 
@@ -196,6 +199,7 @@ test('los enlaces de idioma conservan la ficha en enlaces directos y al navegar 
 
   vm.runInNewContext(source, {
     console,
+    URLSearchParams,
     CustomEvent: class CustomEvent {},
     document,
     fetch: async () => ({ ok: true, json: async () => ({}) }),
@@ -213,4 +217,8 @@ test('los enlaces de idioma conservan la ficha en enlaces directos y al navegar 
   listeners.get('popstate')();
   assert.equal(links[0].href, '/modelos/second-model');
   assert.equal(links[1].href, '/en/models/second-model');
+  location.pathname = '/modelos/';
+  location.search = '?view=map&open=freud&group=school&target=Psicoan%C3%A1lisis';
+  listeners.get('popstate')();
+  assert.equal(links[1].href, '/en/models/freud?view=map&open=freud&group=school&target=Psicoan%C3%A1lisis');
 });
