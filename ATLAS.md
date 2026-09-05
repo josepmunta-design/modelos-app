@@ -39,7 +39,9 @@ concretas (ficha, autenticación, clasificación) sin cambiar el contrato de vis
 
 ## Datos y ficha únicos
 
-Las vistas consumen el catálogo y el resultado filtrado de la biblioteca.
+Las vistas reutilizan el catálogo de la biblioteca. Genealogía muestra todas
+las escuelas, aunque la lista tenga una escuela o búsqueda seleccionada;
+Mapamundi mantiene el resultado filtrado de la biblioteca.
 Reutilizan sus peticiones autenticadas, cachés de escuelas y fichas públicas.
 Genealogía solicita únicamente el índice adicional de influencias. Mapamundi
 completa las coordenadas que faltan mediante la misma caché de fichas públicas,
@@ -77,8 +79,8 @@ a la izquierda y las salientes a la derecha, incluyendo referencias externas
 con sus nombres. Las relaciones de la misma escuela se resaltan en el árbol.
 
 Las tarjetas de otras escuelas permiten viajar hasta el modelo relacionado.
-Si un filtro ocultaba su escuela, esta se incorpora temporalmente al lienzo;
-«Volver al filtro» recupera el conjunto inicial sin cambiar los filtros compartidos.
+Todas las escuelas permanecen en el lienzo al seleccionar modelos o cambiar
+los filtros de la lista. «Recorrer escuela» desplaza la vista hasta la elegida.
 En escritorio se abre la ficha común al seleccionar; en móvil el primer toque
 fija las influencias y «Abrir ficha» abre esa misma ficha. Zoom, desplazamiento,
 tema y filtros siguen perteneciendo a la interfaz persistente del Atlas.

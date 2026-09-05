@@ -179,11 +179,12 @@ export async function createView(host, context) {
   scroll.addEventListener('keydown', event => { if (event.key === 'Escape') interaction?.clear(); });
   const resize = new ResizeObserver(() => { if (active && interaction?.pinned) focus(); }); resize.observe(scroll);
   return {
-    update(nextModels, state) {
+    update(_filteredModels, state) {
       const changed = selectedId !== state.modelId;
       const filters = `${state.group}:${state.target}:${state.query}`;
       if (filterSignature !== filters) { revealedSchools.clear(); filterSignature = filters; }
-      models = nextModels; selectedId = state.modelId; draw();
+      // Keep the complete genealogy visible when the library filters one school.
+      models = context.data.models(); selectedId = state.modelId; draw();
       if (changed) { if (selectedId) pin(selectedId); else interaction.clear(); if (active) focus(); }
     },
     activate() { active = true; draw(); if (selectedId) { pin(selectedId); focus(); } else if (!scroll.scrollLeft && layout.schools.length) scroll.scrollLeft = layout.schools[0].center * zoom - scroll.clientWidth / 2; },
