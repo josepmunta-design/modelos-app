@@ -1,6 +1,6 @@
 /* Atlas shell. Legacy ficha styles remain isolated in modelos/legacy. */
 .atlas-header, .atlas-stage, .atlas-profile-actions, .atlas-notice { display: none; }
-.atlas-enabled { --atlas-header-height: 118px; --atlas-sidebar-width: 320px; }
+.atlas-enabled { --atlas-header-height: 118px; --atlas-sidebar-width: var(--leftPanelW, 380px); }
 .atlas-enabled body { --atlas-bg: #111412; --atlas-surface: #191d19; --atlas-ink: #f0ece2; --atlas-muted: #b4b7ac; --atlas-line: #343b32; --atlas-accent: #cfb773; }
 .atlas-enabled body.theme-light { --atlas-bg: #f4f1e8; --atlas-surface: #fffdf7; --atlas-ink: #272e27; --atlas-muted: #62695f; --atlas-line: #d9dacc; --atlas-accent: #816929; }
 .atlas-enabled body { overflow: hidden; }
@@ -87,8 +87,8 @@
   .atlas-enabled body .app > .panel.right { display: none !important; }
   .atlas-enabled body.model-info-open:not([data-atlas-view="network"]) .app > .panel.right { display: block !important; inset: 0 !important; width: 100% !important; z-index: 700; }
   .atlas-enabled body[data-atlas-view="network"] .app > .panel.right { display: block !important; inset: 0 !important; width: 100% !important; }
-  .atlas-enabled body[data-atlas-view="network"].atlas-filters-open .app > .panel.left { display: block !important; width: min(320px, 92vw) !important; z-index: 710; background: var(--atlas-bg); }
-  .atlas-enabled .atlas-spatial.atlas-filters-open .app > .panel.left { width: min(320px, 92vw) !important; }
+  .atlas-enabled body[data-atlas-view="network"].atlas-filters-open .app > .panel.left { display: block !important; width: min(var(--atlas-sidebar-width), 92vw) !important; z-index: 710; background: var(--atlas-bg); }
+  .atlas-enabled .atlas-spatial.atlas-filters-open .app > .panel.left { width: min(var(--atlas-sidebar-width), 92vw) !important; }
   .atlas-enabled .atlas-spatial .atlas-stage { left: 0 !important; right: 0 !important; }
   .atlas-enabled .atlas-spatial.atlas-has-selection .app > .panel.right { inset: 0 !important; width: 100% !important; }
   .atlas-enabled #btnInfoFull { display: none !important; }

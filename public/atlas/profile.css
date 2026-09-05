@@ -6,7 +6,7 @@
 .atlas-enabled body .panel.left .leftTopSticky { flex:0 0 auto; position:relative; top:auto; }
 .atlas-enabled body .panel.left .modelsListCard { flex:1 0 220px; min-height:220px; display:flex; flex-direction:column; margin-bottom:0; }
 .atlas-enabled body .panel.left #modelsList { flex:1 1 auto; min-height:0; height:0; overflow:auto; }
-.atlas-enabled body .panel.left .schoolControls { display:grid; grid-template-columns:minmax(0,1fr); gap:9px; }
+.atlas-enabled body .panel.left .schoolControls { display:grid; grid-template-columns:minmax(0,0.95fr) minmax(0,1.35fr); gap:9px; align-items:end; }
 .atlas-enabled body .panel.left .schoolControls > * { min-width:0; max-width:100%; }
 .atlas-enabled body .panel.left .schoolControls select { width:100%; min-width:0; }
 .atlas-enabled body .panel.left .modelListHeader { flex-wrap:wrap; gap:8px; }
