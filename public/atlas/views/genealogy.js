@@ -1,5 +1,6 @@
 import { layoutGenealogy, genealogyRelations, CARD_WIDTH, CARD_HEIGHT, YEAR_SCALE, YEAR_TOP } from './genealogy-layout.js';
 import { createInteractions } from './genealogy-interactions.js';
+import { createMinimap } from './genealogy-minimap.js';
 import { modelYear } from '../data.js';
 import { text, escapeHtml, loadAsset } from '../ui.js';
 
@@ -31,11 +32,13 @@ export async function createView(host, context) {
   const scroll = host.querySelector('.atlas-genealogy-scroll'), world = host.querySelector('.atlas-genealogy-world'), size = host.querySelector('.atlas-genealogy-size');
   let zoom = 1, models = [], selectedId = '', signature = '', filterSignature = '', layout, active = false, interaction, contexts = new Map();
   const revealedSchools = new Set();
+  const minimap = createMinimap(host, scroll, () => zoom);
   const mobile = () => matchMedia('(max-width: 980px)').matches;
   function scale() {
     if (!layout) return;
     world.style.transform = `scale(${zoom})`; size.style.width = `${layout.width * zoom}px`; size.style.height = `${layout.height * zoom}px`;
     host.querySelector('[data-zoom]').textContent = `${Math.round(zoom * 100)}%`;
+    minimap.sync();
   }
   function zoomBy(factor) {
     const previous = zoom; zoom = Math.max(.3, Math.min(1.7, zoom * factor)); scale();
@@ -44,11 +47,12 @@ export async function createView(host, context) {
   }
   function focus(id = interaction?.pinned || selectedId) {
     const node = layout?.nodes.find(model => model.id === id);
-    if (node) scroll.scrollTo({ left: (node.x + node.width / 2) * zoom - scroll.clientWidth / 2, top: (node.y + node.height / 2) * zoom - scroll.clientHeight / 2, behavior: 'auto' });
+    const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+    if (node) scroll.scrollTo({ left: (node.x + node.width / 2) * zoom - scroll.clientWidth / 2, top: (node.y + node.height / 2) * zoom - scroll.clientHeight / 2, behavior });
   }
   function pin(id) {
     const ctx = contexts.get(id);
-    if (ctx) { interaction.pin(id, ctx); host.querySelector('[data-focus]').disabled = false; }
+    if (ctx) { interaction.pin(id, ctx); host.querySelector('[data-focus]').disabled = false; minimap.update(layout, context.color, id, rawEdges); }
   }
   function travelToNode(id) {
     const target = context.data.models().find(model => model.id === id);
@@ -151,6 +155,7 @@ export async function createView(host, context) {
     host.querySelector('[role="status"]').textContent = status;
     host.querySelector('[data-focus]').disabled = !contexts.has(interaction?.pinned || selectedId);
     host.querySelector('[data-reset]').hidden = !revealedSchools.size;
+    minimap.update(layout, context.color, interaction?.pinned || selectedId, rawEdges);
   }
   host.querySelector('[data-plus]').addEventListener('click', () => zoomBy(1.2));
   host.querySelector('[data-minus]').addEventListener('click', () => zoomBy(1 / 1.2));
@@ -177,7 +182,7 @@ export async function createView(host, context) {
   scroll.addEventListener('pointercancel', () => { drag = null; scroll._suppressClick = false; });
   scroll.addEventListener('click', event => { if (!scroll._suppressClick && !event.target.closest('[role="button"],.cross-card')) interaction?.clear(); scroll._suppressClick = false; });
   scroll.addEventListener('keydown', event => { if (event.key === 'Escape') interaction?.clear(); });
-  const resize = new ResizeObserver(() => { if (active && interaction?.pinned) focus(); }); resize.observe(scroll);
+  const resize = new ResizeObserver(() => { minimap.sync(); if (active && interaction?.pinned) focus(); }); resize.observe(scroll);
   return {
     update(_filteredModels, state) {
       const changed = selectedId !== state.modelId;
@@ -189,6 +194,6 @@ export async function createView(host, context) {
     },
     activate() { active = true; draw(); if (selectedId) { pin(selectedId); focus(); } else if (!scroll.scrollLeft && layout.schools.length) scroll.scrollLeft = layout.schools[0].center * zoom - scroll.clientWidth / 2; },
     deactivate() { active = false; },
-    destroy() { resize.disconnect(); interaction?.clear(); host.replaceChildren(); },
+    destroy() { resize.disconnect(); minimap.destroy(); interaction?.clear(); host.replaceChildren(); },
   };
 }

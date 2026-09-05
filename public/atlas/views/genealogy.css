@@ -53,3 +53,15 @@
 .atlas-view-genealogy [role="button"]:focus-visible .cross-card-bg { stroke:var(--atlas-accent); stroke-width:3; stroke-opacity:1; }
 .theme-light .atlas-view-genealogy .tnode.lit .node-card { stroke:#635024; }
 .atlas-view-genealogy .atlas-genealogy-scroll { touch-action:pan-x pan-y; }
+
+.genealogy-minimap { position:absolute; right:18px; bottom:48px; z-index:40; width:280px; max-width:calc(100% - 36px); color:var(--atlas-ink); background:color-mix(in srgb,var(--atlas-surface) 92%,transparent); border:1px solid var(--atlas-line); border-radius:12px; box-shadow:0 8px 28px #0003; backdrop-filter:blur(14px); overflow:hidden; }
+.genealogy-minimap summary { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:10px 12px; color:var(--atlas-muted); font:600 10px 'Inter',sans-serif; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; list-style:none; }
+.genealogy-minimap summary::-webkit-details-marker { display:none; }
+.genealogy-minimap summary::after { content:'+'; font-size:14px; line-height:1; }
+.genealogy-minimap[open] summary::after { content:'−'; }
+.genealogy-minimap:not([open]) { width:auto; }
+.genealogy-minimap svg { display:block; width:100%; height:112px; cursor:crosshair; touch-action:none; }
+.genealogy-minimap-viewport { fill:color-mix(in srgb,var(--atlas-accent) 12%,transparent); stroke:var(--atlas-accent); stroke-width:1.2; pointer-events:none; }
+.genealogy-minimap-selection { fill:var(--atlas-ink); stroke:var(--atlas-bg); stroke-width:1; pointer-events:none; }
+.genealogy-minimap summary:focus-visible,.genealogy-minimap svg:focus-visible { outline:2px solid var(--atlas-accent); outline-offset:-3px; }
+@media (max-width:980px) { .genealogy-minimap { right:12px; bottom:58px; width:240px; max-width:calc(100% - 24px); } .genealogy-minimap svg { height:96px; } }

@@ -85,6 +85,12 @@ En escritorio se abre la ficha común al seleccionar; en móvil el primer toque
 fija las influencias y «Abrir ficha» abre esa misma ficha. Zoom, desplazamiento,
 tema y filtros siguen perteneciendo a la interfaz persistente del Atlas.
 
+Los viajes a influencias de otras escuelas se desplazan suavemente hasta el nodo
+de destino y respetan la preferencia de movimiento reducido. El minimapa plegable
+muestra las escuelas, conexiones, selección y encuadre actual. Permite navegar
+con clic, arrastre y flechas del teclado; Inicio vuelve al origen. En móvil
+empieza plegado para dejar espacio al árbol y se mantiene sincronizado con el zoom.
+
 ## Desarrollo y validación
 
 En Windows: `npm.cmd run dev:atlas` (o `npm run dev:atlas` en otras shells).
