@@ -17108,6 +17108,12 @@ body.network-mode{
   --network-gold:#caae68;
 }
 
+/* La navegación sticky pertenece a la ficha de modelo. Una URL con `open=`
+   puede mantenerla montada al entrar en la red, pero nunca debe asomar aquí. */
+body.network-mode #stickyModelHeader{
+  display:none !important;
+}
+
 body.network-mode .networkView::before{
   opacity:.38;
   background-image:
@@ -17132,14 +17138,14 @@ body.network-mode .networkCanvas::before{
 }
 
 body.network-mode .networkHeader{
-  top:18px;
+  top:10px;
   left:24px !important;
   right:24px !important;
   display:grid;
-  gap:16px;
-  padding:18px 20px 17px;
+  gap:7px;
+  padding:9px 11px 10px;
   border:1px solid var(--network-hairline);
-  border-radius:18px;
+  border-radius:14px;
   background:linear-gradient(145deg, rgba(23,23,27,.95), rgba(15,15,18,.88));
   box-shadow:0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.035);
   backdrop-filter:blur(20px) saturate(112%);
@@ -17152,20 +17158,22 @@ body.network-mode.network-has-selection-card .networkHeader{
 
 .networkHeaderTop{
   display:flex;
-  align-items:flex-end;
+  align-items:center;
   justify-content:space-between;
-  gap:28px;
+  gap:18px;
 }
 
 .networkHeading{
-  display:grid;
-  gap:3px;
+  display:flex;
+  align-items:baseline;
+  gap:9px;
   min-width:0;
 }
 
 .networkEyebrow{
   color:var(--network-gold);
-  font:650 9px/1.2 'Space Grotesk', monospace;
+  flex:0 0 auto;
+  font:650 8px/1.2 'Space Grotesk', monospace;
   letter-spacing:.18em;
   text-transform:uppercase;
 }
@@ -17173,23 +17181,20 @@ body.network-mode.network-has-selection-card .networkHeader{
 body.network-mode .networkTitle{
   margin:0;
   color:var(--network-cream);
-  font:400 clamp(27px, 2.8vw, 42px)/.98 'Instrument Serif', Georgia, serif;
+  font:400 clamp(23px, 2vw, 30px)/.98 'Instrument Serif', Georgia, serif;
   letter-spacing:0;
 }
 
 body.network-mode .networkSub{
-  margin:3px 0 0;
-  max-width:62ch;
-  color:var(--network-muted);
-  font:500 12px/1.45 'Hanken Grotesk', system-ui, sans-serif;
+  display:none;
 }
 
 .networkModeSwitch{
   flex:0 0 auto;
   display:grid;
-  grid-template-columns:repeat(2, minmax(132px, 1fr));
-  gap:5px;
-  padding:4px;
+  grid-template-columns:repeat(2, minmax(98px, 1fr));
+  gap:3px;
+  padding:3px;
   border:1px solid var(--network-hairline);
   border-radius:13px;
   background:rgba(0,0,0,.18);
@@ -17198,28 +17203,26 @@ body.network-mode .networkSub{
 
 .networkModeButton{
   display:grid;
-  gap:2px;
-  min-height:48px;
-  padding:8px 12px;
+  gap:0;
+  min-height:30px;
+  padding:5px 9px;
   border:1px solid transparent;
   border-radius:9px;
   background:transparent;
   color:var(--network-muted);
   font-family:'Hanken Grotesk', system-ui, sans-serif;
-  text-align:left;
+  text-align:center;
   cursor:pointer;
   transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
 }
 
 .networkModeButton > span{
-  font-size:12px;
+  font-size:10.5px;
   font-weight:760;
 }
 
 .networkModeButton small{
-  font-size:9.5px;
-  line-height:1.25;
-  opacity:.62;
+  display:none;
 }
 
 .networkModeButton:hover{
@@ -17238,14 +17241,18 @@ body.network-mode .networkSub{
 
 body.network-mode .networkLegend{
   display:grid;
-  grid-template-columns:minmax(0, 1.65fr) minmax(250px, .9fr) auto;
+  grid-template-columns:minmax(0, 1.65fr) minmax(280px, .9fr);
   align-items:stretch;
-  gap:10px;
+  gap:7px;
 }
 
 .networkFilterGroup{
   min-width:0;
-  padding:10px 11px 11px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  overflow:hidden;
+  padding:5px 7px;
   border:1px solid rgba(242,236,223,.09);
   border-radius:12px;
   background:rgba(255,255,255,.018);
@@ -17259,21 +17266,23 @@ body.network-mode .networkLegend{
 }
 
 .networkFilterGroupHead{
+  flex:0 0 auto;
   justify-content:space-between;
-  margin-bottom:8px;
+  gap:7px;
+  margin-bottom:0;
 }
 
 .networkFilterGroup h3{
   margin:0;
   color:rgba(242,236,223,.72);
-  font:650 9px/1.2 'Space Grotesk', monospace;
+  font:650 8px/1.2 'Space Grotesk', monospace;
   letter-spacing:.14em;
   text-transform:uppercase;
 }
 
 .networkFilterCount{
   color:rgba(242,236,223,.38);
-  font:600 9px/1 'Space Grotesk', monospace;
+  font:600 8px/1 'Space Grotesk', monospace;
 }
 
 .networkFilterScopeAction{
@@ -17281,7 +17290,7 @@ body.network-mode .networkLegend{
   border:0;
   background:transparent;
   color:rgba(242,236,223,.46);
-  font:650 9px/1.2 'Space Grotesk', monospace;
+  font:650 8px/1.2 'Space Grotesk', monospace;
   letter-spacing:.04em;
   cursor:pointer;
 }
@@ -17294,20 +17303,27 @@ body.network-mode .networkLegend{
 
 .networkFilterChips{
   display:flex;
-  flex-wrap:wrap;
-  gap:5px;
+  min-width:0;
+  flex:1 1 auto;
+  flex-wrap:nowrap;
+  gap:4px;
+  overflow-x:auto;
+  scrollbar-width:none;
 }
+
+.networkFilterChips::-webkit-scrollbar{ display:none; }
 
 body.network-mode .networkLegend .chip{
   position:relative;
-  min-height:26px;
-  padding:5px 9px;
+  flex:0 0 auto;
+  min-height:22px;
+  padding:4px 7px;
   border:1px solid color-mix(in srgb, var(--filter-color, var(--network-gold)) 32%, var(--network-hairline));
   border-radius:999px;
   background:color-mix(in srgb, var(--filter-color, var(--network-gold)) 9%, #17171a);
   color:rgba(242,236,223,.88);
   box-shadow:none;
-  font:650 9px/1.1 'Space Grotesk', monospace;
+  font:650 8px/1.1 'Space Grotesk', monospace;
   letter-spacing:.045em;
   text-transform:none;
 }
@@ -17338,8 +17354,7 @@ body.network-mode .networkLegend .dot{
 }
 
 .networkLegendReset{
-  display:flex;
-  align-items:flex-end;
+  display:none;
 }
 
 body.network-mode .networkLegend .chip.reset{
@@ -17421,23 +17436,22 @@ body.network-mode .panel.left .networkSelectionCard{
 }
 
 body.network-mode .networkModelGraphPanel{
-  top:224px;
-  max-height:calc(100vh - 244px);
+  top:122px;
+  max-height:calc(100vh - 142px);
 }
 
 @media (max-width: 1180px){
   body.network-mode .networkHeader{
-    gap:12px;
-    padding:14px;
+    gap:7px;
+    padding:9px 10px;
   }
   body.network-mode .networkLegend{
     grid-template-columns:minmax(0, 1fr) minmax(220px, .72fr);
   }
   .networkLegendReset{ display:none; }
-  .networkModeSwitch{ grid-template-columns:repeat(2, minmax(112px, 1fr)); }
-  .networkModeButton small{ display:none; }
-  .networkModeButton{ min-height:38px; }
-  body.network-mode .networkModelGraphPanel{ top:206px; max-height:calc(100vh - 226px); }
+  .networkModeSwitch{ grid-template-columns:repeat(2, minmax(96px, 1fr)); }
+  .networkModeButton{ min-height:30px; }
+  body.network-mode .networkModelGraphPanel{ top:122px; max-height:calc(100vh - 142px); }
 }
 
 @media (max-width: 980px){
@@ -17446,27 +17460,27 @@ body.network-mode .networkModelGraphPanel{
     top:10px;
     left:10px !important;
     right:10px !important;
-    gap:10px;
-    max-height:min(43vh, 330px);
+    gap:7px;
+    max-height:min(38vh, 250px);
     overflow:auto;
-    padding:12px;
-    border-radius:15px;
+    padding:8px;
+    border-radius:13px;
     scrollbar-width:thin;
   }
   .networkHeaderTop{
     align-items:stretch;
-    gap:12px;
+    gap:8px;
   }
   .networkHeading{ flex:1 1 auto; }
-  body.network-mode .networkTitle{ font-size:28px; }
+  body.network-mode .networkTitle{ font-size:24px; }
   body.network-mode .networkSub{ display:none; }
   .networkModeSwitch{
     align-self:center;
     grid-template-columns:repeat(2, auto);
   }
   .networkModeButton{
-    min-height:34px;
-    padding:7px 9px;
+    min-height:30px;
+    padding:5px 8px;
   }
   .networkModeButton > span{ font-size:10.5px; }
   body.network-mode .networkLegend{
@@ -17474,13 +17488,12 @@ body.network-mode .networkModelGraphPanel{
     gap:7px;
   }
   .networkFilterGroup{
-    padding:8px 9px 9px;
+    padding:5px 7px;
   }
-  .networkFilterGroupHead{ margin-bottom:6px; }
   body.network-mode .networkLegend .chip{
-    min-height:28px;
-    padding:5px 8px;
-    font-size:8.5px;
+    min-height:22px;
+    padding:4px 7px;
+    font-size:8px;
   }
   .atlas-enabled body.network-mode.network-has-selection-card .app > .panel.left{
     display:none !important;
