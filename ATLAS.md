@@ -1,8 +1,9 @@
 # Atlas de la psicoterapia
 
 La biblioteca (`/modelos/`, y `/en/models/` en inglés) es ahora la interfaz
-persistente del Atlas. Lista, Red de afinidades, Mapamundi y Genealogía cambian
-de perspectiva dentro del mismo documento. Metamodelos mantiene su enlace
+persistente del Atlas. Entrar por su URL limpia abre el portal de inicio, que
+presenta las cuatro perspectivas; a partir de ahí Lista, Red de afinidades,
+Mapamundi y Genealogía cambian de perspectiva dentro del mismo documento. Metamodelos mantiene su enlace
 como sección independiente; Quiz e Isomorfismos no se han incorporado todavía.
 
 El HTML completo de la biblioteca anterior se conserva, sin modificaciones, en
@@ -19,6 +20,8 @@ El HTML completo de la biblioteca anterior se conserva, sin modificaciones, en
 - `public/modelos/legacy/library.js`: carga y cachés existentes, clasificación,
   red y renderizado de fichas. `atlasLibrary` delimita el adaptador público.
 - `public/modelos/legacy/navigation.js`: tema y utilidades existentes.
+- `public/atlas/portal.js` y `portal.css`: portal de inicio. Se carga como módulo
+  desde la cabecera para pintar antes que el Atlas y no depende de él.
 - `public/atlas/atlas.js`: coordinación de vistas, selección, historial y ficha.
 - `public/atlas/state.js`: estado compartido y serialización de URLs.
 - `public/atlas/data.js`: acceso al catálogo común, coordenadas e influencias.
@@ -59,11 +62,31 @@ sus nombres y usando la mediana de coordenadas del catálogo completo; los filtr
 no desplazan sus centros. Al abrir una ficha desde un nodo se mantienen el zoom
 y el grupo desplegado. El fondo original permite activar los nombres del mapa.
 
+## Portal de inicio
+
+`/modelos/` sin parámetros es el portal: una pantalla propia con la cabecera
+editorial, las cifras reales del catálogo y cuatro tarjetas, una por vista. Cada
+tarjeta lleva una escena en canvas que anticipa su perspectiva —el índice, el
+grafo de afinidades, un globo ortográfico y un linaje que crece sobre el eje
+temporal— y sube de intensidad al enfocarla o pasar el cursor. Las siluetas
+continentales del globo se piden a `world-atlas` en reposo: si no llegan, queda
+la retícula. `prefers-reduced-motion` deja una sola imagen fija.
+
+El portal se monta desde la cabecera, antes que `atlas.js`, para aparecer sin
+esperar al catálogo. Si se elige una vista mientras el Atlas aún carga, la
+elección queda pendiente y `atlas.js` la recoge con `takePending()`; si el
+montaje nunca llega, la tarjeta navega por URL. Mientras el portal está abierto
+no escribe historial: la URL limpia le pertenece. Elegir una vista hace
+`pushState`, así que «atrás» vuelve al portal, y la marca de la cabecera lo
+reabre sin recargar. No se muestra con `?view=`, `?open=`, en `/modelos/<id>` ni
+en modo `embed`.
+
 ## Estado y compatibilidad
 
 Ejemplo: `/modelos/?view=map&group=school&target=Humanista&open=<id>`.
 
-- `view`: `list`, `network`, `map`, `genealogy`.
+- `view`: `list`, `network`, `map`, `genealogy`. Siempre viaja en la URL; su
+  ausencia identifica al portal.
 - `group`, `target`, `q`: clasificación, grupo y búsqueda.
 - `open`: modelo seleccionado.
 - Los filtros por tags y los controles particulares de cada vista permanecen
@@ -111,6 +134,7 @@ implementa pagos. Es una previsualización local, no el servidor de producción.
 - `MODEL_PAGES_OUTPUT_DIR` permite validar el build en una carpeta temporal sin
   sobrescribir páginas o sitemap locales.
 
-La verificación visual debe cubrir la selección Lista → Mapa → Genealogía,
+La verificación visual debe cubrir el portal y sus cuatro destinos, la selección
+Lista → Mapa → Genealogía,
 filtros compartidos, Atrás/Adelante, recarga del enlace, cambio de idioma, tema
 claro/oscuro, ficha en móvil y vuelta a la red existente.

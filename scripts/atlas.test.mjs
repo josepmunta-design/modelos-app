@@ -112,3 +112,13 @@ test('influence names and edges reuse one in-flight data request', async () => {
   assert.equal(names.get('a'), 'Theory A');
   assert.equal(reads, 1);
 });
+
+test('the clean library URL belongs to the portal; every view stays addressable', () => {
+  const store = createStore({});
+  assert.equal(routeUrl('https://example.test/modelos/', store.get()), '/modelos/?view=list');
+  assert.equal(routeUrl('https://example.test/modelos/', { ...store.get(), view: 'map' }, '/en/models/'), '/en/models/?view=map');
+  assert.equal(readRoute('/modelos/').view, 'list');
+  for (const view of ['list', 'network', 'map', 'genealogy']) {
+    assert.equal(readRoute(routeUrl('/modelos/', { ...store.get(), view })).view, view);
+  }
+});

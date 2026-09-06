@@ -15,7 +15,8 @@ export function routeUrl(url, state, libraryPath = '/modelos/') {
   const next = new URL(url, 'https://atlas.local');
   next.pathname = libraryPath;
   for (const key of ['view', 'group', 'target', 'q', 'open', 'school']) next.searchParams.delete(key);
-  if (state.view !== 'list') next.searchParams.set('view', state.view);
+  // La vista siempre viaja en la URL: la biblioteca sin `view` es el portal de inicio.
+  next.searchParams.set('view', state.view);
   if (state.group !== 'all') next.searchParams.set('group', state.group);
   if (state.target) next.searchParams.set('target', state.target);
   if (state.query) next.searchParams.set('q', state.query);

@@ -9,12 +9,14 @@ export async function mountAtlas(library) {
   const stage = document.getElementById('atlasStage'), notice = document.getElementById('atlasNotice');
   const panel = document.querySelector('.panel.right'), sidebar = document.querySelector('.panel.left');
   const header = document.getElementById('atlasHeader');
+  const portal = window.TMPS_ATLAS_PORTAL;
   const views = new Map(), loading = new Map();
   let transition = 0, applying = false, refreshQueued = false, profileFocus = null;
   const labels = { list: text('Lista', 'List'), network: text('Red de afinidades', 'Affinity network'), map: text('Mapamundi', 'World map'), genealogy: text('Genealogía', 'Genealogy') };
   const spatial = () => ['map', 'genealogy'].includes(store.get().view);
 
   function writeHistory(replace = false) {
+    if (portal?.isOpen()) return; // El portal es la URL limpia de la biblioteca.
     const state = store.get();
     const next = routeUrl(location.href, state, library.libraryPath());
     if (next !== location.pathname + location.search + location.hash) history[replace ? 'replaceState' : 'pushState']({ atlas: state }, '', next);
@@ -118,6 +120,7 @@ export async function mountAtlas(library) {
   }
   async function restoreRoute() {
     applying = true;
+    portal?.sync();
     const route = readRoute(location.href);
     route.modelId = library.modelIdFromPath() || route.modelId;
     store.set(route);
@@ -137,6 +140,12 @@ export async function mountAtlas(library) {
   }
   header.querySelector('.atlas-brand-title').textContent = text('Atlas de la psicoterapia', 'Atlas of psychotherapy');
   header.querySelector('.atlas-brand').href = library.libraryPath();
+  header.querySelector('.atlas-brand').addEventListener('click', event => {
+    if (!portal || event.metaKey || event.ctrlKey || event.shiftKey || event.button) return;
+    event.preventDefault();
+    history.pushState({ atlas: null }, '', library.libraryPath());
+    portal.open();
+  });
   header.querySelector('.atlas-sections').setAttribute('aria-label', text('Secciones del Atlas', 'Atlas sections'));
   stage.setAttribute('aria-label', text('Vista del Atlas', 'Atlas view'));
   document.getElementById('atlasViewLabel').textContent = text('Vista', 'View');
@@ -168,6 +177,17 @@ export async function mountAtlas(library) {
   window.addEventListener('pageshow', () => views.get(store.get().view)?.view.activate());
   library.hideWelcome();
   await library.restoreFilters(initial);
-  await setView(initial.view, { replace: true });
+  const models = library.models();
+  const years = models.map(model => Number.parseInt(model?.year, 10)).filter(year => year >= 1000 && year <= 2100);
+  portal?.setStats({
+    models: models.length,
+    schools: new Set(models.map(model => library.schoolLabel?.(model.grupo) || model.grupo).filter(Boolean)).size,
+    from: years.length ? Math.min(...years) : 0,
+    to: years.length ? Math.max(...years) : 0,
+  });
+  const chosen = portal?.takePending();
+  portal?.attach(view => { portal.close(); setView(view); });
+  if (chosen) { portal.close(); await setView(chosen); }
+  else await setView(initial.view, { replace: true });
   syncControls();
 }
