@@ -152,7 +152,6 @@ export async function mountAtlas(library) {
   document.getElementById('atlasViewMap').addEventListener('click', () => setView('map'));
   document.getElementById('atlasViewGenealogy').addEventListener('click', () => setView('genealogy'));
   document.getElementById('atlasCloseProfile').addEventListener('click', closeSelection);
-  document.getElementById('atlasThemeButton').addEventListener('click', () => document.getElementById('btnThemeToggle')?.click());
   document.getElementById('atlasFiltersButton').addEventListener('click', event => {
     if (!spatial() && store.get().view !== 'network' && store.get().modelId && matchMedia('(max-width: 980px)').matches) return closeSelection();
     const open = document.body.classList.toggle('atlas-filters-open'); event.currentTarget.setAttribute('aria-expanded', String(open));

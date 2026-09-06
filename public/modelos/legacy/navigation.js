@@ -39,7 +39,8 @@
   const qsTheme = String(new URLSearchParams(location.search).get('theme') || '').toLowerCase();
   const forcedTheme = (qsTheme === 'light' || qsTheme === 'dark') ? qsTheme : '';
   const savedTheme = localStorage.getItem(THEME_KEY);
-  applyTheme(forcedTheme || (savedTheme === 'light' ? 'light' : 'dark'));
+  const atlasUsesDarkTheme = document.documentElement.classList.contains('atlas-enabled');
+  applyTheme(atlasUsesDarkTheme ? 'dark' : (forcedTheme || (savedTheme === 'light' ? 'light' : 'dark')));
 
   const setOpen = (on) => {
     nav.classList.toggle('open', on);
