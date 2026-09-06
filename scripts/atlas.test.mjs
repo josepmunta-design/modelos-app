@@ -3,6 +3,32 @@ import assert from 'node:assert/strict';
 import { createStore, readRoute, routeUrl } from '../public/atlas/state.js';
 import { coordinates, createAtlasData, normalizeInfluences } from '../public/atlas/data.js';
 import { layoutGenealogy, genealogyRelations } from '../public/atlas/views/genealogy-layout.js';
+import { cityKey, cityCoordinates, nodeSize, clusterAppearance } from '../public/atlas/views/map-geometry.js';
+
+test('map city clusters use stable median coordinates without mutating catalog data', () => {
+  const models = [
+    { id: 'a', ciudad: 'París, Francia', pais: 'Francia', lat: 48, lon: 2 },
+    { id: 'b', ciudad: 'Paris', pais: 'FRANCIA', lat: 50, lon: 4 },
+    { id: 'c', ciudad: 'Paris', pais: 'Estados Unidos', lat: 33, lon: -95 },
+    { id: 'missing', ciudad: 'Paris', pais: 'Francia', lat: null, lon: 2 },
+  ];
+  const points = cityCoordinates(models);
+  assert.equal(cityKey(models[0]), cityKey(models[1]));
+  assert.deepEqual(points.get(cityKey(models[0])), [49, 3]);
+  assert.deepEqual(points.get(cityKey(models[2])), [33, -95]);
+  assert.deepEqual(cityCoordinates([...models].reverse()), points);
+  assert.equal(models[0].lat, 48);
+  assert.equal(cityKey({ pais: 'Francia' }), '');
+});
+
+test('map rings show school proportions and original cluster and node sizes', () => {
+  assert.deepEqual(clusterAppearance(['#aabbcc', '#112233', '#aabbcc', '#aabbcc']), {
+    size: 40, gradient: '#aabbcc 0.0deg 270.0deg, #112233 270.0deg 360.0deg',
+  });
+  assert.equal(clusterAppearance(Array(10).fill('#999')).size, 48);
+  assert.equal(clusterAppearance(Array(40).fill('#999')).size, 58);
+  assert.deepEqual([{}, { importance: -1 }, { importance: 2 }, { importance: 9 }].map(nodeSize), [15, 9, 15, 21]);
+});
 
 test('view changes retain classification, query and model; shared URLs round-trip', () => {
   const store = createStore({ group: 'school', target: 'Psicoanálisis', query: 'Freud', modelId: 'freud' });

@@ -1,8 +1,10 @@
 import { coordinates, modelYear } from '../data.js';
 import { text, escapeHtml, loadAsset } from '../ui.js';
+import { cityKey, cityCoordinates, nodeSize, clusterAppearance } from './map-geometry.js';
 
 export async function createView(host, context) {
   await Promise.all([
+    loadAsset('/atlas/views/map.css', 'style'),
     loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', 'style'),
     loadAsset('https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css', 'style'),
     loadAsset('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'),
@@ -13,6 +15,7 @@ export async function createView(host, context) {
     <div class="atlas-view-tools">
       <span>${text('El origen geográfico de las ideas', 'The geographical origin of ideas')}</span>
       <button type="button" data-fit>${text('Ver todos', 'Fit all')}</button>
+      <button type="button" data-labels aria-pressed="false">${text('Nombres del mapa', 'Map labels')}</button>
     </div>
     <div class="atlas-map-canvas" role="region" aria-label="${text('Mapa de modelos psicoterapéuticos', 'Map of psychotherapy models')}"></div>
     <div class="atlas-timebar">
@@ -23,23 +26,37 @@ export async function createView(host, context) {
       <button type="button" data-present>${text('Actualidad', 'Present')}</button>
     </div>
     <p class="atlas-view-status" role="status"></p>`;
-  const map = L.map(host.querySelector('.atlas-map-canvas'), { minZoom: 2, maxZoom: 18, worldCopyJump: true, zoomControl: true }).setView([28, 4], 2);
-  let tiles, tileTheme;
+  const map = L.map(host.querySelector('.atlas-map-canvas'), { minZoom: 2, maxZoom: 18, worldCopyJump: true, zoomControl: true,
+    zoomSnap: .2, zoomDelta: .6, wheelPxPerZoomLevel: 90, maxBounds: [[-72, -220], [84, 220]], maxBoundsViscosity: .6 }).setView([30, 5], 2.4);
+  map.attributionControl.setPrefix(false);
+  let tiles, tileTheme, labelTiles, labelsOn = false;
+  const tileOptions = {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19, updateWhenIdle: true, keepBuffer: 3,
+  };
+  const tileUrl = name => `https://{s}.basemaps.cartocdn.com/${name}/{z}/{x}/{y}{r}.png?key=cb1_2krb_1_7874140f2d0e9e2cc1e0781f`;
+  function labels() {
+    if (labelTiles) { map.removeLayer(labelTiles); labelTiles = null; }
+    if (labelsOn) labelTiles = L.tileLayer(tileUrl(`${tileTheme}_only_labels`), { ...tileOptions, pane: 'shadowPane' }).addTo(map);
+  }
   function theme() {
-    const next = document.body.classList.contains('theme-light') ? 'light_all' : 'dark_all';
+    const next = document.body.classList.contains('theme-light') ? 'light' : 'dark';
     if (next === tileTheme) return;
     tileTheme = next;
     if (tiles) map.removeLayer(tiles);
-    // Existing public basemap credential from the original Mapamundi app.
-    tiles = L.tileLayer(`https://{s}.basemaps.cartocdn.com/${next}/{z}/{x}/{y}{r}.png?key=cb1_2krb_1_7874140f2d0e9e2cc1e0781f`, {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: 'abcd', maxZoom: 20,
-    }).addTo(map);
+    tiles = L.tileLayer(tileUrl(`${next}_nolabels`), tileOptions).addTo(map);
+    labels();
   }
   theme();
   const clusters = L.markerClusterGroup({
-    showCoverageOnHover: false, maxClusterRadius: 42, spiderfyOnMaxZoom: true, animate: false,
-    iconCreateFunction: cluster => L.divIcon({ className: 'atlas-map-cluster', html: `<span>${cluster.getChildCount()}</span>`, iconSize: [38, 38] }),
+    chunkedLoading: true, showCoverageOnHover: false, maxClusterRadius: 46, spiderfyOnMaxZoom: true,
+    zoomToBoundsOnClick: true, animate: !matchMedia('(prefers-reduced-motion: reduce)').matches,
+    spiderLegPolylineOptions: { weight: 1, color: '#999', opacity: .4 },
+    iconCreateFunction: cluster => {
+      const { size, gradient } = clusterAppearance(cluster.getAllChildMarkers().map(marker => marker.options.atlasColor));
+      return L.divIcon({ className: `atlas-map-cluster atlas-map-cluster-${size}`, iconSize: [size, size],
+        html: `<div class="atlas-cluster-ring" style="background:conic-gradient(${escapeHtml(gradient)})"><span class="atlas-cluster-core">${cluster.getChildCount()}</span></div>` });
+    },
   }).addTo(map);
   let models = [], selectedId = '', markers = new Map(), signature = '', initialFit = false, timer = null, active = false;
   const slider = host.querySelector('input'), output = host.querySelector('output'), play = host.querySelector('[data-play]');
@@ -66,25 +83,32 @@ export async function createView(host, context) {
     output.textContent = slider.value;
     const located = models.filter(model => coordinates(model));
     const visible = located.filter(model => !modelYear(model) || modelYear(model) <= Number(slider.value));
-    const next = visible.map(model => `${model.id}:${coordinates(model)}`).join('|');
+    const cityPoints = cityCoordinates(context.data.models());
+    const pointFor = model => cityPoints.get(cityKey(model)) || coordinates(model);
+    const next = visible.map(model => `${model.id}:${pointFor(model)}`).join('|');
     if (next !== signature) {
-      signature = next; clusters.clearLayers(); markers = new Map();
-      const cityPoints = new Map();
+      signature = next;
+      const visibleIds = new Set(visible.map(model => model.id));
+      const remove = [], add = [];
+      for (const [id, marker] of markers) if (!visibleIds.has(id)) { remove.push(marker); markers.delete(id); }
       for (const model of visible) {
-        const city = `${model.ciudad || ''}|${model.pais || ''}`.toLocaleLowerCase();
-        if (model.ciudad && !cityPoints.has(city)) cityPoints.set(city, coordinates(model));
-        const point = model.ciudad ? cityPoints.get(city) : coordinates(model);
+        const point = pointFor(model), existing = markers.get(model.id);
+        if (existing?.getLatLng().equals(L.latLng(point))) continue;
+        if (existing) remove.push(existing);
+        const size = nodeSize(model), color = context.color(model.grupo);
         const marker = L.marker(point, {
-          title: model.label, keyboard: true,
-          icon: L.divIcon({ className: 'atlas-map-marker', html: `<span style="--marker-color:${escapeHtml(context.color(model.grupo))}"></span>`, iconSize: [22, 22] }),
+          title: model.label, alt: model.label, keyboard: true, atlasColor: color,
+          icon: L.divIcon({ className: 'atlas-map-marker', html: `<span style="--marker-color:${escapeHtml(color)}"></span>`, iconSize: [size, size] }),
         });
         const tooltip = document.createElement('div');
         tooltip.textContent = `${model.label} · ${model.ciudad || model.pais || ''}${modelYear(model) ? ` · ${modelYear(model)}` : ''}`;
         marker.bindTooltip(tooltip, { direction: 'top' });
-        marker.on('click', () => context.select(model.id));
-        markers.set(model.id, marker);
+        // A marker click keeps the current zoom and open fan of city nodes.
+        marker.on('click', () => { selectedId = model.id; context.select(model.id); });
+        markers.set(model.id, marker); add.push(marker);
       }
-      clusters.addLayers([...markers.values()]);
+      if (remove.length) clusters.removeLayers(remove);
+      if (add.length) clusters.addLayers(add);
     }
     if (active && !initialFit && visible.length) { fit(); initialFit = true; }
     for (const [id, marker] of markers) marker.getElement()?.classList.toggle('is-selected', id === selectedId);
@@ -100,6 +124,7 @@ export async function createView(host, context) {
   }
   slider.addEventListener('input', () => { stop(); draw(); });
   host.querySelector('[data-fit]').addEventListener('click', fit);
+  host.querySelector('[data-labels]').addEventListener('click', event => { labelsOn = !labelsOn; labels(); event.currentTarget.setAttribute('aria-pressed', String(labelsOn)); });
   host.querySelector('[data-present]').addEventListener('click', () => { stop(); slider.value = max; draw(); });
   play.addEventListener('click', () => {
     if (timer) return stop();

@@ -53,6 +53,12 @@ módulos. Los controles de acceso existentes de biblioteca y API se mantienen.
 Las dependencias de Leaflet se cargan al entrar en Mapamundi; la animación
 temporal se detiene al salir de la vista.
 
+Mapamundi conserva los anillos proporcionales por escuela, tamaños de nodos por
+importancia y expansión animada del original. Agrupa las ciudades normalizando
+sus nombres y usando la mediana de coordenadas del catálogo completo; los filtros
+no desplazan sus centros. Al abrir una ficha desde un nodo se mantienen el zoom
+y el grupo desplegado. El fondo original permite activar los nombres del mapa.
+
 ## Estado y compatibilidad
 
 Ejemplo: `/modelos/?view=map&group=school&target=Humanista&open=<id>`.
