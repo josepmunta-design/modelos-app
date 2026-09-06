@@ -32,7 +32,7 @@ export async function createView(host, context) {
   const scroll = host.querySelector('.atlas-genealogy-scroll'), world = host.querySelector('.atlas-genealogy-world'), size = host.querySelector('.atlas-genealogy-size');
   let zoom = 1, models = [], selectedId = '', signature = '', filterSignature = '', layout, active = false, interaction, contexts = new Map();
   const revealedSchools = new Set();
-  const minimap = createMinimap(host, scroll, () => zoom);
+  const minimap = createMinimap(host, scroll, () => zoom, context.schoolLabel);
   const mobile = () => matchMedia('(max-width: 980px)').matches;
   function scale() {
     if (!layout) return;

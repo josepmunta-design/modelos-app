@@ -1,4 +1,5 @@
 /* Mapamundi's original rings, node weights and basemap treatment. */
+.atlas-map-canvas .leaflet-tile { mix-blend-mode:normal !important; }
 .atlas-map-canvas .leaflet-tile-pane { filter:brightness(.92) contrast(1.02) sepia(.14) hue-rotate(-6deg) saturate(.85); }
 .theme-light .atlas-map-canvas .leaflet-tile-pane { filter:sepia(.22) saturate(.82) brightness(1.02) contrast(.97); }
 .atlas-map-canvas .atlas-map-marker,.atlas-map-canvas .atlas-map-cluster { background:none; border:none; box-shadow:none; }

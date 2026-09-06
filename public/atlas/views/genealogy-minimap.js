@@ -1,15 +1,15 @@
 import { text } from '../ui.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const WIDTH = 280, HEIGHT = 112, PAD = 8;
+const WIDTH = 460, HEIGHT = 126, PAD = 14, LABEL_SPACE = 19;
 const smooth = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 
-export function createMinimap(host, scroll, getZoom) {
+export function createMinimap(host, scroll, getZoom, schoolLabel = label => label) {
   const panel = document.createElement('details');
   panel.className = 'genealogy-minimap';
   panel.open = !matchMedia('(max-width: 980px)').matches;
   const summary = document.createElement('summary');
-  summary.textContent = text('Minimapa', 'Minimap');
+  summary.textContent = text('Vista general', 'Overview');
   const svg = document.createElementNS(NS, 'svg');
   svg.setAttribute('viewBox', `0 0 ${WIDTH} ${HEIGHT}`);
   svg.setAttribute('preserveAspectRatio', 'none');
@@ -35,19 +35,25 @@ export function createMinimap(host, scroll, getZoom) {
   function update(nextLayout, color, id, edges) {
     if (layout !== nextLayout) {
       layout = nextLayout; svg.replaceChildren();
-      sx = (WIDTH - PAD * 2) / layout.width; sy = (HEIGHT - PAD * 2) / layout.height;
+      sx = (WIDTH - PAD * 2) / layout.width; sy = (HEIGHT - PAD * 2 - LABEL_SPACE) / layout.height;
       for (const school of layout.schools) {
-        const band = node('rect', { x: PAD + school.x * sx, y: PAD, width: school.width * sx, height: HEIGHT - PAD * 2, fill: color(school.label), opacity: .09, rx: 2 });
-        const title = document.createElementNS(NS, 'title'); title.textContent = school.label; band.append(title);
+        const center = PAD + school.center * sx;
+        node('ellipse', { cx: center, cy: (HEIGHT - LABEL_SPACE) / 2, rx: school.width * sx * .28, ry: 18, fill: color(school.label), class: 'genealogy-minimap-glow' });
+        const label = node('text', { x: center, y: HEIGHT - 7, class: 'genealogy-minimap-label', 'text-anchor': 'middle', 'textLength': Math.min(school.width * sx + 3, schoolLabel(school.label).length * 3.5), lengthAdjust: 'spacingAndGlyphs' });
+        label.textContent = schoolLabel(school.label).toLocaleUpperCase();
+        const title = document.createElementNS(NS, 'title'); title.textContent = schoolLabel(school.label); label.append(title);
       }
       const positions = new Map(layout.nodes.map(model => [model.id, { x: PAD + (model.x + model.width / 2) * sx, y: PAD + (model.y + model.height / 2) * sy, model }]));
       for (const edge of edges) {
         const from = positions.get(edge.from), to = positions.get(edge.to);
-        if (from && to && from.model.grupo === to.model.grupo) node('line', { x1: from.x, y1: from.y, x2: to.x, y2: to.y, stroke: color(to.model.grupo), 'stroke-width': .5, opacity: .3 });
+        if (!from || !to) continue;
+        const sameSchool = from.model.grupo === to.model.grupo;
+        const middle = (from.y + to.y) / 2;
+        node('path', { d: `M${from.x},${from.y} C${from.x},${middle} ${to.x},${middle} ${to.x},${to.y}`, fill: 'none', stroke: color(to.model.grupo), 'stroke-width': sameSchool ? .55 : .35, opacity: sameSchool ? .48 : .035 });
       }
-      for (const point of positions.values()) node('circle', { cx: point.x, cy: point.y, r: 1.2, fill: color(point.model.grupo), opacity: .85 });
-      marker = node('circle', { r: 3, class: 'genealogy-minimap-selection' });
-      viewport = node('rect', { class: 'genealogy-minimap-viewport', rx: 2 });
+      for (const point of positions.values()) node('circle', { cx: point.x, cy: point.y, r: .95, fill: color(point.model.grupo), opacity: .95 });
+      marker = node('circle', { r: 2.5, class: 'genealogy-minimap-selection' });
+      viewport = node('rect', { class: 'genealogy-minimap-viewport', rx: 1.5 });
     }
     selectedId = id;
     const selected = layout.nodes.find(model => model.id === selectedId);

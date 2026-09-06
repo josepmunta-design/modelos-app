@@ -35,16 +35,26 @@ export async function createView(host, context) {
     subdomains: 'abcd', maxZoom: 19, updateWhenIdle: true, keepBuffer: 3,
   };
   const tileUrl = name => `https://{s}.basemaps.cartocdn.com/${name}/{z}/{x}/{y}{r}.png?key=cb1_2krb_1_7874140f2d0e9e2cc1e0781f`;
+  function tileLayer(name, options = {}) {
+    const layer = L.tileLayer(tileUrl(name), { ...tileOptions, ...options });
+    // Fractional map/browser zoom can expose hairline gaps between raster tiles.
+    // Overlap only the image edges; Leaflet's geographic tile grid stays intact.
+    layer.on('tileload', ({ tile }) => {
+      const size = layer.getTileSize();
+      tile.style.width = `${size.x + 1}px`; tile.style.height = `${size.y + 1}px`;
+    });
+    return layer;
+  }
   function labels() {
     if (labelTiles) { map.removeLayer(labelTiles); labelTiles = null; }
-    if (labelsOn) labelTiles = L.tileLayer(tileUrl(`${tileTheme}_only_labels`), { ...tileOptions, pane: 'shadowPane' }).addTo(map);
+    if (labelsOn) labelTiles = tileLayer(`${tileTheme}_only_labels`, { pane: 'shadowPane' }).addTo(map);
   }
   function theme() {
     const next = document.body.classList.contains('theme-light') ? 'light' : 'dark';
     if (next === tileTheme) return;
     tileTheme = next;
     if (tiles) map.removeLayer(tiles);
-    tiles = L.tileLayer(tileUrl(`${next}_nolabels`), tileOptions).addTo(map);
+    tiles = tileLayer(`${next}_nolabels`).addTo(map);
     labels();
   }
   theme();

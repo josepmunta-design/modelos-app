@@ -54,14 +54,19 @@
 .theme-light .atlas-view-genealogy .tnode.lit .node-card { stroke:#635024; }
 .atlas-view-genealogy .atlas-genealogy-scroll { touch-action:pan-x pan-y; }
 
-.genealogy-minimap { position:absolute; right:18px; bottom:48px; z-index:40; width:280px; max-width:calc(100% - 36px); color:var(--atlas-ink); background:color-mix(in srgb,var(--atlas-surface) 92%,transparent); border:1px solid var(--atlas-line); border-radius:12px; box-shadow:0 8px 28px #0003; backdrop-filter:blur(14px); overflow:hidden; }
-.genealogy-minimap summary { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:10px 12px; color:var(--atlas-muted); font:600 10px 'Inter',sans-serif; letter-spacing:.12em; text-transform:uppercase; cursor:pointer; list-style:none; }
+.genealogy-minimap { position:absolute; right:20px; bottom:48px; z-index:40; width:460px; max-width:calc(100% - 40px); color:var(--atlas-ink); background:linear-gradient(155deg,#101411f5,#0c100ef5); border:1px solid color-mix(in srgb,var(--atlas-accent) 28%,var(--atlas-line)); border-radius:13px; box-shadow:0 14px 38px #0005,inset 0 1px 0 #ffffff05; backdrop-filter:blur(18px); overflow:hidden; }
+.genealogy-minimap summary { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:12px 14px 4px; color:var(--atlas-accent); font:600 10px 'Hanken Grotesk',sans-serif; letter-spacing:.17em; text-transform:uppercase; cursor:pointer; list-style:none; }
 .genealogy-minimap summary::-webkit-details-marker { display:none; }
-.genealogy-minimap summary::after { content:'+'; font-size:14px; line-height:1; }
+.genealogy-minimap summary::after { content:'+'; color:var(--atlas-ink); font-size:16px; font-weight:400; line-height:1; }
 .genealogy-minimap[open] summary::after { content:'−'; }
 .genealogy-minimap:not([open]) { width:auto; }
-.genealogy-minimap svg { display:block; width:100%; height:112px; cursor:crosshair; touch-action:none; }
-.genealogy-minimap-viewport { fill:color-mix(in srgb,var(--atlas-accent) 12%,transparent); stroke:var(--atlas-accent); stroke-width:1.2; pointer-events:none; }
-.genealogy-minimap-selection { fill:var(--atlas-ink); stroke:var(--atlas-bg); stroke-width:1; pointer-events:none; }
+.genealogy-minimap:not([open]) summary { padding-bottom:12px; }
+.genealogy-minimap svg { display:block; width:100%; height:126px; cursor:crosshair; touch-action:none; }
+.genealogy-minimap-glow { opacity:.09; filter:blur(7px); pointer-events:none; }
+.genealogy-minimap-label { fill:var(--atlas-muted); font:500 6px 'Hanken Grotesk',sans-serif; letter-spacing:.1em; }
+.genealogy-minimap-viewport { fill:color-mix(in srgb,var(--atlas-accent) 7%,transparent); stroke:#d7ba80; stroke-width:1.15; filter:drop-shadow(0 0 2px #d7ba8038); pointer-events:none; }
+.genealogy-minimap-selection { fill:#fff6df; stroke:var(--atlas-accent); stroke-width:1; filter:drop-shadow(0 0 3px #d7ba8070); pointer-events:none; }
+.theme-light .genealogy-minimap { background:linear-gradient(155deg,#fffdf7f5,#f1ecdef5); box-shadow:0 10px 30px #342b191a,inset 0 1px 0 #fff9; }
+.theme-light .genealogy-minimap-viewport { stroke:var(--atlas-accent); }
 .genealogy-minimap summary:focus-visible,.genealogy-minimap svg:focus-visible { outline:2px solid var(--atlas-accent); outline-offset:-3px; }
-@media (max-width:980px) { .genealogy-minimap { right:12px; bottom:58px; width:240px; max-width:calc(100% - 24px); } .genealogy-minimap svg { height:96px; } }
+@media (max-width:980px) { .genealogy-minimap { right:12px; bottom:58px; width:380px; max-width:calc(100% - 24px); } .genealogy-minimap svg { height:116px; } }
