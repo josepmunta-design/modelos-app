@@ -121,3 +121,50 @@
 @media (prefers-reduced-motion: reduce) {
   .atlas-enabled *, .atlas-enabled *::before, .atlas-enabled *::after { scroll-behavior: auto !important; }
 }
+
+/* La red conserva la navegación principal por botones también en pantallas
+   compactas; dentro de esta vista no se sustituye por un desplegable. */
+@media (max-width:1280px) {
+  .atlas-enabled body[data-atlas-view="network"] .atlas-views {
+    display:flex;
+    min-width:0;
+    margin-right:auto;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-views::-webkit-scrollbar { display:none; }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-views > .compactLabel { display:none; }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-mobile-view { display:none; }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle {
+    flex-wrap:nowrap;
+    min-width:max-content;
+  }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle button {
+    padding:9px 8px;
+    font-size:11px;
+  }
+}
+
+/* La red dibuja sobre todo el escenario. Su ficha contextual es un rail
+   superpuesto y no debe reservar espacio cuando está cerrada. */
+.atlas-enabled body.network-mode .app > .panel.right {
+  inset:0 !important;
+  width:100% !important;
+}
+
+@media (max-width:600px) {
+  .atlas-enabled body[data-atlas-view="network"] .atlas-header {
+    display:flex;
+    gap:10px;
+    padding:7px 58px 7px 12px;
+  }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-brand-title { font-size:20px; }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-brand-kicker { display:none; }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-views { grid-column:auto; grid-row:auto; }
+  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle button {
+    padding:8px 6px;
+    font-size:10px;
+  }
+  .atlas-enabled body[data-atlas-view="network"] #atlasFiltersButton,
+  .atlas-enabled body[data-atlas-view="network"] .atlasLocaleSwitch { display:none; }
+}

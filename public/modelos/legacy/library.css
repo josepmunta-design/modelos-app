@@ -17092,3 +17092,430 @@ html.public-library-access [data-action="subscribe-network-graph"],
 html.public-library-access [data-action="subscribe-public-model"]{
   display:none !important;
 }
+
+/* ================================================================
+   Red de afinidades · interfaz comparativa 2026
+   Esta capa solo compone controles y superficies. El SVG y sus
+   reglas de posicionamiento permanecen en la implementación original.
+   ================================================================ */
+body.network-mode{
+  --network-paper:#0d0d0f;
+  --network-panel:#151518;
+  --network-panel-strong:#1a1a1e;
+  --network-cream:#f2ecdf;
+  --network-muted:rgba(242,236,223,.62);
+  --network-hairline:rgba(242,236,223,.12);
+  --network-gold:#caae68;
+}
+
+body.network-mode .networkView::before{
+  opacity:.38;
+  background-image:
+    linear-gradient(90deg, rgba(242,236,223,.026) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(242,236,223,.018) 1px, transparent 1px);
+  background-size:80px 80px;
+}
+
+body.network-mode .networkCanvas{
+  background:
+    radial-gradient(70% 90% at 8% 18%, rgba(75,103,96,.15), transparent 68%),
+    radial-gradient(56% 72% at 92% 82%, rgba(92,78,118,.14), transparent 72%),
+    linear-gradient(145deg, #121215 0%, #0d0d0f 48%, #09090b 100%) !important;
+}
+
+body.network-mode .networkCanvas::before{
+  opacity:.44;
+  background:
+    linear-gradient(90deg, rgba(242,236,223,.028) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(242,236,223,.018) 1px, transparent 1px);
+  background-size:80px 80px;
+}
+
+body.network-mode .networkHeader{
+  top:18px;
+  left:24px !important;
+  right:24px !important;
+  display:grid;
+  gap:16px;
+  padding:18px 20px 17px;
+  border:1px solid var(--network-hairline);
+  border-radius:18px;
+  background:linear-gradient(145deg, rgba(23,23,27,.95), rgba(15,15,18,.88));
+  box-shadow:0 22px 70px rgba(0,0,0,.30), inset 0 1px 0 rgba(255,255,255,.035);
+  backdrop-filter:blur(20px) saturate(112%);
+  -webkit-backdrop-filter:blur(20px) saturate(112%);
+}
+
+body.network-mode.network-has-selection-card .networkHeader{
+  left:calc(var(--leftPanelW, 380px) + 24px) !important;
+}
+
+.networkHeaderTop{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:28px;
+}
+
+.networkHeading{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+
+.networkEyebrow{
+  color:var(--network-gold);
+  font:650 9px/1.2 'Space Grotesk', monospace;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+}
+
+body.network-mode .networkTitle{
+  margin:0;
+  color:var(--network-cream);
+  font:400 clamp(27px, 2.8vw, 42px)/.98 'Instrument Serif', Georgia, serif;
+  letter-spacing:0;
+}
+
+body.network-mode .networkSub{
+  margin:3px 0 0;
+  max-width:62ch;
+  color:var(--network-muted);
+  font:500 12px/1.45 'Hanken Grotesk', system-ui, sans-serif;
+}
+
+.networkModeSwitch{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:repeat(2, minmax(132px, 1fr));
+  gap:5px;
+  padding:4px;
+  border:1px solid var(--network-hairline);
+  border-radius:13px;
+  background:rgba(0,0,0,.18);
+  pointer-events:auto;
+}
+
+.networkModeButton{
+  display:grid;
+  gap:2px;
+  min-height:48px;
+  padding:8px 12px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:transparent;
+  color:var(--network-muted);
+  font-family:'Hanken Grotesk', system-ui, sans-serif;
+  text-align:left;
+  cursor:pointer;
+  transition:background .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.networkModeButton > span{
+  font-size:12px;
+  font-weight:760;
+}
+
+.networkModeButton small{
+  font-size:9.5px;
+  line-height:1.25;
+  opacity:.62;
+}
+
+.networkModeButton:hover{
+  color:var(--network-cream);
+  background:rgba(255,255,255,.035);
+}
+
+.networkModeButton.is-active{
+  border-color:rgba(202,174,104,.34);
+  background:linear-gradient(180deg, rgba(202,174,104,.14), rgba(202,174,104,.055));
+  color:var(--network-cream);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.networkModeButton.is-active small{ color:var(--network-gold); opacity:.82; }
+
+body.network-mode .networkLegend{
+  display:grid;
+  grid-template-columns:minmax(0, 1.65fr) minmax(250px, .9fr) auto;
+  align-items:stretch;
+  gap:10px;
+}
+
+.networkFilterGroup{
+  min-width:0;
+  padding:10px 11px 11px;
+  border:1px solid rgba(242,236,223,.09);
+  border-radius:12px;
+  background:rgba(255,255,255,.018);
+}
+
+.networkFilterGroupHead,
+.networkFilterTitleRow{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.networkFilterGroupHead{
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+
+.networkFilterGroup h3{
+  margin:0;
+  color:rgba(242,236,223,.72);
+  font:650 9px/1.2 'Space Grotesk', monospace;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+}
+
+.networkFilterCount{
+  color:rgba(242,236,223,.38);
+  font:600 9px/1 'Space Grotesk', monospace;
+}
+
+.networkFilterScopeAction{
+  padding:2px 0;
+  border:0;
+  background:transparent;
+  color:rgba(242,236,223,.46);
+  font:650 9px/1.2 'Space Grotesk', monospace;
+  letter-spacing:.04em;
+  cursor:pointer;
+}
+
+.networkFilterScopeAction:hover,
+.networkFilterScopeAction:focus-visible{
+  color:var(--network-gold);
+  outline:none;
+}
+
+.networkFilterChips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+}
+
+body.network-mode .networkLegend .chip{
+  position:relative;
+  min-height:26px;
+  padding:5px 9px;
+  border:1px solid color-mix(in srgb, var(--filter-color, var(--network-gold)) 32%, var(--network-hairline));
+  border-radius:999px;
+  background:color-mix(in srgb, var(--filter-color, var(--network-gold)) 9%, #17171a);
+  color:rgba(242,236,223,.88);
+  box-shadow:none;
+  font:650 9px/1.1 'Space Grotesk', monospace;
+  letter-spacing:.045em;
+  text-transform:none;
+}
+
+body.network-mode .networkLegend .chip:hover{
+  border-color:color-mix(in srgb, var(--filter-color, var(--network-gold)) 58%, rgba(242,236,223,.2));
+  background:color-mix(in srgb, var(--filter-color, var(--network-gold)) 15%, #17171a);
+}
+
+body.network-mode .networkLegend .chip.is-off{
+  opacity:.42;
+  border-color:rgba(242,236,223,.08);
+  background:rgba(255,255,255,.012);
+  color:rgba(242,236,223,.56);
+  box-shadow:none;
+}
+
+body.network-mode .networkLegend .chip.is-off .dot{
+  background:transparent !important;
+  border:1px solid var(--filter-color, rgba(242,236,223,.4));
+}
+
+body.network-mode .networkLegend .dot{
+  flex:0 0 auto;
+  width:7px;
+  height:7px;
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--filter-color, var(--network-gold)) 12%, transparent);
+}
+
+.networkLegendReset{
+  display:flex;
+  align-items:flex-end;
+}
+
+body.network-mode .networkLegend .chip.reset{
+  min-height:32px;
+  padding-inline:11px;
+  border-style:solid;
+  border-color:rgba(242,236,223,.12);
+  background:transparent;
+  color:rgba(242,236,223,.52);
+  white-space:nowrap;
+}
+
+body.network-mode .networkLegend .chip.reset.is-off{ opacity:.46; }
+body.network-mode .networkLegend .chip.reset.is-on{ color:var(--network-gold); }
+
+.networkEmpty{
+  position:absolute;
+  left:50%;
+  top:58%;
+  z-index:3;
+  width:min(360px, calc(100% - 36px));
+  padding:22px 24px;
+  transform:translate(-50%, -50%);
+  border:1px solid var(--network-hairline);
+  border-radius:16px;
+  background:rgba(17,17,20,.9);
+  color:var(--network-cream);
+  box-shadow:0 22px 58px rgba(0,0,0,.3);
+  text-align:center;
+}
+
+.networkEmpty[hidden]{ display:none !important; }
+
+.networkEmptyMark{
+  display:block;
+  width:34px;
+  height:34px;
+  margin:0 auto 13px;
+  border:1px solid rgba(202,174,104,.56);
+  border-radius:50%;
+  box-shadow:0 0 0 8px rgba(202,174,104,.06);
+}
+
+.networkEmpty strong{
+  font:400 24px/1.05 'Instrument Serif', Georgia, serif;
+}
+
+.networkEmpty p{
+  margin:8px 0 0;
+  color:var(--network-muted);
+  font:500 12px/1.5 'Hanken Grotesk', system-ui, sans-serif;
+}
+
+/* En esta perspectiva no se reutilizan los desplegables ni la lista lateral.
+   El rail aparece solo cuando aporta contexto sobre una selección. */
+.atlas-enabled body.network-mode .panel.left .leftTopSticky,
+.atlas-enabled body.network-mode .panel.left .modelsListCard{
+  display:none !important;
+}
+
+.atlas-enabled body.network-mode:not(.network-has-selection-card) .app > .panel.left{
+  display:none !important;
+}
+
+.atlas-enabled body.network-mode.network-has-selection-card .app > .panel.left{
+  display:block !important;
+  width:var(--leftPanelW, 380px) !important;
+  padding:18px 16px !important;
+  background:linear-gradient(180deg, rgba(15,15,18,.97), rgba(10,10,12,.95)) !important;
+  border-right:1px solid var(--network-hairline) !important;
+  box-shadow:18px 0 60px rgba(0,0,0,.32) !important;
+}
+
+body.network-mode .panel.left .networkSelectionCard{
+  margin:0;
+  max-height:calc(100% - 2px);
+  border-radius:18px;
+  background:linear-gradient(160deg, rgba(242,236,223,.035), transparent 42%), var(--network-paper);
+}
+
+body.network-mode .networkModelGraphPanel{
+  top:224px;
+  max-height:calc(100vh - 244px);
+}
+
+@media (max-width: 1180px){
+  body.network-mode .networkHeader{
+    gap:12px;
+    padding:14px;
+  }
+  body.network-mode .networkLegend{
+    grid-template-columns:minmax(0, 1fr) minmax(220px, .72fr);
+  }
+  .networkLegendReset{ display:none; }
+  .networkModeSwitch{ grid-template-columns:repeat(2, minmax(112px, 1fr)); }
+  .networkModeButton small{ display:none; }
+  .networkModeButton{ min-height:38px; }
+  body.network-mode .networkModelGraphPanel{ top:206px; max-height:calc(100vh - 226px); }
+}
+
+@media (max-width: 980px){
+  body.network-mode .networkHeader,
+  body.network-mode.network-has-selection-card .networkHeader{
+    top:10px;
+    left:10px !important;
+    right:10px !important;
+    gap:10px;
+    max-height:min(43vh, 330px);
+    overflow:auto;
+    padding:12px;
+    border-radius:15px;
+    scrollbar-width:thin;
+  }
+  .networkHeaderTop{
+    align-items:stretch;
+    gap:12px;
+  }
+  .networkHeading{ flex:1 1 auto; }
+  body.network-mode .networkTitle{ font-size:28px; }
+  body.network-mode .networkSub{ display:none; }
+  .networkModeSwitch{
+    align-self:center;
+    grid-template-columns:repeat(2, auto);
+  }
+  .networkModeButton{
+    min-height:34px;
+    padding:7px 9px;
+  }
+  .networkModeButton > span{ font-size:10.5px; }
+  body.network-mode .networkLegend{
+    grid-template-columns:1fr;
+    gap:7px;
+  }
+  .networkFilterGroup{
+    padding:8px 9px 9px;
+  }
+  .networkFilterGroupHead{ margin-bottom:6px; }
+  body.network-mode .networkLegend .chip{
+    min-height:28px;
+    padding:5px 8px;
+    font-size:8.5px;
+  }
+  .atlas-enabled body.network-mode.network-has-selection-card .app > .panel.left{
+    display:none !important;
+  }
+  body.network-mode .networkModelGraphPanel{
+    top:auto;
+    max-height:min(58vh, 520px);
+  }
+}
+
+@media (max-width: 560px){
+  body.network-mode .networkHeader{
+    max-height:min(42vh, 300px);
+  }
+  .networkHeaderTop{
+    display:grid;
+    grid-template-columns:1fr;
+  }
+  .networkHeading{
+    grid-template-columns:auto 1fr;
+    align-items:baseline;
+    gap:8px;
+  }
+  body.network-mode .networkTitle{ font-size:24px; }
+  .networkModeSwitch{
+    width:100%;
+    grid-template-columns:1fr 1fr;
+  }
+  .networkModeButton{ text-align:center; }
+  .networkFilterChips{
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+  .networkFilterChips::-webkit-scrollbar{ display:none; }
+  body.network-mode .networkLegend .chip{ flex:0 0 auto; }
+}

@@ -5526,6 +5526,8 @@ const NETWORK_GLOBAL_LAYOUT_CACHE = {
 };
     const NETWORK_FILTER_STATE = {
       activeSchools: new Set(),
+      knownSchools: new Set(),
+      schoolFiltersInitialized: false,
       minSimDelta: 0,
       query: '',
       selectedNodeId: '',
@@ -8714,8 +8716,8 @@ function disposeNetworkGraph(){
 
 function getNetworkSchoolList(){
   return uniq(
-    (window.TMPS_ATLAS ? getAtlasFilteredModels() : getAllModelsPool())
-      .filter(m => m && isModelVisibleInApp(m) && !isMarcoModel(m) && m.id && m.label)
+    getAllModelsPool()
+      .filter(m => m && isTherapyModel(m) && !isMarcoModel(m) && m.id && m.label)
       .map(m => String(m.grupo || 'Otros'))
       .filter(Boolean)
   );
@@ -8724,26 +8726,41 @@ function getNetworkSchoolList(){
 function ensureNetworkSchoolFilters(){
   const schools = getNetworkSchoolList();
   const active = NETWORK_FILTER_STATE.activeSchools;
+  const known = NETWORK_FILTER_STATE.knownSchools;
 
-  if (!active.size){
+  if (!NETWORK_FILTER_STATE.schoolFiltersInitialized){
     schools.forEach((s) => active.add(s));
-    return schools;
+    NETWORK_FILTER_STATE.schoolFiltersInitialized = true;
+  }else{
+    // Los grupos que llegan después de la carga inicial empiezan visibles, sin
+    // reactivar los que la persona ya ha apagado deliberadamente.
+    schools.forEach((s) => {
+      if (!known.has(s)) active.add(s);
+    });
   }
 
   for (const s of [...active]){
     if (!schools.includes(s)) active.delete(s);
   }
-  if (!active.size){
-    schools.forEach((s) => active.add(s));
-  }
+  known.clear();
+  schools.forEach((s) => known.add(s));
   return schools;
+}
+
+function getNetworkFilterGroups(){
+  const groups = ensureNetworkSchoolFilters();
+  return {
+    schools: groups.filter((group) => !collectionDefinitionForSchool(group)),
+    collections: groups.filter((group) => !!collectionDefinitionForSchool(group))
+  };
 }
 
 function updateNetworkLegendUi(){
   const legend = document.querySelector('.networkLegend');
   if (!legend) return;
   const active = NETWORK_FILTER_STATE.activeSchools;
-  const allSchools = getNetworkSchoolList();
+  const grouped = getNetworkFilterGroups();
+  const allSchools = [...grouped.schools, ...grouped.collections];
   legend.querySelectorAll('.chip[data-school]').forEach((chip) => {
     const school = String(chip.getAttribute('data-school') || '');
     const on = active.has(school);
@@ -8758,6 +8775,24 @@ function updateNetworkLegendUi(){
     resetBtn.classList.toggle('is-off', allOn);
     resetBtn.classList.toggle('is-on', !allOn);
   }
+
+  legend.querySelectorAll('[data-network-filter-scope]').forEach((button) => {
+    const scope = String(button.getAttribute('data-network-filter-scope') || '');
+    const values = grouped[scope] || [];
+    const enabled = values.filter((value) => active.has(value)).length;
+    const allOn = values.length > 0 && enabled === values.length;
+    button.textContent = allOn
+      ? uiText('network.hideAll', 'Ocultar todas')
+      : uiText('network.showAll', 'Mostrar todas');
+    button.setAttribute('aria-pressed', allOn ? 'true' : 'false');
+  });
+
+  legend.querySelectorAll('[data-network-filter-count]').forEach((counter) => {
+    const scope = String(counter.getAttribute('data-network-filter-count') || '');
+    const values = grouped[scope] || [];
+    const enabled = values.filter((value) => active.has(value)).length;
+    counter.textContent = `${enabled}/${values.length}`;
+  });
 }
 
 function bindNetworkLegendHandlers(){
@@ -8780,13 +8815,24 @@ function bindNetworkLegendHandlers(){
       active.add(school);
     }else{
       if (active.has(school)){
-        if (active.size <= 1) return; // evita quedarse sin nodos
         active.delete(school);
       }else{
         active.add(school);
       }
     }
 
+    updateNetworkLegendUi();
+    renderNetworkGraphLazy();
+  });
+
+  legend.addEventListener('click', (evt) => {
+    const scopeButton = evt.target.closest('[data-network-filter-scope]');
+    if (!scopeButton) return;
+    const scope = String(scopeButton.getAttribute('data-network-filter-scope') || '');
+    const values = getNetworkFilterGroups()[scope] || [];
+    const active = NETWORK_FILTER_STATE.activeSchools;
+    const allOn = values.length > 0 && values.every((value) => active.has(value));
+    values.forEach((value) => allOn ? active.delete(value) : active.add(value));
     updateNetworkLegendUi();
     renderNetworkGraphLazy();
   });
@@ -8804,26 +8850,55 @@ function bindNetworkLegendHandlers(){
 }
 
 function buildNetworkOverviewHtml(){
-  const schools = ensureNetworkSchoolFilters();
+  const grouped = getNetworkFilterGroups();
   const accessLocked = !hasNetworkGraphAccess();
-  const legends = schools.map((s) => {
+  const renderFilterChips = (groups) => groups.map((s) => {
     const c = colorForSchoolLabel(s);
     const on = NETWORK_FILTER_STATE.activeSchools.has(s);
-    return `<button type="button" class="chip ${on ? 'is-on' : 'is-off'}" data-school="${escapeHtml(s)}" aria-pressed="${on ? 'true' : 'false'}"><span class="dot" style="background:${escapeHtml(c)}"></span>${escapeHtml(navigationGroupDisplayLabel(s))}</button>`;
+    return `<button type="button" class="chip ${on ? 'is-on' : 'is-off'}" data-school="${escapeHtml(s)}" aria-pressed="${on ? 'true' : 'false'}" style="--filter-color:${escapeHtml(c)}"><span class="dot" style="background:${escapeHtml(c)}"></span><span>${escapeHtml(navigationGroupDisplayLabel(s))}</span></button>`;
   }).join('');
   const resetLegend = `<button type="button" class="chip reset" title="${escapeHtml(uiText('network.showAllGroups', 'Mostrar todos los grupos'))}">${escapeHtml(uiText('network.showAll', 'Mostrar todas'))}</button>`;
+  const activeMode = String(NETWORK_FILTER_STATE.profileMode || 'process');
+  const modeButtons = [
+    { id:'process', label:uiText('network.processes', 'Procesos'), desc:uiText('network.processesDescription', 'Afinidad por procesos de cambio') },
+    { id:'dimension', label:uiText('network.dimensions', 'Dimensiones'), desc:uiText('network.dimensionsDescription', 'Afinidad por dimensiones psicológicas') }
+  ].map((mode) => `
+    <button type="button" class="networkModeButton ${activeMode === mode.id ? 'is-active' : ''}" data-network-mode-control="${mode.id}" aria-pressed="${activeMode === mode.id ? 'true' : 'false'}">
+      <span>${escapeHtml(mode.label)}</span>
+      <small>${escapeHtml(mode.desc)}</small>
+    </button>
+  `).join('');
+  const filterGroup = (scope, title, groups) => {
+    const enabled = groups.filter((group) => NETWORK_FILTER_STATE.activeSchools.has(group)).length;
+    return `
+      <section class="networkFilterGroup networkFilterGroup-${scope}" aria-labelledby="network-filter-${scope}">
+        <div class="networkFilterGroupHead">
+          <div class="networkFilterTitleRow">
+            <h3 id="network-filter-${scope}">${escapeHtml(title)}</h3>
+            <span class="networkFilterCount" data-network-filter-count="${scope}">${enabled}/${groups.length}</span>
+          </div>
+          <button type="button" class="networkFilterScopeAction" data-network-filter-scope="${scope}" aria-pressed="${enabled === groups.length ? 'true' : 'false'}">${escapeHtml(enabled === groups.length ? uiText('network.hideAll', 'Ocultar todas') : uiText('network.showAll', 'Mostrar todas'))}</button>
+        </div>
+        <div class="networkFilterChips">${renderFilterChips(groups)}</div>
+      </section>
+    `;
+  };
 
   return `
     <div class="networkView">
       <div class="networkHeader">
-        <div class="networkLegend">${legends}${resetLegend}</div>
-        <div class="networkControlsBar">
-          <div class="networkControl">
-            <select id="networkProfileModeSelect" aria-label="${escapeHtml(uiText('network.graphMode', 'Modo del grafo'))}">
-              <option value="process" ${String(NETWORK_FILTER_STATE.profileMode || 'mixed') === 'process' ? 'selected' : ''}>${escapeHtml(uiText('network.processes', 'Procesos'))}</option>
-              <option value="dimension" ${String(NETWORK_FILTER_STATE.profileMode || 'mixed') === 'dimension' ? 'selected' : ''}>${escapeHtml(uiText('network.dimensions', 'Dimensiones'))}</option>
-            </select>
+        <div class="networkHeaderTop">
+          <div class="networkHeading">
+            <span class="networkEyebrow">${escapeHtml(uiText('library.group.network', 'Red de afinidades'))}</span>
+            <h2 class="networkTitle">${escapeHtml(uiText('network.compareTitle', 'Cartografía del cambio'))}</h2>
+            <p class="networkSub">${escapeHtml(uiText('network.compareIntro', 'Activa escuelas y colecciones para descubrir proximidades, contrastes y territorios compartidos.'))}</p>
           </div>
+          <div class="networkModeSwitch" role="group" aria-label="${escapeHtml(uiText('network.graphMode', 'Modo del grafo'))}">${modeButtons}</div>
+        </div>
+        <div class="networkLegend">
+          ${filterGroup('schools', uiText('library.group.school', 'Escuelas'), grouped.schools)}
+          ${filterGroup('collections', uiText('library.group.collection', 'Colecciones'), grouped.collections)}
+          <div class="networkLegendReset">${resetLegend}</div>
         </div>
       </div>
       <div class="networkCanvas ${accessLocked ? 'is-access-preview' : ''}" id="networkCanvas">
@@ -8837,6 +8912,11 @@ function buildNetworkOverviewHtml(){
           </div>
         </div>
         <div class="networkTooltip" id="networkTooltip"></div>
+        <div class="networkEmpty" id="networkEmpty" hidden role="status">
+          <span class="networkEmptyMark" aria-hidden="true"></span>
+          <strong>${escapeHtml(uiText('network.emptyTitle', 'No hay grupos activos'))}</strong>
+          <p>${escapeHtml(uiText('network.emptyText', 'Activa al menos una escuela o colección para volver a dibujar la red.'))}</p>
+        </div>
         ${accessLocked ? `
           <div class="networkAccessOverlay">
             <div class="networkAccessCard">
@@ -9250,7 +9330,7 @@ function buildNetwork3DData(){
   for (const [id, pos] of cache.positionsById.entries()){
     const meta = cache.nodeMetaById.get(id);
     if (!meta) continue;
-    if (activeSchools.size && !activeSchools.has(String(meta.grupo || 'Otros'))) continue;
+    if (NETWORK_FILTER_STATE.schoolFiltersInitialized && !activeSchools.has(String(meta.grupo || 'Otros'))) continue;
     if (query){
       const inLabel = normSearchText(meta.label).includes(query);
       const inAuthor = normSearchText(meta.autores || '').includes(query);
@@ -9746,12 +9826,12 @@ function buildNetworkData(){
   const activeSchools = NETWORK_FILTER_STATE.activeSchools;
   const mode = String(NETWORK_FILTER_STATE.profileMode || 'mixed');
   const query = normSearchText(NETWORK_FILTER_STATE.query || '');
-  const rawNodes = (window.TMPS_ATLAS ? getAtlasFilteredModels() : getAllModelsPool())
-    .filter(m => m && isModelVisibleInApp(m) && !isMarcoModel(m) && m.id && m.label)
+  const rawNodes = getAllModelsPool()
+    .filter(m => m && isTherapyModel(m) && !isMarcoModel(m) && m.id && m.label)
     .filter(m => modelHasNetworkProfileData(m, mode))
     .filter(m => {
       const g = String(m.grupo || 'Otros');
-      return !activeSchools.size || activeSchools.has(g);
+      return !NETWORK_FILTER_STATE.schoolFiltersInitialized || activeSchools.has(g);
     })
     .filter((m) => {
       if (!query) return true;
@@ -9863,8 +9943,10 @@ async function renderNetworkGraph(){
   if (threeMount) threeMount.hidden = true;
 
   const { nodes, links } = buildNetworkData();
+  const empty = document.getElementById('networkEmpty');
   if (!nodes.length){
     svgEl.innerHTML = '';
+    if (empty) empty.hidden = false;
     setNetworkLoading(false);
     NETWORK_FILTER_STATE.selectedNodeId = '';
     hideNetworkMobileGraphButton();
@@ -9872,6 +9954,7 @@ async function renderNetworkGraph(){
     renderNetworkSelectionCard(null);
     return;
   }
+  if (empty) empty.hidden = true;
 
   const svg = d3.select(svgEl);
   const size = () => {
@@ -10565,14 +10648,13 @@ function bindNetworkCompactControls(){
     });
   }
 
-  const modeSelect = document.getElementById('networkProfileModeSelect');
-  if (modeSelect && modeSelect.dataset.bound !== '1'){
-    modeSelect.dataset.bound = '1';
-    modeSelect.value = String(NETWORK_FILTER_STATE.profileMode || 'process');
-    modeSelect.addEventListener('change', () => {
-      applyNetworkProfileMode(modeSelect.value || 'process');
+  document.querySelectorAll('[data-network-mode-control]').forEach((button) => {
+    if (button.dataset.bound === '1') return;
+    button.dataset.bound = '1';
+    button.addEventListener('click', () => {
+      applyNetworkProfileMode(button.getAttribute('data-network-mode-control') || 'process');
     });
-  }
+  });
 }
 
 function ensureNetworkModelGraphHost(){
@@ -14806,6 +14888,7 @@ function summarizeModelForNetwork(model){
 function renderNetworkSelectionCard(model){
   if (!networkSelectionEl) return;
   if (!model || !model.id || groupingMode !== 'network'){
+    document.body.classList.remove('network-has-selection-card');
     networkSelectionEl.hidden = true;
     networkSelectionEl.innerHTML = '';
     networkSelectionEl.style.removeProperty('--schoolColor');
@@ -14823,6 +14906,7 @@ function renderNetworkSelectionCard(model){
   ].filter(Boolean);
   const schoolName = String(schoolDisplayLabel(model.grupo) || uiText('group.school', 'Escuela'));
 
+  document.body.classList.add('network-has-selection-card');
   networkSelectionEl.hidden = false;
   networkSelectionEl.style.setProperty('--schoolColor', schoolColor);
   networkSelectionEl.innerHTML = `
@@ -14854,6 +14938,7 @@ function renderNetworkSelectionCard(model){
 function renderNetworkZoneSelectionCard(zoneMetaRow, zoneModels){
   if (!networkSelectionEl) return;
   if (!zoneMetaRow || !groupingMode || groupingMode !== 'network'){
+    document.body.classList.remove('network-has-selection-card');
     networkSelectionEl.hidden = true;
     networkSelectionEl.innerHTML = '';
     networkSelectionEl.style.removeProperty('--schoolColor');
@@ -14869,6 +14954,7 @@ function renderNetworkZoneSelectionCard(zoneMetaRow, zoneModels){
     : uiText('overview.process.defaultTitle', 'Proceso');
   const rows = Array.isArray(zoneModels) ? zoneModels : [];
 
+  document.body.classList.add('network-has-selection-card');
   networkSelectionEl.hidden = false;
   networkSelectionEl.style.setProperty('--schoolColor', tint);
   networkSelectionEl.innerHTML = `
