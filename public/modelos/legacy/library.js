@@ -3731,6 +3731,8 @@ function bindSpecialModelModules(host){
    { key:'Transversal', color:'#5F7F78' },
    { key:'Psicodélicos', color:'#9575CD' },
    { key:'Fronteras', color:'#8D6E63' },
+   { key:'Terapias Expresivas y Creativas', color:'#C86B98' },
+   { key:'Arteterapia', color:'#C86B98' },
    { key:'Epistemología', color:'#D9AA3F' },
 
 
@@ -3819,6 +3821,11 @@ para comprender su lugar historico y sus riesgos, diferenciando recursos potenci
 teoricas que requieren cautela critica.`,
   keys: ['limite epistemologico', 'evidencia discutida', 'influencia cultural', 'uso prudente', 'riesgo de sugestion']
 },
+  'Terapias Expresivas y Creativas': {
+  subtitle: 'Creación, simbolización y experiencia artística como vías de cambio',
+  desc: `Esta colección reúne modelos que utilizan los lenguajes artísticos y expresivos como medios centrales de elaboración psicológica. Integra enfoques basados en artes visuales, movimiento, música, dramatización, escritura y otras formas creativas sin tratarlos como una escuela psicoterapéutica única.`,
+  keys: ['creación', 'simbolización', 'expresión', 'experiencia artística', 'integración']
+},
   'Epistemología': {
   subtitle: 'Marcos sobre conocimiento, sujeto, verdad y cambio',
   desc: `Las epistemologías explicitan los supuestos desde los que cada tradición comprende qué puede conocerse,
@@ -3848,6 +3855,8 @@ con la experiencia y la forma de vivirla.`,
 
 
 };
+
+SCHOOL_INFO_ES['Arteterapia'] = SCHOOL_INFO_ES['Terapias Expresivas y Creativas'];
 
 const SCHOOL_INFO_EN = {
   'Psicoanálisis': {
@@ -3930,6 +3939,12 @@ require critical caution.`,
     keys: ['epistemological boundary', 'contested evidence', 'cultural influence', 'prudent use', 'risk of suggestion']
   },
 
+  'Terapias Expresivas y Creativas': {
+  subtitle: 'Creation, symbolisation and artistic experience as pathways to change',
+  desc: `This collection brings together models that use artistic and expressive languages as central means of psychological elaboration. It includes approaches based on visual arts, movement, music, drama, writing and other creative forms without treating them as a single psychotherapy school.`,
+  keys: ['creation', 'symbolisation', 'expression', 'artistic experience', 'integration']
+  },
+
   'Epistemología': {
     subtitle: 'Frameworks for knowledge, subject, truth and change',
     desc: `Epistemologies make explicit the assumptions through which each tradition understands what can be known,
@@ -3957,6 +3972,8 @@ come from correcting symptoms or mental content, but from transforming one’s r
     ]
   }
 };
+
+SCHOOL_INFO_EN['Arteterapia'] = SCHOOL_INFO_EN['Terapias Expresivas y Creativas'];
 
 const SCHOOL_INFO = MODELOS_LOCALE === 'en' ? SCHOOL_INFO_EN : SCHOOL_INFO_ES;
 
@@ -5322,7 +5339,8 @@ async function ensureModelFull(m){
       { id:'transversal', sourceKeys:['transversal'], labelKey:'collection.transversal', fallback:'Transversales' },
       { id:'psychedelic', sourceKeys:['psicodelicos'], labelKey:'collection.psychedelic', fallback:'Psicodélicos' },
       { id:'frontiers', sourceKeys:['fronteras'], labelKey:'collection.frontiers', fallback:'Fronteras' },
-      { id:'cultural-traditions', sourceKeys:['otros'], labelKey:'collection.culturalTraditions', fallback:'Tradiciones culturales' }
+      { id:'cultural-traditions', sourceKeys:['otros'], labelKey:'collection.culturalTraditions', fallback:'Tradiciones culturales' },
+      { id:'expressive-creative', sourceKeys:['terapiasexpresivasycreativas', 'arteterapia'], labelKey:'collection.expressiveCreative', fallback:'Terapias Expresivas y Creativas' }
     ];
     const TAG_FACETS = [
       { id:'foco', label:'Foco' },
@@ -8334,7 +8352,9 @@ const epistemologiaTable = shouldShowEpistemologiaTable ? renderEpistemologiaCom
   }
 
   // Datos dinámicos desde tus MODELS
-  const list = filteredModelsBySchool(grupo);
+  const list = collection
+    ? baseListByGroupingMode('collection')
+    : filteredModelsBySchool(grupo);
   const n = list.length;
   const schoolTimeline = renderSchoolModelTimeline(list);
 
@@ -8435,8 +8455,8 @@ function renderAllModelsOverviewHtml(){
     },
     {
       title:uiText('library.group.collection', 'Colecciones'),
-      copy:uiText('overview.all.collections.copy', 'Agrupan desarrollos transversales, psicodélicos, fronterizos y tradiciones culturales sin convertirlos en escuelas.'),
-      meta:uiText('overview.all.collections.meta', '4 colecciones temáticas')
+      copy:uiText('overview.all.collections.copy', 'Agrupan desarrollos transversales, psicodélicos, fronterizos, tradiciones culturales y terapias expresivas y creativas sin convertirlos en escuelas.'),
+      meta:uiText('overview.all.collections.meta', '5 colecciones temáticas')
     },
     {
       title:uiText('library.group.tags', 'Tags'),
@@ -8477,7 +8497,7 @@ function renderAllModelsOverviewHtml(){
           <div class="school-editorialKeys" aria-label="${escapeHtml(uiText('overview.all.summary', 'Resumen de la biblioteca'))}">
             <span class="school-editorialKey">${escapeHtml(`${models.length} ${uiPlural('common.model', models.length, 'modelo', 'modelos')}`)}</span>
             <span class="school-editorialKey">${escapeHtml(uiText('overview.all.schools.meta', '7 escuelas canónicas'))}</span>
-            <span class="school-editorialKey">${escapeHtml(uiText('overview.all.collections.meta', '4 colecciones temáticas'))}</span>
+            <span class="school-editorialKey">${escapeHtml(uiText('overview.all.collections.meta', '5 colecciones temáticas'))}</span>
             <span class="school-editorialKey">${escapeHtml(uiText('overview.all.twoViews', '2 vistas'))}</span>
           </div>
 
