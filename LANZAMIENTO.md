@@ -113,6 +113,41 @@ sentido. Si a las dos semanas la captura va floja, subirlo es mover una sección
 Requiere entrar en el renderizado del panel de ficha (`library.js`, ~15.000
 líneas). Se hará junto con la Fase 1.1, que ya toca esa zona.
 
+#### Fase 0.1 bis — La analítica vive en Supabase, no en Vercel
+
+Decisión del 8/9: **no se paga Vercel Pro.** En el plan Hobby las visitas se
+registran, pero `va('event', …)` se descarta en silencio, así que el embudo
+—que es justo lo que hay que medir— se habría perdido entero.
+
+En vez de meter un proveedor nuevo, los eventos van a la base de datos que ya
+existe. Sale gratis, los datos son tuyos y se consultan con SQL.
+
+- [x] `supabase/eventos.sql` — tabla `eventos` con `nombre`, `sesion_id`,
+      `ruta`, `referrer`, `datos` (jsonb) y `creado_en`. RLS sin policies.
+- [x] `api/track.js` — recibe lotes. Los nombres de evento son un **vocabulario
+      cerrado** validado en el servidor: siendo el endpoint público, un
+      allowlist evita que la tabla se llene de basura. Responde 204 pase lo que
+      pase, para no generar errores en la consola de nadie.
+- [x] `public/assets/track.js` reescrito: acumula eventos y los envía por lotes
+      cada 3 segundos, y **vacía la cola con `sendBeacon` al ocultarse la
+      página**. Sin eso, las visitas cortas —que son la mayoría— no dejarían
+      rastro. Se mantiene la llamada a `window.va` para conservar las visitas
+      del plan gratuito.
+- [x] `supabase/consultas-embudo.sql` — 10 consultas listas: el embudo
+      completo, el mismo en porcentaje, **en qué número de ficha choca la gente
+      con el muro**, modelos y escuelas más abiertos, vistas más usadas,
+      actividad por día, procedencia, estado de la lista de espera y
+      mantenimiento de la tabla.
+
+**Privacidad:** no se guarda email, ni IP, ni cookies. `sesion_id` es un
+identificador aleatorio que vive en `sessionStorage` y muere al cerrar la
+pestaña; solo sirve para encadenar los pasos de una misma visita. Al no haber
+cookies ni datos personales, esto no obliga a poner banner de consentimiento.
+
+**Contrapartida asumida:** no hay panel de control. Los números se miran
+ejecutando las consultas. Si algún día molesta, se conecta Metabase o Grafana
+a la misma base sin tocar nada del código.
+
 #### Verificación
 
 - [x] `npm run test:atlas`, `test:i18n`, `test:build-fetch`: 22/22 pasan.
@@ -120,22 +155,21 @@ líneas). Se hará junto con la Fase 1.1, que ya toca esa zona.
 - [x] Anidamiento del HTML de la home revisado a mano.
 - [ ] Sin probar en navegador todavía.
 
-#### Lo que hace falta de tu parte antes de que esto funcione en producción
+#### Estado de despliegue
 
-1. **Ejecutar los dos SQL en Supabase** (SQL Editor):
-   `supabase/lista_espera.sql` y `supabase/trial_history.sql`. Sin el primero,
-   el formulario devuelve error; sin el segundo, el webhook registra un fallo
-   en el log (no tumba nada, pero ensucia).
-2. **Desplegar y probar el pago de punta a punta.** El arreglo hay que verlo
-   funcionando: crear cuenta → Suscribirse → llegar a Stripe. Es lo más
-   importante de esta sesión.
-3. **Comprobar el plan de Vercel.** Los eventos personalizados de Vercel Web
-   Analytics requieren plan Pro; en Hobby se registran las visitas pero
-   `va('event', …)` se descarta en silencio. Si estás en Hobby, la decisión es
-   subir a Pro o montar PostHog (plan gratuito de 1M eventos/mes).
-   `track.js` ya está preparado para PostHog: basta cargar su snippet.
-4. **Decidir dónde recibir los avisos** de altas nuevas. Ahora mismo hay que
-   mirar la tabla en Supabase; no hay email de notificación.
+- [x] Los dos SQL de la primera tanda, ejecutados en Supabase (confirmado por
+      Josep el 8/9).
+- [x] Desplegado a producción: commits `351d35b` (arreglo) y `219a745`
+      (Fase 0), push a `origin/main`.
+- [x] **Arreglo del pago verificado en producción**: `GET
+      /api/create-checkout-session` devuelve 405 Method Not Allowed, que es la
+      respuesta correcta del handler. Antes reventaba con un 500 al cargar el
+      módulo. `GET /api/subscribe-list` también responde 405.
+- [x] El formulario de la home se ve en producción.
+- [ ] **Ejecutar `supabase/eventos.sql`** en Supabase. Sin esa tabla, los
+      eventos se pierden (en silencio y sin romper nada, pero se pierden).
+- [ ] Prueba manual pendiente: dejar un email, y hacer el recorrido crear
+      cuenta → Suscribirse → llegar a Stripe.
 
 #### Siguiente paso
 
