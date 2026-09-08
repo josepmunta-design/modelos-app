@@ -15886,6 +15886,27 @@ body.theme-light .ed-ficha .ed-seqStepTitle{ color:#20242c; }
   font-size:1rem;
   line-height:1.55;
 }
+/* Captura de email al pie de la ficha (Fase 0.2, tercer emplazamiento).
+   El componente `.lista-espera` toma su color del contexto; aqui se le pasa la
+   paleta editorial de la ficha para que no imponga la suya. Es el ultimo
+   capitulo, asi que se le quita el borde inferior. */
+.ed-listaEspera{
+  border-bottom:0;
+  background:#0e0c10;
+}
+.ed-listaEspera .lista-espera{
+  --le-tinta:var(--ed-ink);
+  --le-suave:var(--ed-mut);
+  --le-acento:var(--ed-accent,#cfb487);
+  --le-linea:var(--ed-line);
+  --le-fondo:rgba(244,238,228,0.04);
+  max-width:520px;
+}
+.ed-listaEspera .lista-espera-titulo{
+  font-family:'Instrument Serif',Georgia,serif;
+  color:#fbf6ee;
+}
+
 .ed-refs{
   margin-top:36px;
   padding-top:24px;

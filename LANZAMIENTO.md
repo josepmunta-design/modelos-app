@@ -15,6 +15,45 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (noche-III) — captura al pie de la ficha
+
+Cierra la Fase 0.2. Era el tercer emplazamiento y el único que quedaba: home,
+muro y **pie de ficha**. Importa más que los otros dos porque en modo de
+biblioteca abierta el muro está oculto por CSS, así que dentro del Atlas **no
+había ninguna forma visible de dejar el correo**.
+
+- [x] `renderFichaListaEspera(model)` en `library.js`, junto al resto de
+      renderizadores de sección. Se pinta como último bloque de `.ed-ficha`,
+      después de «Contexto y fuentes».
+- [x] **Se vuelve a enganchar en cada repintado.** `.ed-ficha` se reescribe
+      entera con cada ficha, así que el `<form>` inyectado nace sin listeners.
+      Se llama a `window.listaEspera.iniciar()` tras asignar el `innerHTML`;
+      `enganchar` ya era idempotente, así que llamarlo de más no duplica nada.
+- [x] **Lleva el modelo de contexto.** `data-modelo="<id>"` viaja hasta
+      `modelo_contexto` en `lista_espera`, así se sabrá desde qué fichas se
+      apunta la gente. `origen: "ficha"` ya estaba en la allowlist del endpoint
+      y `email_capturado` ya se emitía desde el componente: no ha hecho falta
+      tocar ni la API ni la analítica.
+- [x] Doce cadenas nuevas por `uiText`, en `es.json` y `en.json`. La ficha
+      inglesa usa el mismo renderizador, así que sin las dos habría salido en
+      español.
+- [x] Estilos `.ed-listaEspera` en `library.css`: le pasan la paleta editorial
+      de la ficha al componente, que toma el color del contexto en vez de
+      imponer el suyo.
+- [x] Test nuevo en `i18n-build.test.mjs`: comprueba que la plantilla lo invoca,
+      que se vuelve a enganchar, que declara `data-modelo` y que **todas** sus
+      claves existen en los dos idiomas. Suite: **36/36**.
+
+**Dos decisiones pequeñas.** El bloque **no** entra en la navegación de
+capítulos (`data-smh-section`): un formulario listado junto a «Portada», «El
+modelo» y «Fuentes» se lee como contenido y no lo es. Y el `id` del campo lleva
+el id del modelo, porque el `id` de un input tiene que ser único y la ficha se
+repinta.
+
+**Lo que esto no es.** El formulario lo inyecta el JS, así que en la página
+estática que ve el buscador no está. No es un problema —la ficha entera se pinta
+igual— pero significa que sin JS no hay captura en `/modelos/`.
+
 ### 8 de septiembre de 2026 (noche-II) — saneado el corpus en `tmps-data`
 
 Las tres inconsistencias que anotó la sesión anterior estaban en el origen, no
@@ -399,7 +438,8 @@ sentido. Si a las dos semanas la captura va floja, subirlo es mover una sección
 
 **Pendiente de la Fase 0.2:** el tercer emplazamiento, el pie de cada ficha.
 Requiere entrar en el renderizado del panel de ficha (`library.js`, ~15.000
-líneas). Se hará junto con la Fase 1.1, que ya toca esa zona.
+líneas). ~~Se hará junto con la Fase 1.1, que ya toca esa zona.~~ **Hecho el
+8/9 por la noche; ver la entrada noche-III.**
 
 #### Fase 0.1 bis — La analítica vive en Supabase, no en Vercel
 

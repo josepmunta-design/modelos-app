@@ -759,6 +759,17 @@
   ,"taxonomy.tagValue.insomnio": "Insomnio"
   ,"taxonomy.tagValue.construccionismo-social": "Construccionismo social"
   ,"taxonomy.tagValue.toc": "TOC"
+  ,"waitlist.fiche.title": "Apúntate ahora y tendrás precio de fundador cuando abra la suscripción."
+  ,"waitlist.fiche.note": "El Atlas sigue creciendo. Déjame tu correo y te aviso cuando haya modelos nuevos y cuando abra el acceso completo."
+  ,"waitlist.emailLabel": "Tu correo electrónico"
+  ,"waitlist.emailPlaceholder": "tu@correo.com"
+  ,"waitlist.submit": "Avísame"
+  ,"waitlist.profileQuestion": "Gracias. ¿Qué describe mejor tu caso?"
+  ,"waitlist.profile.clinical": "Ejerzo la clínica"
+  ,"waitlist.profile.teaching": "Doy clase"
+  ,"waitlist.profile.student": "Estudio"
+  ,"waitlist.profile.other": "Otra cosa"
+  ,"waitlist.closing": "Anotado. Nos leemos pronto."
   ,"school.other": "Otros",
   "atlas.library": "Biblioteca",
   "atlas.theme": "Cambiar tema",

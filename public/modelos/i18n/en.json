@@ -759,6 +759,17 @@
   ,"taxonomy.tagValue.insomnio": "Insomnia"
   ,"taxonomy.tagValue.construccionismo-social": "Social constructionism"
   ,"taxonomy.tagValue.toc": "OCD"
+  ,"waitlist.fiche.title": "Sign up now and you will get founder pricing when the subscription opens."
+  ,"waitlist.fiche.note": "The Atlas keeps growing. Leave me your email and I will let you know when new models arrive and when full access opens."
+  ,"waitlist.emailLabel": "Your email address"
+  ,"waitlist.emailPlaceholder": "you@email.com"
+  ,"waitlist.submit": "Notify me"
+  ,"waitlist.profileQuestion": "Thank you. What best describes you?"
+  ,"waitlist.profile.clinical": "I practise clinically"
+  ,"waitlist.profile.teaching": "I teach"
+  ,"waitlist.profile.student": "I am studying"
+  ,"waitlist.profile.other": "Something else"
+  ,"waitlist.closing": "Noted. Talk soon."
   ,"school.other": "Other",
   "atlas.library": "Library",
   "atlas.theme": "Change theme",

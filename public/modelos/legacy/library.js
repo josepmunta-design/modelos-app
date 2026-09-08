@@ -13034,6 +13034,7 @@ const authorHTML =
           ${sectionListInner(m.refs, {asList:true})}
         </div>
       </section>
+${renderFichaListaEspera(m)}
 
     </div>
   `;
@@ -13175,6 +13176,12 @@ if (!fotoUrl){
   }).catch(() => {});
 }
 
+// El formulario del pie se repinta con cada ficha, asi que hay que volver a
+// engancharlo. `enganchar` es idempotente, de modo que llamarlo de mas no duplica
+// los listeners. Si el componente aun no ha cargado, el <form> sigue funcionando
+// como envio normal del navegador.
+try { window.listaEspera?.iniciar?.(); } catch (_) {}
+
 initDimHoverSync(modelInfoEl);
 initProcessDetailSync(modelInfoEl);
 initGraphEntranceAnimations(modelInfoEl);
@@ -13187,6 +13194,39 @@ requestAnimationFrame(() => {
   renderMiniMapBgLazy(m);
 });
 
+}
+
+/* Captura de email al pie de la ficha — tercer emplazamiento de la Fase 0.2.
+   Va dentro de `.ed-ficha`, asi que se repinta con cada ficha: por eso el
+   `id` del campo lleva el id del modelo (no puede haber dos iguales si algun
+   dia se pintan dos fichas) y por eso hay que volver a enganchar el formulario
+   despues de asignar el innerHTML. Ver LANZAMIENTO.md, seccion 0.2. */
+function renderFichaListaEspera(model){
+  const modelId = String(model?.id || '').trim();
+  const campoId = 'fichaListaEmail-' + (modelId.replace(/[^a-zA-Z0-9_-]/g, '') || 'x');
+  return `
+      <section class="ed-chapter ed-listaEspera" aria-labelledby="${campoId}-titulo">
+        <form class="lista-espera" data-lista-espera="ficha" data-modelo="${escapeHtml(modelId)}" data-locale="${escapeHtml(MODELOS_LOCALE)}" action="/api/subscribe-list" method="post">
+          <p class="lista-espera-titulo" id="${campoId}-titulo">${escapeHtml(uiText('waitlist.fiche.title', 'Apúntate ahora y tendrás precio de fundador cuando abra la suscripción.'))}</p>
+          <p class="lista-espera-nota">${escapeHtml(uiText('waitlist.fiche.note', 'El Atlas sigue creciendo. Déjame tu correo y te aviso cuando haya modelos nuevos y cuando abra el acceso completo.'))}</p>
+          <div class="lista-espera-campos" data-lista-campos>
+            <label class="visually-hidden" for="${campoId}">${escapeHtml(uiText('waitlist.emailLabel', 'Tu correo electrónico'))}</label>
+            <input id="${campoId}" type="email" name="email" placeholder="${escapeHtml(uiText('waitlist.emailPlaceholder', 'tu@correo.com'))}" autocomplete="email" required />
+            <button type="submit">${escapeHtml(uiText('waitlist.submit', 'Avísame'))}</button>
+          </div>
+          <div class="lista-espera-gracias" data-lista-gracias hidden>
+            <p class="lista-espera-nota">${escapeHtml(uiText('waitlist.profileQuestion', 'Gracias. ¿Qué describe mejor tu caso?'))}</p>
+            <div class="lista-espera-perfiles">
+              <button type="button" data-perfil="clinico">${escapeHtml(uiText('waitlist.profile.clinical', 'Ejerzo la clínica'))}</button>
+              <button type="button" data-perfil="docente">${escapeHtml(uiText('waitlist.profile.teaching', 'Doy clase'))}</button>
+              <button type="button" data-perfil="estudiante">${escapeHtml(uiText('waitlist.profile.student', 'Estudio'))}</button>
+              <button type="button" data-perfil="otro">${escapeHtml(uiText('waitlist.profile.other', 'Otra cosa'))}</button>
+            </div>
+          </div>
+          <p class="lista-espera-cierre" data-lista-cierre hidden>${escapeHtml(uiText('waitlist.closing', 'Anotado. Nos leemos pronto.'))}</p>
+          <p class="lista-espera-estado" data-lista-estado role="status" aria-live="polite"></p>
+        </form>
+      </section>`;
 }
 
 function edFmtCoord(v, isLat){

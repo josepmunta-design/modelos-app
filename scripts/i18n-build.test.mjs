@@ -143,6 +143,33 @@ test('todos los valores de tag declarados por la app tienen etiqueta localizada'
   assert.deepEqual(missing, []);
 });
 
+test('la ficha lleva el formulario de lista de espera y vuelve a engancharlo al repintarse', async () => {
+  const [library, es, en] = await Promise.all([
+    fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'legacy', 'library.js'), 'utf8'),
+    fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'i18n', 'es.json'), 'utf8').then(JSON.parse),
+    fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'i18n', 'en.json'), 'utf8').then(JSON.parse)
+  ]);
+
+  // El bloque se pinta dentro de `.ed-ficha`, que se reescribe entera con cada
+  // ficha: sin la llamada a `iniciar()` el formulario quedaria inerte.
+  assert.match(library, /\$\{renderFichaListaEspera\(m\)\}/,
+    'La plantilla de la ficha no invoca renderFichaListaEspera');
+  assert.match(library, /window\.listaEspera\?\.iniciar\?\.\(\)/,
+    'La ficha no vuelve a enganchar el formulario tras repintarse');
+
+  const bloque = library.slice(library.indexOf('function renderFichaListaEspera('));
+  assert.match(bloque, /data-lista-espera="ficha"/);
+  assert.match(bloque, /data-modelo="\$\{escapeHtml\(modelId\)\}"/,
+    'El formulario debe declarar de que ficha sale, o no se sabra que modelo capta');
+
+  // Toda cadena visible pasa por uiText, y sus claves tienen que existir en los
+  // dos idiomas: la ficha inglesa usa el mismo renderizador.
+  const claves = [...bloque.matchAll(/uiText\('([^']+)'/g)].map((m) => m[1]);
+  assert.ok(claves.length >= 10, `Se esperaban las claves del formulario, hay ${claves.length}`);
+  const faltan = claves.filter((k) => !Object.hasOwn(es, k) || !Object.hasOwn(en, k));
+  assert.deepEqual(faltan, []);
+});
+
 test('los scripts de la plantilla y sus archivos externos mantienen sintaxis válida', async () => {
   const html = await fs.readFile(path.join(process.cwd(), 'public', 'modelos', 'index.html'), 'utf8');
   const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
