@@ -1,0 +1,7 @@
+# Páginas de modelo generadas por `npm run build` (build-model-pages.mjs).
+# Vercel las regenera en cada deploy desde la API de datos, por eso no se versionan.
+/public/modelos/*/
+!/public/modelos/i18n/
+!/public/modelos/legacy/
+/public/modelos/.generated-pages.json
+/public/en/models/
