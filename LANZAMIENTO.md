@@ -15,6 +15,92 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (noche-II) — saneado el corpus en `tmps-data`
+
+Las tres inconsistencias que anotó la sesión anterior estaban en el origen, no
+en la app. Arregladas en `tmps-data`, que es donde tocaba. Con ellas caen dos
+cosas que el plan daba por hechas y no lo estaban: la escuela número trece y un
+modelo que no existía para el buscador.
+
+- [x] **`grupo` normalizado.** Cuatro modelos escribían su escuela en minúscula
+      o con otro nombre: `equipos-reflexivos-andersen-1987` (`sistemico`),
+      `programacion-neurolinguistica-bandler-grinder-1975` (`fronteras`),
+      `psicologia-ayurvedica-moderna-1951` (`otros`) y
+      `pe-prolonged-exposure-1986` (`Conductual`). Los 261 modelos públicos se
+      reparten ahora en **13 valores exactos**, sin duplicados por caja ni por
+      acento.
+- [x] **`Arteterapia` → `Terapias Expresivas y Creativas`** en
+      `Core/escuelas/terapias-expresivas-y-creativas.json`. El alias que dejó la
+      sesión anterior salvaba la *página* de escuela, pero no la app: el filtro
+      por escuela (`filteredModelsBySchool`, `library.js:6678`) compara
+      `model.grupo` en crudo, sin aliases. Con el alias solo, el enlace «Lista
+      completa» de la página llevaba a una lista sin `art-as-therapy`.
+- [x] **`art-as-therapy-kramer-1971` publicado.** Ejecutado
+      `scripts/build-public-models.mjs`: **261 modelos públicos** (eran 259) y
+      **189 overlays EN** (eran 186).
+- [x] **`expressive-therapies-continuum-kagin-lusebrink-1978` faltaba en el
+      índice.** No lo dijo nadie: `data/indices/modelos-index.json` declaraba
+      294 modelos y el corpus tenía 295. Reconstruido con
+      `tools/build-modelos-indices.mjs`.
+- [x] **Décimotercera página de escuela.** Build local contra `tmps-data`:
+      **261 fichas ES, 189 EN, 13 páginas de escuela**.
+      `/escuelas/terapias-expresivas-y-creativas/` ya lista sus dos modelos.
+- [x] Suite completa de `modelos-app`: **35/35**.
+
+**Detalle que costará recordar: tocar `grupo` invalida las traducciones, y el
+hash depende del fin de línea.** `grupo` está en `PROTECTED_MODEL_FIELDS` —no se
+traduce—, pero el `sourceHash` de cada overlay se calcula sobre **los bytes
+enteros** del fichero fuente. Cambiar una sola palabra no traducible deja el
+overlay obsoleto y **`build-public-models.mjs` aborta**. No hay herramienta para
+volver a sellarlo: hay que reescribir `_translation.sourceHash` a mano.
+
+Y el fin de línea cuenta como byte, así que el repo tiene **dos convenciones a
+la vez** y hay que sellar cada fichero en la suya:
+
+- **`data/Core/modelos/**` — CRLF.** Los materializa git con
+  `core.autocrlf=true` (no hay `.gitattributes`). 216 de los 219 overlays
+  guardan el hash en esa forma.
+- **`data/Core/modelos-publicos/**` — LF.** Los escribe Node. Sus 189 overlays
+  guardan el hash en LF. Ahí no se sella nada: se vuelve a ejecutar el build.
+
+Esto se aprendió por las malas. El primer commit selló cuatro overlays en LF
+porque el árbol de trabajo estaba en LF en ese momento; el `git rebase`
+siguiente los devolvió a CRLF y la validación se cayó. Corregido en un segundo
+commit. **La consecuencia práctica: después de cualquier `git checkout`,
+`pull` o `rebase` en este repo hay que volver a ejecutar
+`build-public-models.mjs` antes de validar**, porque git deja los públicos en
+CRLF y sus hashes son de LF.
+
+**Un overlay llegó roto de antes.** El de
+`expressive-therapies-continuum-kagin-lusebrink-1978` entró en `3e3e04a94`
+(«translate ETC and canonical therapy models») con un `sourceHash` que no
+corresponde a **ninguna** versión commiteada de su fuente, ni en LF ni en CRLF.
+Abortaba el build. La traducción es la de ese mismo commit y está bien; lo que
+estaba mal era el sello, así que se ha vuelto a sellar. Si aparece otro igual,
+el patrón es este: sellado contra un árbol de trabajo que nunca se commiteó.
+
+`npm run validate:i18n`: **422 overlays, 0 avisos, 0 errores**.
+
+**Lo que se ha decidido no tocar:**
+
+- **53 divergencias de `label`** entre el índice de escuela y el fichero del
+  modelo (`Group Analysis` / `Análisis grupal`, `PE – Prolonged Exposure` /
+  `Prolonged Exposure (PE)`…). No es un fallo: el índice usa nombres cortos para
+  la lista y el modelo el nombre largo para la ficha. Parece deliberado y
+  reescribirlo en bloque sería tocar 53 decisiones editoriales a ciegas.
+- **23 entradas con `grupo: "epistemologia"` y 2 con `grupo: undefined`** en
+  `modelos-unidos.ndjson`. Ninguna está publicada —son posiciones
+  epistemológicas, no modelos— y ya estaban así antes de esta sesión. La app
+  lee `modelos-publicos`, que está limpio. Las dos `undefined` sí parecen un
+  fallo del generador del índice.
+
+**Datos ya en producción.** `tmps-data` empujado a `origin/main` en dos commits:
+`b473eec` (normalización y publicación) y el sello de los hashes. El corpus que
+sirve `/api/data` ya tiene 261 modelos y las dos fichas de terapias expresivas.
+Falta desplegar `modelos-app` para que el build regenere las páginas: hasta
+entonces producción sigue sirviendo 259 fichas y 12 escuelas, porque las páginas
+son estáticas y se generan en el despliegue.
+
 ### 8 de septiembre de 2026 (noche) — páginas de escuela
 
 Cierra la Fase 1.4. Doce páginas hub en `/escuelas/<id>/`, generadas en el
