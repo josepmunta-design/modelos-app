@@ -18,8 +18,16 @@ const SCHOOLS = [
   { id: 'integrativo',     desc: 'Lo que funciona, venga de donde venga, con criterio para combinarlo.' },
 ];
 
-const ROTATE_MS = 6200;
-const MAX_PHOTOS = 7;
+/* Las imagenes son las de la ficha del modelo: Core/imagenes/vida, 16:9 en
+   color, las mismas que ilustran la ficha en la biblioteca. */
+const VIDA_INDEX = 'Core/imagenes/vida/index.json';
+const VIDA_FALLBACK_BASE = 'Core/imagenes/vida';
+
+/* Un relevo cada 18 s con un cruce de 3,4 s: la tarjeta debe mudar despacio,
+   no pasar diapositivas. El desfase inicial evita que las siete cambien a la vez. */
+const ROTATE_MS = 18000;
+const FADE_MS = 3400;
+const MAX_PHOTOS = 6;
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const grid = document.getElementById('schoolsGrid');
@@ -40,17 +48,17 @@ function firstAuthor(authors) {
   return first.replace(/\s*\(.*?\)\s*$/, '').trim();
 }
 
-/* Retratos de una escuela: los modelos mas destacados que tienen foto.
+/* Imagenes de una escuela: las fichas mas destacadas que tienen imagen de vida.
    Un mismo autor firma varios modelos (Beck, Maslow), asi que se queda solo con
-   su ficha mas destacada: la rotacion nunca debe repetir cara. */
-function portraits(models, photoByModel) {
+   su ficha mas destacada: la rotacion nunca debe repetir autor. */
+function stills(models, imageByModel, basePath) {
   const seen = new Set();
   return models
-    .filter(model => model && model.id && photoByModel.has(String(model.id).trim()))
+    .filter(model => model && model.id && imageByModel.has(String(model.id).trim()))
     .sort((a, b) => (Number(b.importance) || 0) - (Number(a.importance) || 0)
       || (Number(a.year) || 9999) - (Number(b.year) || 9999))
     .map(model => ({
-      src: url(`Core/fotos/${photoByModel.get(String(model.id).trim())}`),
+      src: url(`${basePath}/${imageByModel.get(String(model.id).trim())}`),
       author: firstAuthor(model.autores),
       model: String(model.label || '').trim(),
     }))
@@ -127,12 +135,14 @@ function animate(node, photos) {
     } catch { /* Una foto que no carga no debe detener la rotacion. */ }
     back.src = entry.src;
     if (!immediate) caption.classList.remove('is-on');
+    // El pie se retira antes del cruce y vuelve ya iniciado, para que no
+    // se lea sobre una imagen que esta dejando de ser la suya.
     window.setTimeout(() => {
       back.classList.add('is-on');
       layers[front].classList.remove('is-on');
       front = 1 - front;
-      paint(entry);
-    }, immediate ? 0 : 420);
+      window.setTimeout(() => paint(entry), immediate ? 0 : FADE_MS * 0.5);
+    }, immediate ? 0 : FADE_MS * 0.45);
   };
 
   show(photos[cursor], true);
@@ -142,8 +152,22 @@ function animate(node, photos) {
     cursor = (cursor + 1) % photos.length;
     show(photos[cursor], false);
   };
-  const start = () => { if (!timer) timer = window.setInterval(tick, ROTATE_MS); };
-  const stop = () => { window.clearInterval(timer); timer = null; };
+
+  // Cada tarjeta arranca con una fase distinta para que la rejilla no mude en
+  // bloque. Es un retraso del primer relevo, no un pase extra: si se sumara al
+  // intervalo, las primeras vueltas irian mas rapido que el ritmo elegido.
+  const phase = 12000 + Math.random() * ROTATE_MS;
+  let phased = false;
+  const start = () => {
+    if (timer) return;
+    if (phased) { timer = window.setInterval(tick, ROTATE_MS); return; }
+    timer = window.setTimeout(() => {
+      phased = true;
+      tick();
+      timer = window.setInterval(tick, ROTATE_MS);
+    }, phase);
+  };
+  const stop = () => { window.clearTimeout(timer); window.clearInterval(timer); timer = null; };
 
   // Solo rota lo que esta a la vista, y nunca con la pestana en segundo plano.
   const observer = new IntersectionObserver(entries => {
@@ -154,22 +178,21 @@ function animate(node, photos) {
     if (document.hidden) stop();
     else if (node.getBoundingClientRect().top < innerHeight) start();
   });
-
-  // El relevo se desincroniza por tarjeta: la rejilla no debe parpadear a la vez.
-  window.setTimeout(tick, 900 + Math.random() * ROTATE_MS);
 }
 
 async function render() {
-  const [index, photoIndex] = await Promise.all([
+  const [index, vidaIndex] = await Promise.all([
     readJson('Core/escuelas/index.json'),
-    readJson('Core/fotos/foto.json'),
+    readJson(VIDA_INDEX),
   ]);
 
   const labelById = new Map((Array.isArray(index) ? index : [])
     .filter(entry => entry && entry.id && entry.tipo !== 'coleccion')
     .map(entry => [String(entry.id).trim(), String(entry.label || entry.id).trim()]));
 
-  const photoByModel = new Map(Object.entries(photoIndex?.models || {})
+  // El indice declara su propia carpeta; se respeta en lugar de codificarla.
+  const basePath = String(vidaIndex?.basePath || VIDA_FALLBACK_BASE).trim().replace(/\/+$/, '');
+  const imageByModel = new Map(Object.entries(vidaIndex?.models || {})
     .filter(([, file]) => typeof file === 'string' && file.trim())
     .map(([id, file]) => [id.trim(), file.trim()]));
 
@@ -182,7 +205,7 @@ async function render() {
         ...school,
         label: labelById.get(school.id),
         count: models.length,
-        photos: portraits(models, photoByModel),
+        photos: stills(models, imageByModel, basePath),
       };
     }))).filter(school => school.count > 0);
 
