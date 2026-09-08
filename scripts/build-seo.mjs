@@ -95,6 +95,10 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModifie
     sitemapUrl(libraryAlternates.en, lastModified, libraryAlternates),
     sitemapUrl(`${baseUrl}/escuelas/`, lastModified),
     sitemapUrl(`${baseUrl}/genealogia`, lastModified),
+    // Metamodelos es una pieza editorial larga y autocontenida: no depende de
+    // /api/data y responde a busquedas propias ("por que funciona la
+    // psicoterapia", "factores comunes"). Faltaba en el sitemap.
+    sitemapUrl(`${baseUrl}/metamodelos/`, lastModified),
     ...esIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;
       const en = enSet.has(id) ? `${baseUrl}/en/models/${encodeURIComponent(id)}` : '';
@@ -126,9 +130,18 @@ async function buildSeoFiles() {
 
   const sitemap = buildSitemap({ modelIdsByLocale, lastModified });
 
+  // OJO: este archivo se regenera en cada build y pisa cualquier edicion
+  // manual de public/robots.txt. Los cambios se hacen aqui.
+  //
+  // /api/data es el proxy de solo lectura del que cuelga TODO el contenido del
+  // Atlas. Mientras estuvo prohibido, Googlebot no podia pedirlo al renderizar
+  // y evaluaba fichas vacias: 13 paginas indexadas de 410. Gana la regla mas
+  // larga, asi que este Allow tiene prioridad sobre el Disallow de abajo.
+  // El resto de /api/ (pagos, sesion, eventos) sigue fuera del rastreo.
   const robots = [
     'User-agent: *',
     'Allow: /',
+    'Allow: /api/data',
     'Disallow: /api/',
     '',
     `Sitemap: ${BASE_URL}/sitemap.xml`,

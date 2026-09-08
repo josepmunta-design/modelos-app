@@ -15,6 +15,44 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (tarde-III) — el robots.txt se revertia solo
+
+Verificacion del despliegue anterior. Dos hallazgos.
+
+**Lo que funciono:** la ficha de ACT en produccion ya sirve el articulo
+completo en el HTML —definicion, teoria del cambio, diez ideas numeradas,
+influencias, referencias y modelos relacionados—, sin depender de ninguna
+peticion. El cambio principal esta vivo.
+
+**Lo que no:** `robots.txt` seguia sin la linea `Allow: /api/data`.
+`scripts/build-seo.mjs:129` **regenera ese archivo en cada build**, asi que mi
+edicion de `public/robots.txt` se sobrescribio al desplegar. El arreglo se
+habia deshecho solo, en silencio.
+
+- [x] La regla se anade en `build-seo.mjs`, que es la fuente real, con un aviso
+      en el propio codigo de que el archivo se regenera.
+
+**Dos correcciones al plan, comprobadas contra los datos actuales:**
+
+- **Las 13 fichas con `noindex` no existen.** Las conte sobre las paginas
+  generadas en agosto que quedaban en `public/modelos/`. En los datos de hoy no
+  hay ni un solo modelo con `descripcion` por debajo de 160 caracteres, y el
+  build limpio genera **cero** paginas con `noindex`. La tarea 1.3 estaba hecha.
+- **`/escuelas/` si esta en el sitemap.** Lo verifique sobre el `sitemap.xml`
+  del repositorio, que esta obsoleto: el build lo regenera entero en cada
+  despliegue. `buildSitemap` ya incluia `/escuelas/` y `/genealogia`.
+- [x] Lo que si faltaba: **`/metamodelos/`**, una pieza editorial larga que no
+      depende de `/api/data` y responde a busquedas propias. Anadida.
+- [ ] `/procesos/` sigue fuera del sitemap. Tiene contenido real, pero esta
+      oculto a proposito en la home. Decision pendiente: si se quiere que
+      posicione, hay que enlazarlo desde algun sitio; una pagina en el sitemap
+      sin enlaces internos rinde poco.
+
+**Estado de la Fase 1:** 1.1, 1.2 y 1.3 cerradas. Lo unico tecnico que queda
+son las **paginas de escuela** (`/escuelas/<escuela>/`). Requieren texto nuevo:
+`Core/escuelas/index.json` solo guarda `id`, `label` y `file`, sin ninguna
+descripcion aprovechable. Son 13 introducciones de 300-500 palabras.
+
 ### 8 de septiembre de 2026 (tarde-II) — Fase 1: por qué no indexaba, de verdad
 
 Josep decidió: **fichas abiertas, herramientas de pago**, y **49 €/año
@@ -639,7 +677,15 @@ herramienta que por un texto.
 - [ ] Decidir esto de forma explícita y anotarlo. Es reversible, pero no debe
       quedar ambiguo.
 
-### 1.3 Rescatar las 13 fichas con `noindex`
+### 1.3 Rescatar las fichas con `noindex` — RESUELTO (8/9)
+
+Comprobado sobre los datos actuales: no queda ningún modelo con `descripcion`
+por debajo de 160 caracteres, y un build limpio genera cero páginas con
+`noindex`. Las 13 que contaba este plan eran páginas generadas en agosto que
+seguían en `public/modelos/`. No hay nada que hacer.
+
+<details><summary>Instrucciones originales, por si el umbral vuelve a saltar</summary>
+
 
 `build-model-pages.mjs:699`:
 
@@ -655,6 +701,8 @@ const indexable = model.descripcion.length >= 160;
       Son 13 párrafos; una tarde.
 - [ ] Reconstruir y verificar que ninguna queda con `noindex`.
 
+</details>
+
 ### 1.4 Arquitectura de enlaces internos
 
 Un sitemap plano de 410 URLs sin jerarquía es lo peor para el rastreo. Google
@@ -664,8 +712,10 @@ necesita entender qué es importante.
       a la tradición (300-500 palabras) y enlace a todos sus modelos. Son 13
       páginas con alto potencial de posicionamiento por sí mismas
       ("terapia sistémica", "psicoanálisis relacional", "terapias contextuales").
-- [ ] Incluir `/escuelas/` y las páginas de escuela **en el sitemap** (hoy no
-      están: `grep -c "escuelas" public/sitemap.xml` → 0).
+- [x] `/escuelas/` y `/genealogia` **ya estaban** en el sitemap: lo comprobé
+      contra el `sitemap.xml` del repositorio, que está obsoleto porque el
+      build lo regenera entero. `/metamodelos/` sí faltaba y se ha añadido.
+- [ ] Añadir las páginas de escuela al sitemap cuando existan.
 - [ ] Enlazar cada ficha a su página de escuela (miga de pan visible, no solo
       en JSON-LD).
 - [ ] Mantener el bloque «Modelos relacionados» que ya generas — está bien
