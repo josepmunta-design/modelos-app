@@ -81,7 +81,7 @@ function sitemapUrl(url, lastModified, alternates = null) {
   ].join('\n');
 }
 
-export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModified }) {
+export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModified, escuelaIds = [] }) {
   const esIds = [...new Set(modelIdsByLocale.es)].sort((a, b) => a.localeCompare(b, 'es'));
   const enIds = [...new Set(modelIdsByLocale.en)].sort((a, b) => a.localeCompare(b, 'en'));
   const enSet = new Set(enIds);
@@ -99,6 +99,11 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModifie
     // /api/data y responde a busquedas propias ("por que funciona la
     // psicoterapia", "factores comunes"). Faltaba en el sitemap.
     sitemapUrl(`${baseUrl}/metamodelos/`, lastModified),
+    // Paginas hub por escuela: dan jerarquia a las 260 fichas y posicionan por
+    // los terminos amplios que una ficha suelta no alcanza. La lista viene del
+    // manifiesto del build, no de una constante: una escuela sin modelos no se
+    // genera, y anunciar en el sitemap una URL que da 404 es peor que omitirla.
+    ...escuelaIds.map((id) => sitemapUrl(`${baseUrl}/escuelas/${encodeURIComponent(id)}/`, lastModified)),
     ...esIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;
       const en = enSet.has(id) ? `${baseUrl}/en/models/${encodeURIComponent(id)}` : '';
@@ -128,7 +133,8 @@ async function buildSeoFiles() {
     ? generatedAt.slice(0, 10)
     : new Date().toISOString().slice(0, 10);
 
-  const sitemap = buildSitemap({ modelIdsByLocale, lastModified });
+  const escuelaIds = Array.isArray(manifest?.escuelas) ? manifest.escuelas : [];
+  const sitemap = buildSitemap({ modelIdsByLocale, lastModified, escuelaIds });
 
   // OJO: este archivo se regenera en cada build y pisa cualquier edicion
   // manual de public/robots.txt. Los cambios se hacen aqui.

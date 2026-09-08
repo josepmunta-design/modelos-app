@@ -1,6 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { buildEscuelaPages } from './build-escuela-pages.mjs';
+
+// grupo del modelo -> id de su pagina de escuela.
+const ESCUELA_SLUGS = new Map(Object.entries({"psicoanálisis": "psicoanalisis", "conductismo": "conductismo", "cognitivo": "cognitivo", "humanista": "humanista", "sistémico": "sistemico", "constructivista": "constructivista", "integrativo": "integrativo", "transversal": "transversal", "otros": "otros", "epistemología": "epistemologia", "psicodélicos": "psicodelicos", "fronteras": "fronteras", "terapias expresivas y creativas": "terapias-expresivas-y-creativas"}));
 
 const ROOT = process.cwd();
 const SOURCE_PUBLIC_DIR = path.join(ROOT, 'public');
@@ -674,13 +678,30 @@ function modelUrl(modelId, locale) {
 // contenido dependia de peticiones a /api/data desde el navegador.
 // Al montarse, la app reemplaza el innerHTML de #modelInfo y este articulo
 // desaparece solo. Es el mismo contenido en el mismo sitio: no hay cloaking.
+// El grupo enlaza a la pagina de su escuela. Es el enlace interno que le da
+// jerarquia al Atlas: sin el, las 260 fichas cuelgan del sitemap y de nada mas.
+// Solo en espanol: las paginas de escuela todavia no estan traducidas.
+function renderGrupoLink(model, locale) {
+  const partes = [];
+
+  if (model.grupo) {
+    const slug = ESCUELA_SLUGS.get(String(model.grupo).trim().toLowerCase());
+    partes.push(slug && locale.code === 'es'
+      ? `<a href="/escuelas/${encodeURIComponent(slug)}/">${escapeHtml(model.grupo)}</a>`
+      : escapeHtml(model.grupo));
+  }
+
+  if (model.year) partes.push(escapeHtml(String(model.year)));
+  return partes.join(' · ');
+}
+
 function renderSeoArticle(model, related, locale) {
   const theory = compactText(model?.teoriaCambio?.resumen || '');
   const ideas = model.ideasPrincipales.slice(0, 10);
   const references = model.refs.map(compactText).filter(Boolean).slice(0, 20);
 
   return `    <article class="seo-article" id="seoArticle">
-      <p>${escapeHtml([model.grupo, model.year].filter(Boolean).join(' · '))}</p>
+      <p>${renderGrupoLink(model, locale)}</p>
       <h1>${escapeHtml(model.label)}</h1>
       ${model.frase ? `<blockquote>${escapeHtml(model.frase)}</blockquote>` : ''}
       <p>${escapeHtml(model.descripcion)}</p>
@@ -928,8 +949,15 @@ export async function build() {
     }
   };
 
+
+  // Las paginas de escuela reutilizan el corpus ya cargado aqui: asi no hay
+  // dos fuentes de verdad ni un listado que se quede atras al crecer el Atlas.
+  const escuelas = await buildEscuelaPages(modelsByLocale.es, PUBLIC_DIR);
+  manifest.escuelas = escuelas.generadas.map((e) => e.id);
   await fs.writeFile(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+
   console.log(`Páginas HTML generadas: ${modelsByLocale.es.length} es, ${modelsByLocale.en.length} en.`);
+  console.log(`Páginas de escuela: ${escuelas.generadas.length}${escuelas.vacias.length ? ` (sin modelos, omitidas: ${escuelas.vacias.join(', ')})` : ''}.`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

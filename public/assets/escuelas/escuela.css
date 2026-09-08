@@ -1,0 +1,77 @@
+/* Pagina de una escuela: /escuelas/<id>/
+   Mismo lenguaje editorial que la home, en una sola columna de lectura. */
+:root {
+  color-scheme: dark;
+  --night: #0b0e0c;
+  --paper: #ebe7dc;
+  --muted: #9c9e90;
+  --gold: #cfb487;
+  --line: #e7ddbb24;
+  --serif: 'Instrument Serif', Georgia, serif;
+  --sans: 'Hanken Grotesk', Arial, sans-serif;
+  --pad: clamp(22px, 3.4vw, 74px);
+}
+* { box-sizing: border-box; }
+html { background: var(--night); scroll-behavior: smooth; }
+body { margin: 0; color: var(--paper); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; cursor: pointer; }
+p, h1, h2, h3 { margin: 0; }
+::selection { background: var(--gold); color: var(--night); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+
+.grain { position: fixed; inset: 0; pointer-events: none; z-index: 20; background: url('/assets/atlas-home/grain.png'); opacity: .055; mix-blend-mode: screen; }
+
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: 25px; padding: 22px var(--pad); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 11px; font-size: 9px; letter-spacing: 1.5px; font-weight: 600; }
+.brand-symbol { color: var(--gold); font-size: 30px; line-height: 1; }
+.brand-sub { display: block; font-size: 7px; letter-spacing: 1.9px; color: var(--muted); }
+.masthead nav { display: flex; gap: 26px; font-size: 11px; }
+.masthead nav a:hover { color: var(--gold); }
+
+.ee { max-width: 1180px; margin: 0 auto; padding: 0 var(--pad) 70px; }
+
+.ee-breadcrumb { padding: 26px 0 0; font-size: 11px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.ee-breadcrumb a:hover { color: var(--gold); }
+.ee-breadcrumb [aria-current] { color: var(--paper); }
+
+.ee-cuerpo { max-width: 720px; padding: 34px 0 10px; }
+.ee-eyebrow { font-size: 9px; letter-spacing: 2.2px; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+.ee-cuerpo h1 { font-family: var(--serif); font-size: clamp(36px, 5.2vw, 68px); font-weight: 400; line-height: 1.04; letter-spacing: -1px; margin-bottom: 22px; }
+.ee-entradilla { font-family: var(--serif); font-size: clamp(20px, 2.2vw, 27px); font-style: italic; line-height: 1.35; color: #d5cfbf; margin-bottom: 30px; }
+.ee-cuerpo p { font-size: 16px; line-height: 1.78; color: #c3c0b3; margin-bottom: 19px; }
+
+.ee-catalogo, .ee-vistas { margin-top: 54px; padding-top: 34px; border-top: 1px solid var(--line); }
+.ee-catalogo h2, .ee-vistas h2 { font-family: var(--serif); font-size: 30px; font-weight: 400; margin-bottom: 10px; }
+.ee-nota { font-size: 13px; color: var(--muted); margin-bottom: 26px; max-width: 620px; }
+
+.ee-modelos { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.ee-modelos li { display: grid; grid-template-columns: 68px 1fr; align-items: baseline; gap: 4px 18px; padding: 15px 18px; background: var(--night); }
+.ee-modelos li:hover { background: #14171400; }
+.ee-year { font-size: 12px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.ee-year-na { color: #6d7065; }
+.ee-modelos a { font-size: 16px; line-height: 1.35; }
+.ee-modelos a:hover { color: var(--gold); text-decoration: underline; text-underline-offset: 3px; }
+.ee-autores { grid-column: 2; font-size: 11.5px; color: var(--muted); }
+
+.ee-vistas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+.ee-vistas-grid a { padding: 17px 19px; border: 1px solid var(--line); border-radius: 3px; font-size: 13.5px; display: flex; align-items: center; justify-content: space-between; gap: 12px; transition: border-color .2s ease, color .2s ease; }
+.ee-vistas-grid a:hover { border-color: var(--gold); color: var(--gold); }
+
+.ee-aviso { margin-top: 54px; padding-top: 34px; border-top: 1px solid var(--line); }
+.ee-aviso .lista-espera-titulo { font-family: var(--serif); font-size: clamp(21px, 2.4vw, 30px); font-weight: 400; line-height: 1.2; max-width: 20ch; }
+
+.footer { border-top: 1px solid var(--line); margin: 0 var(--pad); padding: 26px 0 34px; display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; }
+.footer .brand { font-size: 8px; letter-spacing: 1.2px; }
+.footer-atlas { font-family: var(--serif); font-size: 14px; font-style: italic; letter-spacing: 0; color: #a8ac9d; }
+.footer nav { display: flex; gap: 22px; font-size: 9px; }
+.footer nav a:hover { color: var(--gold); }
+.footer > span { font-size: 8px; color: #939788; }
+
+@media (max-width: 760px) {
+  .ee-cuerpo { padding-top: 26px; }
+  .ee-cuerpo p { font-size: 15px; }
+  .ee-modelos li { grid-template-columns: 52px 1fr; padding: 13px 14px; }
+  .ee-modelos a { font-size: 15px; }
+  .ee-catalogo, .ee-vistas, .ee-aviso { margin-top: 40px; padding-top: 26px; }
+}

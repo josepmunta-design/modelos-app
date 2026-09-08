@@ -12,7 +12,8 @@
     "seo:build": "node scripts/build-seo.mjs",
     "test:i18n": "node --test scripts/i18n-build.test.mjs",
     "test:build-fetch": "node --test scripts/build-model-pages-retry.test.mjs",
-    "test:billing": "node --test scripts/billing-rest.test.mjs"
+    "test:billing": "node --test scripts/billing-rest.test.mjs",
+    "test:escuelas": "node --test scripts/escuelas.test.mjs"
   }
 }
 

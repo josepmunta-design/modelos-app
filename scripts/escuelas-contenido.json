@@ -1,0 +1,181 @@
+{
+  "_nota": "Texto editorial de las páginas /escuelas/<id>/. El listado de modelos NO se escribe aquí: lo deriva build-escuela-pages.mjs del corpus, emparejando por el campo `grupo` de cada modelo. Si se renombra una escuela en tmps-data hay que actualizar `grupo` aquí o la página saldrá vacía.",
+  "escuelas": [
+    {
+      "id": "psicoanalisis",
+      "grupo": "Psicoanálisis",
+      "titulo": "Psicoanálisis y psicoterapias psicodinámicas",
+      "entradilla": "La primera tradición que sostuvo que el sufrimiento tiene sentido, y que ese sentido puede escucharse.",
+      "descripcionMeta": "Los modelos psicoanalíticos y psicodinámicos del Atlas: de Freud a la teoría relacional y la mentalización, con sus fundamentos y sus linajes.",
+      "intro": [
+        "El psicoanálisis nace a finales del siglo XIX de una intuición que hoy damos por descontada y entonces era una ruptura: que los síntomas no son ruido biológico ni debilidad moral, sino formaciones con sentido, comprensibles a la luz de una historia personal. Freud llega a ello escuchando a pacientes que la medicina de su tiempo había dejado sin explicación, y de esa escucha extrae un método —la asociación libre— y una teoría del aparato psíquico que se reformulará muchas veces durante el siglo siguiente.",
+        "Lo que llamamos «psicoanálisis» es en realidad una familia de modelos en tensión permanente. La psicología del yo desplaza el foco desde el contenido reprimido hacia las defensas que lo mantienen fuera de la conciencia. La escuela de las relaciones objetales sostiene que la pulsión busca vínculo antes que descarga, y que lo que se interioriza no son impulsos sino relaciones. El psicoanálisis relacional lleva esa idea hasta la propia sesión: el terapeuta no es una pantalla neutra, sino un participante cuya subjetividad forma parte de lo que ocurre. La teoría del apego y, más tarde, los modelos basados en la mentalización, traducen buena parte de estas intuiciones a un lenguaje contrastable empíricamente.",
+        "El hilo que atraviesa todas estas variantes es la idea de que gran parte de lo que gobierna nuestra conducta no está disponible para la introspección, y que ese material se hace accesible sobre todo en la relación: en cómo el paciente trata al terapeuta, en lo que se repite sin ser recordado, en lo que se evita sin saber que se evita. De ahí que conceptos como transferencia, contratransferencia, resistencia y encuadre no sean adornos teóricos, sino descripciones de fenómenos que cualquier clínico encuentra en su consulta, los llame como los llame.",
+        "Su relación con la investigación empírica ha sido larga y accidentada. Durante décadas el psicoanálisis se mantuvo al margen del ensayo controlado, en parte por convicción metodológica y en parte por aislamiento institucional. Eso cambió: hoy existen manuales de terapia psicodinámica breve, medidas de resultado y estudios que sostienen su eficacia en varios cuadros. Las fichas de esta sección recogen tanto los modelos fundacionales como sus desarrollos contemporáneos, con sus fuentes originales y las críticas que han recibido."
+      ]
+    },
+    {
+      "id": "conductismo",
+      "grupo": "Conductismo",
+      "titulo": "Conductismo y terapias de conducta",
+      "entradilla": "Si la conducta se aprende, puede desaprenderse: la tradición que convirtió esa frase en un método.",
+      "descripcionMeta": "Los modelos conductuales del Atlas: condicionamiento, exposición, análisis funcional y activación conductual, con sus fundamentos y referencias.",
+      "intro": [
+        "El conductismo entra en la clínica con una apuesta metodológica antes que con una teoría del sufrimiento: si algo no puede observarse y medirse, no puede estudiarse con rigor. De ahí surge un programa que renuncia deliberadamente a hablar de estados internos y se concentra en la relación entre lo que ocurre en el entorno y lo que hace la persona. Esa restricción, que a menudo se ha leído como pobreza teórica, resultó ser extraordinariamente productiva: produjo las primeras intervenciones psicológicas con eficacia demostrada.",
+        "Sus dos raíces son el condicionamiento clásico de Pávlov —un estímulo neutro que acaba provocando una respuesta por asociación— y el condicionamiento operante de Skinner —una conducta que se hace más o menos probable según sus consecuencias—. De la primera salen la desensibilización sistemática y toda la familia de tratamientos por exposición, que siguen siendo la intervención de referencia en trastornos de ansiedad. De la segunda salen el análisis funcional, el manejo de contingencias y la activación conductual en depresión.",
+        "El análisis funcional merece atención aparte porque es, más que una técnica, una forma de pensar. En lugar de preguntar qué tiene el paciente, pregunta qué función cumple lo que hace: qué lo antecede, qué lo mantiene, qué consigue o qué evita. Esa pregunta ha sobrevivido a todos los cambios de paradigma posteriores y se encuentra hoy en modelos que no se declaran conductuales.",
+        "La crítica clásica al conductismo —que ignoraba el pensamiento y el lenguaje— fue respondida por dos vías distintas. Una condujo a la revolución cognitiva y a los modelos que ocupan la sección siguiente. La otra, menos conocida fuera del campo, mantuvo el marco conductual y amplió su alcance mediante la teoría de los marcos relacionales y el contextualismo funcional, dando lugar a las llamadas terapias de tercera generación. Las fichas de esta sección recorren ese camino completo, desde los experimentos fundacionales hasta sus derivaciones actuales."
+      ],
+      "alias": [
+        "Conductual"
+      ]
+    },
+    {
+      "id": "cognitivo",
+      "grupo": "Cognitivo",
+      "titulo": "Terapias cognitivas y cognitivo-conductuales",
+      "entradilla": "No nos altera lo que ocurre, sino cómo lo interpretamos: la tradición más investigada de la psicoterapia contemporánea.",
+      "descripcionMeta": "Los modelos cognitivos y cognitivo-conductuales del Atlas: Beck, Ellis, terapia metacognitiva, ACT, DBT y protocolos transdiagnósticos.",
+      "intro": [
+        "La terapia cognitiva nace de una observación clínica de Aaron Beck que contradecía sus propias expectativas: los pacientes con depresión no parecían gobernados por una hostilidad vuelta contra sí mismos, como sostenía la teoría que él había aprendido, sino por un flujo continuo de pensamientos negativos automáticos sobre sí, el mundo y el futuro. De esa discrepancia entre lo esperado y lo observado sale un modelo, un manual y, poco después, un programa de investigación que acabaría convirtiéndose en el más extenso de la psicoterapia.",
+        "El supuesto central es que entre el acontecimiento y la emoción hay un paso interpretativo, y que ese paso es modificable. La intervención combina la identificación de pensamientos y creencias, la comprobación empírica de su validez y los experimentos conductuales que ponen a prueba las predicciones del paciente en su propia vida. Albert Ellis había llegado por su cuenta a una formulación emparentada, más filosófica y más directiva, centrada en las exigencias absolutas que la persona se impone.",
+        "A partir de los años noventa el campo se diversifica en varias direcciones a la vez. Los modelos metacognitivos desplazan el foco desde el contenido del pensamiento hacia la relación con él: lo que sostiene el problema no sería lo que se piensa, sino la rumiación y la preocupación como estrategias. Las terapias contextuales —ACT, DBT, mindfulness clínico— cuestionan que haya que cambiar el contenido del pensamiento para que cambie la conducta. Y los protocolos transdiagnósticos abandonan la lógica de un manual por diagnóstico para trabajar sobre procesos comunes a varios cuadros.",
+        "Esta sección es la más numerosa del Atlas, y conviene decir por qué: no porque estos modelos sean mejores, sino porque esta tradición ha producido más modelos formalizados, manualizados y sometidos a ensayo. Su relación con la evidencia es su mayor fortaleza y también el origen de sus críticas más consistentes, que apuntan a la distancia entre la eficacia en condiciones de investigación y la efectividad en la práctica real. Cada ficha recoge unas y otras."
+      ]
+    },
+    {
+      "id": "humanista",
+      "grupo": "Humanista",
+      "titulo": "Psicoterapias humanistas y experienciales",
+      "entradilla": "La persona no es un problema que resolver, sino un proceso que acompañar.",
+      "descripcionMeta": "Los modelos humanistas y experienciales del Atlas: Rogers, Gestalt, logoterapia, focusing y terapia focalizada en la emoción.",
+      "intro": [
+        "Las psicoterapias humanistas se constituyen a mediados del siglo XX como una tercera vía frente al psicoanálisis y al conductismo, a los que reprochan lo mismo desde ángulos opuestos: haber reducido a la persona a un mecanismo, gobernado por pulsiones inconscientes o por contingencias externas. Frente a eso, sitúan en el centro la experiencia consciente, la capacidad de elegir y una tendencia inherente al desarrollo que la terapia no crea sino que destraba.",
+        "Carl Rogers dio a esta intuición su formulación más influyente y también la más comprobable. Su propuesta de que existen condiciones necesarias y suficientes para el cambio terapéutico —empatía, aceptación incondicional y congruencia del terapeuta— tuvo dos efectos duraderos. Uno clínico: desplazó la atención desde la técnica hacia la relación. Otro metodológico, menos recordado: Rogers fue pionero en grabar sesiones y someterlas a análisis sistemático, en un momento en que eso resultaba casi transgresor.",
+        "La tradición se ramifica pronto. La terapia Gestalt trabaja el contacto y la conciencia en el presente, con un estilo activo y experiencial que contrasta con la contención rogeriana. La logoterapia de Frankl sitúa el sentido como necesidad primaria. El focusing de Gendlin identifica y sistematiza la sensación sentida, ese registro corporal difuso que precede a la formulación verbal. Y la terapia focalizada en la emoción de Greenberg recoge buena parte de esa herencia y la reformula en términos de procesamiento emocional, con un cuerpo de investigación sólido detrás.",
+        "El destino de esta tradición ha sido paradójico. Como escuelas identificables perdieron peso institucional frente a los modelos cognitivo-conductuales; sin embargo, sus hallazgos centrales se incorporaron a casi todo lo demás. La alianza terapéutica, hoy uno de los predictores de resultado mejor establecidos con independencia del enfoque, es en buena medida una herencia humanista. Las fichas de esta sección recogen tanto los modelos fundacionales como sus desarrollos contemporáneos."
+      ]
+    },
+    {
+      "id": "sistemico",
+      "grupo": "Sistémico",
+      "titulo": "Terapia sistémica y familiar",
+      "entradilla": "El síntoma no está dentro de una persona: está entre varias.",
+      "descripcionMeta": "Los modelos sistémicos y familiares del Atlas: Palo Alto, escuela de Milán, estructural, estratégica y terapia breve centrada en soluciones.",
+      "intro": [
+        "La terapia sistémica introduce un desplazamiento que cuesta asimilar precisamente porque es muy radical: deja de mirar dentro del individuo y empieza a mirar entre los individuos. El síntoma deja de entenderse como propiedad de quien lo presenta y pasa a leerse como parte de una pauta de interacción que lo produce y lo mantiene. La persona que llega a consulta es «el paciente identificado»: quien porta el síntoma, no necesariamente donde está el problema.",
+        "Su origen es interdisciplinar y poco convencional. La cibernética de Bateson, la teoría general de sistemas y el grupo de Palo Alto aportan un vocabulario —retroalimentación, homeostasis, causalidad circular— que venía de la ingeniería y la biología antes que de la psicología. De ahí sale una tesis operativa: en un sistema, los intentos de solución pueden convertirse en el problema, y a menudo lo hacen. Cuanto más insiste una familia en la solución que no funciona, más estable se vuelve aquello que quiere eliminar.",
+        "Las escuelas que se desarrollan a partir de ahí son notablemente distintas entre sí. La estructural de Minuchin trabaja sobre jerarquías, límites y alianzas dentro de la familia, y no duda en intervenir para reorganizarlos en la propia sesión. La estratégica y el modelo de Milán despliegan intervenciones indirectas —connotación positiva, prescripción del síntoma, preguntas circulares— diseñadas para desbloquear pautas rígidas sin confrontarlas de frente. La terapia breve centrada en soluciones lleva la economía al extremo: renuncia a entender el origen del problema y trabaja sobre las excepciones, esos momentos en que el problema no aparece.",
+        "El giro posterior fue epistemológico. La llamada cibernética de segundo orden señaló que el terapeuta no observa el sistema desde fuera: al observarlo, entra en él. Esa idea abre la puerta a los enfoques construccionistas y narrativos, y explica por qué la frontera entre esta sección y la constructivista es porosa. Las fichas recogen tanto los modelos clásicos como los desarrollos posteriores, incluida la crítica —importante— a los usos de la teoría sistémica que llegaron a culpabilizar a las familias."
+      ]
+    },
+    {
+      "id": "constructivista",
+      "grupo": "Constructivista",
+      "titulo": "Constructivismo, terapias narrativas y de significado",
+      "entradilla": "No accedemos a la realidad: construimos versiones de ella, y algunas nos dejan vivir mejor que otras.",
+      "descripcionMeta": "Los modelos constructivistas y narrativos del Atlas: Kelly, terapia narrativa, construccionismo social y modelos posracionalistas.",
+      "intro": [
+        "El constructivismo parte de una posición epistemológica antes que clínica: no conocemos la realidad directamente, sino a través de estructuras de significado que nosotros mismos elaboramos. George Kelly lo formuló en 1955 con una metáfora que sigue siendo útil: cada persona funciona como un científico que construye hipótesis sobre el mundo, las pone a prueba y las revisa —o se aferra a ellas aunque fallen—. Desde ahí, el problema clínico no es una creencia irracional que corregir, sino un sistema de constructos que se ha vuelto demasiado rígido o demasiado estrecho para la vida de quien lo habita.",
+        "Esta diferencia con la terapia cognitiva es más profunda de lo que parece y conviene no aplanarla. Para el modelo cognitivo clásico existe un criterio de realidad frente al que un pensamiento puede ser contrastado y corregido. Para el constructivista, la pregunta no es tanto si una construcción es verdadera como si resulta viable: si permite anticipar, actuar y sostener la propia identidad. Se trabaja con la coherencia y la flexibilidad del sistema de significados, no con su correspondencia con los hechos.",
+        "La terapia narrativa de White y Epston añade una dimensión política a este planteamiento. Las historias con las que nos contamos no las inventamos en solitario: circulan socialmente, y algunas —sobre el género, el éxito, la normalidad, la enfermedad— son opresivas. De ahí prácticas características como la externalización, que separa a la persona del problema en el propio lenguaje de la conversación, o la búsqueda de acontecimientos extraordinarios que la historia dominante había descartado por no encajar.",
+        "El construccionismo social lleva el argumento un paso más allá, situando el significado no en la mente individual sino en el intercambio entre personas. Y los modelos posracionalistas, más cercanos a la tradición cognitiva y a la teoría del apego, reconstruyen la organización del significado personal a lo largo del desarrollo. Las fichas de esta sección recorren ese arco, con sus fuentes y con las objeciones que ha recibido —sobre todo la de hasta dónde puede sostenerse el relativismo sin desarmar el propio criterio clínico."
+      ]
+    },
+    {
+      "id": "integrativo",
+      "grupo": "Integrativo",
+      "titulo": "Psicoterapias integradoras",
+      "entradilla": "Todos los enfoques funcionan, ninguno funciona del todo: la tradición que se tomó ese hallazgo en serio.",
+      "descripcionMeta": "Los modelos integradores del Atlas: factores comunes, modelo transteórico, integración asimilativa y protocolos basados en procesos.",
+      "intro": [
+        "La psicoterapia integradora no es una escuela más, sino una respuesta a un problema que las escuelas no podían resolver desde dentro. La investigación comparativa lleva décadas produciendo un resultado incómodo y notablemente estable: las diferencias de eficacia entre enfoques bien estructurados son pequeñas, mucho menores de lo que sus defensores sostienen. Si eso es así, o bien todos aciertan por razones distintas, o bien están haciendo algo parecido bajo vocabularios diferentes.",
+        "De esa pregunta salen varias estrategias que conviene no confundir. La integración teórica busca un marco conceptual nuevo que dé cabida a las aportaciones de varias tradiciones. El eclecticismo técnico renuncia a unificar teorías y selecciona intervenciones según lo que funciona para cada problema y cada paciente. La aproximación por factores comunes sostiene que lo que cura no es la técnica sino lo compartido: la alianza, la expectativa de mejora, un marco explicativo creíble, la oportunidad de afrontar lo evitado. Y la integración asimilativa parte de un modelo de base e incorpora procedimientos ajenos sin abandonar su lógica.",
+        "El modelo transteórico de Prochaska y DiClemente introdujo una pieza que ha resultado especialmente útil en la práctica: los estadios de cambio. La misma intervención puede ser eficaz o contraproducente según el momento en que se encuentre la persona, y buena parte de lo que se interpretaba como resistencia era en realidad un desajuste entre lo que el terapeuta proponía y lo que el paciente estaba en condiciones de hacer.",
+        "El desarrollo más reciente de esta línea es la terapia basada en procesos, que propone abandonar del todo la lógica de los paquetes de tratamiento por diagnóstico y trabajar sobre procesos de cambio identificables, medibles y compartidos entre modelos. Las fichas de esta sección incluyen tanto los marcos integradores como la evidencia sobre factores comunes, y también la objeción principal que se les hace: que integrar sin criterio puede acabar en una práctica sin teoría, difícil de enseñar y de evaluar."
+      ]
+    },
+    {
+      "id": "transversal",
+      "grupo": "Transversal",
+      "titulo": "Enfoques transversales de la psicoterapia",
+      "entradilla": "Modelos que no pertenecen a ninguna escuela porque atraviesan todas.",
+      "descripcionMeta": "Modelos transversales del Atlas: mindfulness, estadios de cambio, regulación emocional, feedback clínico, trauma sociopolítico y determinación.",
+      "intro": [
+        "Algunos modelos no encajan en ninguna tradición porque no nacieron dentro de ninguna. Describen procesos que cualquier terapeuta encuentra, trabaje desde donde trabaje: cómo se regula una emoción, en qué momento de disposición al cambio está una persona, qué hace que alguien sostenga un esfuerzo o lo abandone, cómo se mide si una terapia está funcionando mientras todavía se puede corregir el rumbo. Esta sección los reúne.",
+        "Varios proceden de la psicología básica y llegaron a la clínica después. El modelo procesual de regulación emocional distingue puntos de intervención —selección de la situación, despliegue atencional, cambio cognitivo, modulación de la respuesta— que resultan útiles con independencia del marco. La teoría de la autodeterminación aporta un modelo empíricamente sólido de motivación basado en autonomía, competencia y vínculo, con implicaciones directas sobre cómo se plantea una tarea entre sesiones. El modelo transteórico de los estadios de cambio ha reorganizado la forma de entender lo que antes se llamaba resistencia.",
+        "Otros son metodológicos antes que teóricos. El feedback-informed treatment propone algo tan sencillo como medir sesión a sesión cómo va el paciente y la alianza, y usar ese dato para ajustar el trabajo. Su aportación no es una técnica nueva sino un hallazgo incómodo: los terapeutas predicen mal el deterioro de sus propios pacientes, y un cuestionario breve lo detecta antes que el criterio clínico.",
+        "Esta sección incluye también modelos que amplían el foco más allá del individuo y su consulta: el trabajo con trauma sociopolítico, la intervención en contextos de desplazamiento forzado, la psicoterapia comunitaria para la reconciliación y el Marco de Poder, Amenaza y Significado, que propone sustituir el diagnóstico psiquiátrico por una lectura del sufrimiento en términos de poder y contexto. Son enfoques que recuerdan que buena parte de lo que llega a consulta no se originó allí."
+      ]
+    },
+    {
+      "id": "otros",
+      "grupo": "Otros",
+      "titulo": "Tradiciones terapéuticas no occidentales",
+      "entradilla": "Prácticas para el sufrimiento humano que se desarrollaron fuera del canon europeo y norteamericano.",
+      "descripcionMeta": "Naikan, Morita, Ubuntu, Whānau Ora, psicología ayurvédica, vipassana y otras tradiciones terapéuticas no occidentales, en el Atlas.",
+      "intro": [
+        "La historia estándar de la psicoterapia se cuenta como si hubiera empezado en Viena y se hubiera desarrollado entre Europa y Norteamérica. Es una historia parcial. Otras culturas elaboraron prácticas sistemáticas para el malestar psíquico —con su teoría del sufrimiento, su método y sus criterios de mejora— antes, después y al margen de ese linaje. Esta sección las recoge.",
+        "Japón aporta dos modelos formalizados que se enseñan y se practican con manual: la terapia Morita, que trabaja la aceptación del síntoma y la reorientación hacia la acción con propósito en lugar de perseguir su eliminación, y el Naikan, una práctica estructurada de revisión biográfica organizada en torno a tres preguntas sobre lo recibido, lo devuelto y las dificultades causadas a otros. Corea ha desarrollado la psicoterapia del Han, un trabajo sobre una forma culturalmente específica de dolor acumulado y no resuelto.",
+        "Otras entradas provienen de marcos comunitarios más que individuales. Whānau Ora, en Aotearoa/Nueva Zelanda, sitúa la unidad de intervención en la familia extensa y no en la persona. Los enfoques basados en Ubuntu, en el sur de África, parten de una concepción de la identidad como constituida por el vínculo. El Social and Emotional Wellbeing australiano articula salud mental, tierra, cultura y comunidad en un mismo marco. En todos ellos, la separación entre lo clínico, lo espiritual y lo social —que la psicoterapia occidental da por supuesta— sencillamente no se sostiene.",
+        "Hay que leer esta sección con dos cautelas. La primera es que agrupar bajo una etiqueta prácticas tan distintas es una decisión editorial cómoda para navegar el Atlas, no una afirmación de que tengan algo en común más allá de no ser occidentales. La segunda es que varias de estas tradiciones han llegado a Occidente despojadas de su contexto y convertidas en técnicas; el caso del mindfulness es el más evidente. Cada ficha indica de dónde viene la práctica, qué evidencia existe sobre ella y qué se pierde en esa traducción."
+      ]
+    },
+    {
+      "id": "epistemologia",
+      "grupo": "Epistemologías",
+      "titulo": "Epistemologías de la psicoterapia",
+      "entradilla": "Debajo de cada modelo hay una teoría del conocimiento, aunque casi nunca se declare.",
+      "descripcionMeta": "Las epistemologías que sostienen los modelos de psicoterapia: positivismo, fenomenología, constructivismo, cibernética, pragmatismo y hermenéutica.",
+      "intro": [
+        "Ninguna psicoterapia empieza en la clínica. Antes de decidir qué hacer con un paciente, todo modelo ha decidido ya —casi siempre sin decirlo— qué cuenta como conocimiento válido, qué tipo de cosa es un síntoma y qué autoriza a afirmar que alguien ha mejorado. Esta sección reúne las posiciones epistemológicas que sostienen el resto del Atlas.",
+        "No es una discusión académica. De ella dependen desacuerdos clínicos muy concretos. Si se parte del postpositivismo, la pregunta legítima es si un tratamiento produce un efecto medible frente a un control, y el ensayo aleatorizado es el instrumento adecuado. Si se parte de la fenomenología, el objeto de estudio es la experiencia vivida tal como se presenta, y reducirla a puntuaciones pierde justo aquello que se quería comprender. Ambas posiciones son coherentes; lo que no es coherente es exigir a una los criterios de la otra sin advertirlo.",
+        "Las entradas de esta sección recorren las corrientes que más han marcado el campo: el positivismo y su revisión postpositivista, que sostienen el modelo de tratamientos con apoyo empírico; la fenomenología y el existencialismo, base de las terapias humanistas y de buena parte de la psicopatología descriptiva europea; el constructivismo y el construccionismo social, que desplazan el foco desde el descubrimiento hacia la construcción del significado; la cibernética y la teoría de sistemas, de las que nace el pensamiento sistémico; el pragmatismo y el contextualismo funcional, que juzgan una idea por su utilidad para predecir e influir; y la hermenéutica, que entiende la clínica como interpretación de un texto vital.",
+        "Leer estas fichas cambia la forma de leer las demás. Muchas polémicas entre escuelas que parecen técnicas —qué es una prueba, cuándo un caso único vale, si el diagnóstico describe o construye— son en realidad desacuerdos epistemológicos que nunca se explicitaron. Hacerlos visibles no los resuelve, pero permite discutirlos en el nivel donde de verdad ocurren."
+      ]
+    },
+    {
+      "id": "psicodelicos",
+      "grupo": "Psicodélicos",
+      "titulo": "Psicoterapia asistida con psicodélicos",
+      "entradilla": "Un campo que la investigación reabrió medio siglo después de haberlo cerrado, y que todavía se está construyendo.",
+      "descripcionMeta": "Modelos de psicoterapia asistida con psilocibina, MDMA y ketamina: protocolos de preparación, sesión e integración, con su evidencia actual.",
+      "intro": [
+        "La psicoterapia asistida con psicodélicos tiene una historia interrumpida. Entre los años cincuenta y principios de los setenta se investigó con considerable intensidad; el cambio de marco legal la detuvo casi por completo durante tres décadas. El campo se reabrió a partir de los años noventa con estándares metodológicos muy distintos, y hoy es una de las áreas más activas —y más discutidas— de la investigación en salud mental.",
+        "Conviene precisar qué se está catalogando aquí. Estos modelos no son fármacos, sino protocolos psicoterapéuticos que organizan el trabajo alrededor de una experiencia inducida farmacológicamente. Casi todos comparten la misma arquitectura en tres tiempos: una fase de preparación en la que se construye la alianza y se establecen expectativas y encuadre; la sesión con la sustancia, acompañada y no directiva; y una fase de integración en la que lo ocurrido se elabora y se traduce en cambios sostenibles. La hipótesis de trabajo compartida es que la sustancia abre una ventana de plasticidad, y que lo que determina el resultado es el trabajo psicológico que se hace dentro de ella.",
+        "Las entradas recogen protocolos con psilocibina, MDMA y ketamina, más varios marcos de integración que se han formalizado recientemente. Se incluyen también modelos de reducción de daños, dirigidos a personas que van a consumir al margen del sistema sanitario y que necesitan acompañamiento aunque su uso no sea clínico.",
+        "Es la sección del Atlas donde más cambia el estado del conocimiento de un año para otro, y donde más conviene la prudencia. Los resultados en depresión resistente y en estrés postraumático han sido prometedores, pero persisten problemas metodológicos serios —el cegamiento es casi imposible, las muestras son pequeñas, el seguimiento a largo plazo escaso— y ya han aparecido cuestionamientos regulatorios y casos documentados de mala praxis en el encuadre terapéutico. Cada ficha indica su nivel de evidencia y el estado regulatorio de la sustancia."
+      ]
+    },
+    {
+      "id": "fronteras",
+      "grupo": "Fronteras",
+      "titulo": "Pseudoterapias y prácticas cuestionadas",
+      "entradilla": "Lo que se ofrece como psicoterapia sin serlo, y lo que llegó a hacer daño. Están aquí para poder reconocerlas.",
+      "descripcionMeta": "Catálogo crítico de pseudoterapias y prácticas iatrogénicas: por qué se difundieron, qué prometen y qué dice la evidencia sobre ellas.",
+      "intro": [
+        "Esta sección reúne prácticas que se han presentado como psicoterapia y que no lo son, o que lo fueron y dejaron de serlo cuando la evidencia se acumuló en su contra. Están catalogadas con el mismo cuidado que el resto del Atlas, y la razón es sencilla: un profesional necesita poder reconocerlas, saber qué prometen y disponer de argumentos concretos cuando un paciente pregunta por ellas o llega dañado por ellas. Incluirlas es documentarlas, nunca recomendarlas.",
+        "No todas están aquí por el mismo motivo, y la diferencia importa. Algunas carecen de fundamento y de eficacia demostrada, pero su daño principal es el coste de oportunidad: el tiempo y el dinero que alguien no dedicó a un tratamiento que sí funciona. Otras son activamente iatrogénicas, y hay ensayos que lo muestran: los programas de disuasión carcelaria juvenil aumentan la reincidencia en lugar de reducirla, y el debriefing psicológico obligatorio tras un incidente crítico incrementa el riesgo de estrés postraumático frente a no intervenir. Un tercer grupo ha producido daños graves y documentados, incluida la muerte de menores en el caso de las terapias de contención coercitiva.",
+        "Mención aparte merece la llamada terapia de conversión, dirigida a modificar la orientación sexual o la identidad de género. No es una técnica discutida: es una práctica sin base científica, condenada por las principales asociaciones profesionales, asociada a depresión y conducta suicida, y prohibida por ley en un número creciente de países, España incluida. Figura en el Atlas por su relevancia histórica y por la necesidad de nombrarla con precisión.",
+        "También hay casos que obligan a matizar. Algunas de estas prácticas contienen elementos que sí funcionan —exposición, sugestión, relación de apoyo, expectativa de mejora— envueltos en explicaciones falsas sobre por qué funcionan. Eso explica que acumulen testimonios entusiastas y, a la vez, fracasen en los ensayos controlados: quien mejoró lo hizo por razones distintas de las que le contaron. Cada ficha detalla el origen de la práctica, el mecanismo que afirma y lo que ha encontrado la investigación al ponerlo a prueba."
+      ]
+    },
+    {
+      "id": "terapias-expresivas-y-creativas",
+      "grupo": "Terapias Expresivas y Creativas",
+      "titulo": "Terapias expresivas y creativas",
+      "entradilla": "Cuando el material clínico no llega por la palabra, sino por la imagen, el cuerpo o el sonido.",
+      "descripcionMeta": "Arteterapia y terapias expresivas en el Atlas: la obra como espacio terapéutico, sus fundamentos y sus referencias. Sección en ampliación.",
+      "intro": [
+        "Las terapias expresivas parten de una constatación que cualquier clínico ha encontrado alguna vez: hay experiencias que no se dejan decir. El trauma temprano, lo preverbal, lo que ocurrió antes de que existieran palabras para nombrarlo, o simplemente lo que la persona no puede todavía formular sin desbordarse. Estas aproximaciones ofrecen otra vía de acceso —la imagen, el movimiento, el sonido, la dramatización— no como entretenimiento ni como diagnóstico encubierto, sino como el lugar donde el trabajo sucede.",
+        "La distinción clásica dentro del campo, formulada por Edith Kramer, es la que separa el arte como terapia del arte en psicoterapia. En la primera, el proceso creativo es en sí mismo terapéutico: la sublimación que ocurre al dar forma a un material difícil hace el trabajo, y la obra no necesita ser interpretada para que produzca efecto. En la segunda, lo producido es material que se elabora después en la conversación, más cerca del uso que el psicoanálisis hace del sueño. Ambas posiciones siguen conviviendo y sostienen prácticas formativas distintas.",
+        "Es un campo con presencia clínica considerable —hospitales, oncología, cuidados paliativos, salud mental infantojuvenil, contextos de desplazamiento— y con una base de investigación todavía desigual: abundante en estudios de proceso y casos, más escasa en ensayos controlados de tamaño suficiente. Esa asimetría no es exclusiva de estas terapias, pero conviene tenerla presente al leer sus fichas.",
+        "Esta sección del Atlas está en construcción y es, hoy, la más pequeña. Se irá ampliando con arteterapia, musicoterapia, danza-movimiento terapia, dramaterapia y psicodrama. Si trabajas en este campo y echas en falta un modelo, es probable que tengas razón: escríbeme y lo incorporo."
+      ]
+    }
+  ],
+  "_pendiente_en_tmps_data": [
+    "prolonged-exposure-foa-1991 tiene grupo 'Conductual' en vez de 'Conductismo'. Aquí se salva con un alias, pero debería corregirse en el origen.",
+    "art-as-therapy-kramer-1971 existe en Core/modelos pero no en Core/modelos-publicos: falta ejecutar scripts/build-public-models.mjs. Hasta entonces no aparece en la app ni tiene página de escuela."
+  ]
+}

@@ -5,3 +5,7 @@
 !/public/modelos/legacy/
 /public/modelos/.generated-pages.json
 /public/en/models/
+
+# Páginas de escuela generadas por `npm run build` (build-escuela-pages.mjs).
+# El texto editorial sí se versiona: scripts/escuelas-contenido.json.
+/public/escuelas/*/

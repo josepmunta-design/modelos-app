@@ -15,6 +15,45 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (noche) — páginas de escuela
+
+Cierra la Fase 1.4. Doce páginas hub en `/escuelas/<id>/`, generadas en el
+build a partir del corpus ya cargado por `build-model-pages.mjs`, así que el
+listado no puede quedarse atrás cuando crezca el Atlas.
+
+- [x] `scripts/escuelas-contenido.json` — texto editorial de las 13 escuelas:
+      título, entradilla, meta y 300-370 palabras de introducción. 4.165
+      palabras en total. Es lo único escrito a mano; el resto se deriva.
+- [x] `scripts/build-escuela-pages.mjs` — genera cada página con su listado
+      cronológico de modelos, JSON-LD (`CollectionPage`, `ItemList`,
+      `BreadcrumbList`), migas de pan, accesos a las cuatro vistas filtradas
+      por escuela y el formulario de lista de espera.
+- [x] `public/assets/escuelas/escuela.css` con el mismo lenguaje editorial.
+- [x] **Enlace interno desde cada ficha**: el grupo de la cabecera
+      («Cognitivo · 1999») ahora enlaza a su escuela. Es lo que da jerarquía:
+      sin ese enlace, las 259 fichas colgaban del sitemap y de nada más.
+- [x] El sitemap anuncia solo las escuelas realmente generadas, leyéndolas del
+      manifiesto del build. Una escuela sin modelos no genera página, y
+      anunciar una URL que da 404 es peor que omitirla.
+- [x] `scripts/escuelas.test.mjs` — 7 tests. Suite completa: 35/35.
+
+**Tres inconsistencias encontradas en `tmps-data`** al emparejar modelos con
+escuelas. Las dos primeras están salvadas en `modelos-app`, pero conviene
+arreglarlas en el origen:
+
+1. El campo `grupo` no está normalizado: conviven `Sistémico` y `sistemico`,
+   `Fronteras` y `fronteras`, `Otros` y `otros`. El emparejado ahora ignora
+   acentos y mayúsculas.
+2. `prolonged-exposure-foa-1991` tiene `grupo: "Conductual"` en vez de
+   `"Conductismo"`. Salvado con un alias declarado en el contenido. Es un
+   modelo importante y estaba huérfano de su escuela.
+3. **`art-as-therapy-kramer-1971` no está publicado.** Existe en
+   `Core/modelos/` pero no en `Core/modelos-publicos/`, así que no aparece en
+   la app ni tiene ficha. Falta ejecutar `scripts/build-public-models.mjs` en
+   `tmps-data`. Por eso `terapias-expresivas-y-creativas` se queda sin página:
+   su único modelo no existe de cara al público. El texto editorial ya está
+   escrito y la página se generará sola en cuanto el modelo se publique.
+
 ### 8 de septiembre de 2026 (tarde-III) — el robots.txt se revertia solo
 
 Verificacion del despliegue anterior. Dos hallazgos.
@@ -708,10 +747,10 @@ const indexable = model.descripcion.length >= 160;
 Un sitemap plano de 410 URLs sin jerarquía es lo peor para el rastreo. Google
 necesita entender qué es importante.
 
-- [ ] **Páginas hub por escuela**: `/escuelas/<escuela>/` con introducción real
-      a la tradición (300-500 palabras) y enlace a todos sus modelos. Son 13
-      páginas con alto potencial de posicionamiento por sí mismas
-      ("terapia sistémica", "psicoanálisis relacional", "terapias contextuales").
+- [x] **Páginas hub por escuela** — HECHO el 8/9. `/escuelas/<escuela>/` con
+      300-370 palabras de introducción y el listado cronológico de sus modelos.
+      Doce publicadas; la decimotercera espera a que se publique su único
+      modelo.
 - [x] `/escuelas/` y `/genealogia` **ya estaban** en el sitemap: lo comprobé
       contra el `sitemap.xml` del repositorio, que está obsoleto porque el
       build lo regenera entero. `/metamodelos/` sí faltaba y se ha añadido.
