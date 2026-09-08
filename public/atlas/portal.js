@@ -763,6 +763,7 @@ root.addEventListener('keydown', event => {
 // montaje nunca llega, se navega por URL para no dejar al usuario encerrado.
 let rescue = 0;
 function request(view, source) {
+  window.track?.('vista_elegida', { vista: view, origen: 'portal' });
   if (choose) return choose(view);
   pending = view;
   source?.setAttribute('data-busy', 'true');

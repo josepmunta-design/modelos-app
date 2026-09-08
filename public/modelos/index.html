@@ -51,6 +51,9 @@
   <script src="/modelos/i18n/runtime.js?v=20260902-1"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/modelos/legacy/analytics.js"></script>
+  <script src="/assets/track.js"></script>
+  <link rel="stylesheet" href="/assets/lista-espera.css">
+  <script defer src="/assets/lista-espera.js"></script>
   <script defer src="/_vercel/insights/script.js"></script>
 <script src="/modelos/legacy/bootstrap.js"></script>
 
@@ -95,6 +98,25 @@
           <span><span data-i18n="auth.price">9.90&euro;/mes</span><small data-i18n="auth.privateBeta">Beta privada</small></span>
           <span><span data-i18n="auth.partialProfile">Ficha parcial</span><small data-i18n="auth.freeAccess">Acceso gratuito</small></span>
         </div>
+        <form class="lista-espera listaEsperaMuro" data-lista-espera="muro" action="/api/subscribe-list" method="post">
+          <p class="lista-espera-nota">&iquest;Prefieres esperar? D&eacute;jame tu correo y te aviso cuando abra el acceso completo. Sin compromiso.</p>
+          <div class="lista-espera-campos" data-lista-campos>
+            <label class="visually-hidden" for="muroEmail">Tu correo electr&oacute;nico</label>
+            <input id="muroEmail" type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required />
+            <button type="submit">Av&iacute;same</button>
+          </div>
+          <div class="lista-espera-gracias" data-lista-gracias hidden>
+            <p class="lista-espera-nota">Gracias. &iquest;Qu&eacute; describe mejor tu caso?</p>
+            <div class="lista-espera-perfiles">
+              <button type="button" data-perfil="clinico">Ejerzo la cl&iacute;nica</button>
+              <button type="button" data-perfil="docente">Doy clase</button>
+              <button type="button" data-perfil="estudiante">Estudio</button>
+              <button type="button" data-perfil="otro">Otra cosa</button>
+            </div>
+          </div>
+          <p class="lista-espera-cierre" data-lista-cierre hidden>Anotado. Nos leemos pronto.</p>
+          <p class="lista-espera-estado" data-lista-estado role="status" aria-live="polite"></p>
+        </form>
       </div>
       <div class="accessEditorialAside" aria-hidden="true"></div>
     </div>

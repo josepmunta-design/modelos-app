@@ -26,6 +26,10 @@
   <link rel="preload" as="image" href="/assets/atlas-home/library.jpg">
   <link rel="stylesheet" href="/assets/atlas-home/home.css">
   <script type="module" src="/assets/atlas-home/home.js"></script>
+  <link rel="stylesheet" href="/assets/lista-espera.css">
+  <script src="/assets/track.js"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/assets/lista-espera.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#vistas">Saltar a las cuatro vistas</a>
@@ -81,6 +85,31 @@
       <div class="atlas-foot"><span>Un mismo catálogo. Todas sus conexiones.</span><span class="atlas-foot-center">MODELOS &nbsp; / &nbsp; AUTORES &nbsp; / &nbsp; ESCUELAS</span><button id="motion-toggle" class="motion-toggle" type="button" aria-pressed="false" hidden><span class="motion-icon" aria-hidden="true">Ⅱ</span><span class="motion-label">Pausar movimiento</span></button></div>
     </section>
     <section class="manifesto" id="el-atlas" aria-labelledby="manifesto-title"><div><p class="eyebrow">EL ESPÍRITU DEL ATLAS</p><h2 id="manifesto-title">Comprender es<br><em>poner en relación.</em></h2></div><div class="manifesto-copy"><p>Detrás de cada teoría hay una forma de mirar al otro. El Atlas reúne esas miradas para explorar la psicoterapia con contexto, descubrir sus vínculos y construir un criterio propio.</p><a href="#vistas">La próxima conexión la haces tú. <span aria-hidden="true">↑</span></a></div></section>
+    <section class="aviso" id="avisame" aria-labelledby="aviso-title">
+      <div class="aviso-intro">
+        <p class="eyebrow">EL ATLAS ESTÁ EN BETA ABIERTA</p>
+        <h2 id="aviso-title">253 modelos de psicoterapia,<br><em>con sus fundamentos y sus linajes.</em></h2>
+      </div>
+      <form class="lista-espera" data-lista-espera="home" action="/api/subscribe-list" method="post">
+        <p class="lista-espera-nota">Sigo ampliándolo cada semana. Déjame tu correo y te aviso de lo que voy publicando: modelos nuevos, vistas nuevas y la apertura del acceso completo.</p>
+        <div class="lista-espera-campos" data-lista-campos>
+          <label class="visually-hidden" for="aviso-email">Tu correo electrónico</label>
+          <input id="aviso-email" type="email" name="email" placeholder="tu@correo.com" autocomplete="email" required>
+          <button type="submit">Avísame</button>
+        </div>
+        <div class="lista-espera-gracias" data-lista-gracias hidden>
+          <p class="lista-espera-nota">Gracias. Una última cosa, si te apetece: ¿qué describe mejor tu caso?</p>
+          <div class="lista-espera-perfiles">
+            <button type="button" data-perfil="clinico">Ejerzo la clínica</button>
+            <button type="button" data-perfil="docente">Doy clase</button>
+            <button type="button" data-perfil="estudiante">Estudio</button>
+            <button type="button" data-perfil="otro">Otra cosa</button>
+          </div>
+        </div>
+        <p class="lista-espera-cierre" data-lista-cierre hidden>Anotado. Nos leemos pronto.</p>
+        <p class="lista-espera-estado" data-lista-estado role="status" aria-live="polite"></p>
+      </form>
+    </section>
   </main>
   <footer class="footer"><a class="brand" href="/">TU MENTOR <span class="footer-atlas">/ Atlas de la psicoterapia</span></a><nav aria-label="Otros recursos"><a href="/metamodelos/">Metamodelos ↗</a><a href="/procesos/">Procesos ↗</a><a href="/en/models/">English ↗</a></nav><span>© 2026 Tu Mentor Psicología</span></footer>
 </body>

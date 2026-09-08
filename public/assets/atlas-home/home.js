@@ -168,3 +168,18 @@ document.addEventListener('visibilitychange',sync);
 window.addEventListener('pagehide',()=>cancelAnimationFrame(frame));
 window.addEventListener('pageshow',sync);
 sync();
+
+/* Analitica. Nombres de evento fijados en LANZAMIENTO.md, seccion 0.1. */
+window.track?.('home_vista', { referrer: document.referrer || 'directo' });
+
+for (const s of scenes) {
+  s.element.addEventListener('click', () => {
+    window.track?.('vista_elegida', { vista: s.element.dataset.scene, origen: 'home' });
+  });
+}
+
+for (const enlace of document.querySelectorAll('.masthead nav a[href*="/modelos/"], .manifesto-copy a')) {
+  enlace.addEventListener('click', () => {
+    window.track?.('vista_elegida', { vista: 'list', origen: 'cabecera' });
+  });
+}

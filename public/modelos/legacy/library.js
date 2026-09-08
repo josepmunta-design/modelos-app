@@ -205,6 +205,7 @@
 
       function openAccessGate(message = '', mode = 'login'){
         document.body.classList.add('access-locked');
+        window.track?.('muro_visto', { modo: mode, fichas_vistas: window.track?.fichasVistas?.() });
         setAccessMode(mode);
         setStatus(message);
         const focusTarget = mode === 'reset' ? passwordInput : emailInput;
@@ -271,6 +272,7 @@
       }
 
       async function requestCheckout(){
+        window.track?.('click_suscribir', { origen: 'muro', fichas_vistas: window.track?.fichasVistas?.() });
         const { data } = await supabaseClient.auth.getSession();
         const token = data?.session?.access_token || window.SUPABASE_ACCESS_TOKEN || '';
         if (!token){
@@ -308,6 +310,7 @@
           if (!response.ok || !payload.url){
             throw new Error(payload.error || uiText('checkout.openError', 'No se pudo abrir Stripe Checkout.'));
           }
+          window.track?.('checkout_iniciado', {});
           location.href = payload.url;
         }catch(error){
           setStatus(error?.message || uiText('checkout.openError', 'No se pudo abrir Stripe Checkout.'));
@@ -413,6 +416,7 @@
 
       async function signUp(){
         if (!emailInput || !passwordInput) return;
+        window.track?.('click_registro', { origen: 'muro' });
         setBusy(true);
         setStatus(uiText('auth.creatingAccount', 'Creando cuenta…'), true);
         const { data, error } = await supabaseClient.auth.signUp({
@@ -425,6 +429,7 @@
           return;
         }
         await applySession(data?.session || null);
+        window.track?.('registro_ok', { confirmacion_pendiente: !data?.session });
         if (!data?.session){
           setStatus(uiText('auth.accountCreated', 'Cuenta creada. Revisa tu email para confirmar el acceso.'), true);
         }else if (!document.body.classList.contains('access-locked')){
@@ -15092,6 +15097,14 @@ async function openModel(id, options = {}){
     window.TMPS_ATLAS?.recordSelection(id, options.updateUrl !== false);
     currentModelId = id;
     window.__CURRENT_MODEL_ID = id;
+
+    // Analitica: cuenta fichas distintas por sesion (LANZAMIENTO.md 0.1).
+    const trackedModel = (Array.isArray(window.MODELS_ALL) ? window.MODELS_ALL : MODELS)
+      ?.find(x => String(x?.id ?? '').trim() === String(id).trim());
+    window.track?.ficha?.(String(id), {
+      escuela: trackedModel?.grupo,
+      origen: window.TMPS_ATLAS?.getState?.()?.view || 'directo'
+    });
 
     if (options.updateUrl !== false){
       updateModelUrl(id, { replace: options.replaceUrl === true });
