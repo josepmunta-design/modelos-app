@@ -15,6 +15,38 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (mediodía) — captura arriba, precio de fundador, perfil arreglado
+
+La captura de email ya funciona en producción: tres altas en `lista_espera`.
+Pero las tres tenían `perfil` en NULL pese a haberse respondido la pregunta.
+
+**Bug del perfil.** El perfil se pregunta después de guardar el email, así que
+llega en una segunda llamada cuando la fila ya existe. Esa llamada repetía el
+POST con `resolution=ignore-duplicates`, de modo que Postgres la descartaba por
+duplicada y la respuesta se perdía. Arreglado: cuando llega un perfil, el
+endpoint hace además un `PATCH` sobre `email_normalized`. Es idempotente y
+sirve igual si el perfil viniera en la primera llamada.
+
+**Decisión de Josep: la captura sube arriba.** El formulario pasa del pie de
+la home a una banda entre la portada y las cuatro vistas. Revierte lo que
+decidí esta mañana; la razón que da Josep es no perder a quien no hace scroll,
+y manda él.
+
+- [x] Banda compacta en dos columnas, no un bloque a página completa: se ve
+      antes de hacer scroll sin expulsar los portales de la pantalla.
+- [x] `.intro` pierde 15px de padding para compensar el alto que añade.
+- [x] En móvil se apila en una columna.
+
+**Nuevo mensaje, con promesa de descuento.** Titular: *«Apúntate ahora y
+tendrás precio de fundador cuando abra la suscripción.»* El muro dice lo mismo.
+
+**Esto es un compromiso, no un reclamo.** Quien esté en la lista antes de que
+abras la suscripción tiene que recibir un precio mejor que la tarifa. Encaja
+con la beta fundadora de la Fase 3 (49 €/año bloqueado, 100 plazas), así que
+la promesa es sostenible — pero hay que cumplirla, y conviene decidir ya el
+número exacto antes de que la lista crezca. Si más adelante se cambia de idea,
+lo que se rompe es la confianza de justo las personas más interesadas.
+
 ### 8 de septiembre de 2026 (tarde) — arreglo del 500 en la captura de email
 
 Josep probó el formulario en producción y la consola devolvió

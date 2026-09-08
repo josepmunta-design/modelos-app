@@ -44,6 +44,8 @@ export default async function handler(req, res) {
       });
     }
 
+    const perfil = cleanText(body.perfil, PERFILES);
+
     await supabaseRest('lista_espera?on_conflict=email_normalized', {
       method: 'POST',
       headers: {
@@ -56,11 +58,26 @@ export default async function handler(req, res) {
         email_normalized: norm.value,
         origen: cleanText(body.origen, ORIGENES) || 'otro',
         modelo_contexto: cleanText(body.modelo) || null,
-        perfil: cleanText(body.perfil, PERFILES),
+        perfil,
         locale: cleanText(body.locale, LOCALES) || 'es',
         user_agent: String(req.headers['user-agent'] ?? '').slice(0, 250) || null
       })
     });
+
+    // El perfil se pregunta DESPUÉS de guardar el email, así que llega en una
+    // segunda llamada cuando la fila ya existe. El insert de arriba la ignora
+    // por duplicada, de modo que sin este PATCH la respuesta se perdía y la
+    // columna quedaba en NULL.
+    if (perfil) {
+      await supabaseRest(
+        `lista_espera?email_normalized=eq.${encodeURIComponent(norm.value)}`,
+        {
+          method: 'PATCH',
+          headers: { Accept: 'application/json', Prefer: 'return=minimal' },
+          body: JSON.stringify({ perfil })
+        }
+      );
+    }
 
     return res.status(200).json({ ok: true });
   } catch (err) {

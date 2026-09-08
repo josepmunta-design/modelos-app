@@ -33,7 +33,7 @@ p, h1, h2, h3 { margin: 0; }
 .masthead nav span { margin-left: 16px; font-size: 17px; color: var(--gold); }
 .masthead nav a:hover, .footer a:hover { color: var(--gold); }
 .atlas { padding: 0 var(--pad); margin: auto; max-width: 2100px; }
-.intro { padding: 35px 0 32px; display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; }
+.intro { padding: 30px 0 22px; display: flex; align-items: flex-end; justify-content: space-between; gap: 25px; }
 .eyebrow { color: var(--gold); font-size: 8px; letter-spacing: 2.4px; font-weight: 500; text-transform: uppercase; }
 .intro .eyebrow { display: flex; align-items: center; gap: 9px; }
 .status-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 9px #cfb48766; }
@@ -187,17 +187,21 @@ h1 em { font-weight: 400; color: #cfbf9b; }
   .portal-photo { will-change: auto; }
 }
 
-/* Lista de avisos. Va tras el manifiesto: quien ha llegado hasta aqui ya ha
-   recorrido las cuatro vistas y es cuando tiene sentido pedirle el correo. */
-.aviso { margin: 0 var(--pad); padding: 55px 0 62px; border-top: 1px solid var(--line); display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
-.aviso h2 { font-family: var(--serif); font-size: clamp(30px, 3.1vw, 48px); line-height: 1.12; font-weight: 400; letter-spacing: -.5px; margin-top: 21px; }
-.aviso h2 em { color: #b5b79f; font-weight: 400; }
-.aviso .lista-espera { justify-self: end; }
+/* Banda de captacion. Va entre la portada y las cuatro vistas, por peticion
+   expresa: se ve antes de hacer scroll, sin empujar los portales fuera de
+   pantalla como haria un bloque a pagina completa. */
+.aviso { display: grid; grid-template-columns: 1.15fr .85fr; gap: 34px; align-items: center; margin: 0 0 16px; padding: 21px 26px; border: 1px solid var(--line); border-radius: 3px; background: linear-gradient(100deg, #cfb4870d, transparent 62%); }
+.aviso h2 { font-family: var(--serif); font-size: clamp(19px, 1.85vw, 28px); line-height: 1.2; font-weight: 400; letter-spacing: -.2px; margin-top: 9px; max-width: 22ch; }
+.aviso h2 em { color: var(--gold); font-style: italic; }
+.aviso .eyebrow { display: flex; align-items: center; gap: 9px; }
+.aviso .lista-espera { max-width: 100%; gap: 9px; }
+.aviso .lista-espera-estado { font-size: 11px; min-height: 1.4em; }
+.aviso .lista-espera-cierre { font-size: 15px; }
 @media (max-width: 1100px) {
-  .aviso { gap: 34px; }
+  .aviso { grid-template-columns: 1fr; gap: 18px; padding: 20px 22px; }
+  .aviso h2 { max-width: 100%; }
 }
 @media (max-width: 760px) {
-  .aviso { grid-template-columns: 1fr; gap: 25px; padding: 38px 0 43px; }
-  .aviso h2 { font-size: 34px; margin-top: 18px; }
-  .aviso .lista-espera { justify-self: stretch; }
+  .aviso { margin-bottom: 14px; padding: 18px; }
+  .aviso h2 { font-size: 21px; }
 }
