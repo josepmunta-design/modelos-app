@@ -15,6 +15,68 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (tarde-II) — Fase 1: por qué no indexaba, de verdad
+
+Josep decidió: **fichas abiertas, herramientas de pago**, y **49 €/año
+bloqueado de por vida** para los 100 primeros como precio de fundador. Al ir a
+implementar la primera parte apareció que ya estaba hecha, y que el diagnóstico
+del plan era erróneo.
+
+**La biblioteca ya estaba abierta.** `bootstrap.js:268`:
+
+```js
+// Modo temporal de biblioteca abierta. Mantiene preparado el flujo de
+// autenticacion y Stripe para poder reactivarlo cambiando este valor a false.
+const PUBLIC_LIBRARY_ACCESS = true;
+```
+
+Con ese interruptor, `HAS_SUBSCRIPTION_ACCESS` es siempre `true`, el muro se
+oculta por CSS (`html.public-library-access .accessGate { display:none }`) y
+cualquiera ve la ficha completa. Así que el muro **nunca** fue la causa de la
+falta de indexación, y la decisión «fichas abiertas» ya está cumplida: no hay
+nada que hacer.
+
+**La causa real, en dos partes:**
+
+1. **`robots.txt` bloqueaba `/api/data`**, que es el proxy del que cuelga todo
+   el contenido del Atlas. Googlebot no descarga subrecursos prohibidos al
+   renderizar, así que ejecutaba el JS, las peticiones de datos no salían y lo
+   que evaluaba era una cáscara vacía. Cuadra con el 13 de 410: trece es
+   aproximadamente el número de páginas que no dependen de `/api/data`.
+2. **El contenido solo vivía en `<noscript>`**, que ningún buscador lee.
+
+**Arreglos:**
+
+- [x] `robots.txt`: `Allow: /api/data` antes del `Disallow: /api/`. El resto de
+      la API (pagos, sesión, eventos) sigue fuera del rastreo.
+- [x] `build-model-pages.mjs`: `renderNoScriptFallback` pasa a
+      `renderSeoArticle` y el artículo se escribe **dentro de `#modelInfo`**,
+      el panel donde el Atlas pinta luego la ficha viva. Al montarse, la app
+      reemplaza ese `innerHTML` y el artículo desaparece solo: mismo contenido,
+      mismo sitio, sin cloaking. Si la app no carga, el contenido se queda.
+- [x] El build falla explícitamente si la plantilla no trae `#modelInfo`, para
+      que un cambio futuro en el HTML no vuelva a dejar las páginas vacías en
+      silencio.
+- [x] Estilos `.seo-article` en `library.css` para que el artículo se lea bien
+      durante el instante en que está visible.
+- [x] Test actualizado: comprueba que el artículo está dentro de `#modelInfo` y
+      que **no** queda ningún `<noscript>` en la página.
+- [x] Build de verificación con los datos locales: 259 fichas ES + 186 EN.
+      Comprobado sobre ACT: **1.105 palabras en el HTML inicial**, cero
+      `<noscript>`.
+- [x] Suite completa: 28/28.
+
+**Consecuencia para el resto del plan:** la Fase 1.2 («decidir qué es gratis»)
+queda resuelta sin trabajo. Poner las cuatro vistas de pago es trabajo de la
+Fase 3, cuando se abra la suscripción; hacerlo ahora restaría uso justo cuando
+se quiere medir interés.
+
+**Nota sobre el botón de suscribirse:** en modo abierto,
+`window.startSubscriptionCheckout` se sustituye por una función vacía y el muro
+está oculto, así que desde `/modelos/` **no hay forma de llegar a Stripe**. El
+arreglo de esta mañana desbloqueó el endpoint, pero para probar el pago de
+punta a punta hará falta una entrada visible. Pendiente de decidir dónde.
+
 ### 8 de septiembre de 2026 (mediodía) — captura arriba, precio de fundador, perfil arreglado
 
 La captura de email ya funciona en producción: tres altas en `lista_espera`.
@@ -273,7 +335,8 @@ Arreglado y verificado; falta probarlo desplegado. Ver Registro de avance.
 | --- | --- | --- |
 | No hay captura de email en ningún sitio | **Crítica** | Búsqueda en todo `public/`: cero formularios de newsletter, lista de espera o aviso de lanzamiento |
 | Analítica sin eventos y ausente en la home | **Crítica** | `public/modelos/legacy/analytics.js` solo define el stub `window.va`; `/_vercel/insights/script.js` se carga en `/modelos/` y en las fichas, **no** en `public/index.html`. Cero eventos personalizados |
-| Contenido indexable solo dentro de `<noscript>` | **Crítica** | `build-model-pages.mjs:671-690` genera la ficha completa dentro de `<noscript>`; se inyecta en `:775` |
+| Contenido indexable solo dentro de `<noscript>` | **Crítica** | `build-model-pages.mjs:671-690` generaba la ficha dentro de `<noscript>`. **Arreglado el 8/9**: ahora se escribe dentro de `#modelInfo` |
+| `robots.txt` bloqueaba `/api/data` | **Crítica** | Todo el contenido del Atlas cuelga de ese proxy; Googlebot no puede pedir subrecursos prohibidos, así que renderizaba páginas vacías. **Arreglado el 8/9** |
 | Indexación parada | **Alta** | Search Console 4/9/26: 410 descubiertas, **13 indexadas**, 378 sin indexar por 2 motivos |
 | 13 fichas con `noindex` automático | Media | `build-model-pages.mjs:699` marca `noindex,follow` toda ficha cuya `descripcion` tenga menos de 160 caracteres |
 | `/escuelas/` fuera del sitemap | Media | `public/escuelas/index.html` existe (7 KB, 5 enlaces) pero no aparece en `sitemap.xml` |
@@ -286,39 +349,49 @@ Arreglado y verificado; falta probarlo desplegado. Ver Registro de avance.
 
 ### 1.1 El problema de indexación, explicado
 
-Cada ficha generada carga la aplicación completa:
+**Corregido el 8/9/2026.** La primera versión de este documento culpaba al muro
+de suscripción. Era falso: `bootstrap.js:268` tiene `PUBLIC_LIBRARY_ACCESS =
+true`, la biblioteca lleva abierta desde hace tiempo y el muro está oculto por
+CSS. Google nunca ha visto una pantalla de acceso. La causa real son dos cosas
+que se suman:
 
-```html
-<!-- public/modelos/<id>/index.html, líneas 98-101 -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/modelos/generated-assets/app-1.js"></script>
-<script defer src="/_vercel/insights/script.js"></script>
-<script src="/modelos/generated-assets/app-2.js"></script>
+**1. `robots.txt` bloqueaba la fuente de todo el contenido.**
+
+Cada dato del Atlas —escuelas, modelos, fichas, influencias, coordenadas— se
+pide en el navegador a través de un único proxy:
+
+```js
+// public/modelos/legacy/bootstrap.js:300
+function proxyDataUrl(path){
+  return `${API_BASE}/api/data?path=${encodeURIComponent(clean)}`;
+}
 ```
 
-Y la ficha de texto vive aquí:
+Y `robots.txt` decía:
 
-```html
-<!-- misma página, línea 402 en adelante -->
-<noscript>
-  <article class="seo-noscript">
-    <h1>Terapia de Aceptación y Compromiso (ACT)</h1>
-    ... ~1.000 palabras de contenido excelente ...
-  </article>
-</noscript>
+```
+Disallow: /api/
 ```
 
-**Googlebot ejecuta JavaScript.** Por definición, `<noscript>` no se muestra
-cuando hay JS. Lo que Google renderiza y evalúa es el DOM resultante: el Atlas
-con su pantalla de acceso (`access-locked`), el aviso *"Entra para guardar tu
-sesión o suscríbete para abrir la biblioteca completa. Puedes seguir gratis con
-fichas parciales"* y una ficha parcial.
+Googlebot **no descarga los subrecursos prohibidos** cuando renderiza. Al
+rastrear una ficha ejecutaba el JavaScript, éste pedía los datos a `/api/data`,
+y esas peticiones no salían. El resultado renderizado era una cáscara vacía.
 
-Resultado: 410 páginas que, para Google, se parecen mucho entre sí y aportan
-poco texto único. Ese es exactamente el perfil de **"Rastreada: actualmente sin
-indexar"** y **"Descubierta: actualmente sin indexar"**.
+Encaja con lo que muestra Search Console: 13 indexadas de 410. Trece es
+aproximadamente el número de páginas del sitio que **no** dependen de
+`/api/data` — la home, `/escuelas/`, `/metamodelos/`, `/procesos/`, `/quiz/` y
+poco más. Todo lo que necesitaba datos quedó fuera.
 
-El contenido bueno existe. Google no lo ve.
+**2. El contenido solo existía dentro de `<noscript>`.**
+
+`build-model-pages.mjs` escribía la ficha completa —unas 1.000 palabras
+propias— dentro de un bloque `<noscript>`. Como todos los buscadores ejecutan
+JavaScript, ese bloque no lo lee nadie. Era contenido invisible por
+construcción.
+
+Las dos causas son independientes y ambas están arregladas (ver Registro de
+avance del 8/9). El contenido bueno existía desde el principio; lo que fallaba
+era el camino hasta él.
 
 ### 1.2 El problema de medición
 
@@ -832,7 +905,7 @@ No dedicar tiempo a optimizar el precio hasta tener 50 clientes.
 | --- | --- | --- |
 | Abierto | 0 € | 253 fichas completas, buscador, Lista, páginas de escuela |
 | Atlas | 9,90 €/mes · 89 €/año | Las cuatro vistas, Procesos, comparador, colecciones, exportar, EN |
-| Fundador | 49 €/año de por vida | Igual que Atlas. 100 plazas. Solo en beta |
+| Fundador | **49 €/año de por vida — cifra comprometida el 8/9/2026** | Igual que Atlas. 100 plazas. Solo en beta |
 | Institucional | a convenir | Acceso por aula. Precio por número de alumnos |
 
 - [ ] El plan **institucional** puede acabar siendo el grueso del ingreso. Un

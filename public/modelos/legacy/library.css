@@ -17532,3 +17532,68 @@ body.network-mode .networkModelGraphPanel{
   .networkFilterChips::-webkit-scrollbar{ display:none; }
   body.network-mode .networkLegend .chip{ flex:0 0 auto; }
 }
+
+/* ================================================================
+   Articulo indexable de la ficha.
+   Lo escribe scripts/build-model-pages.mjs dentro de #modelInfo. Es el
+   contenido que reciben los buscadores y quien llega con la red lenta o sin
+   JavaScript; la app lo sustituye por la ficha viva al montarse.
+   ================================================================ */
+.seo-article{
+  max-width:820px;
+  margin:0 auto;
+  padding:34px 30px 48px;
+  color:#e9e4d8;
+  font:16px/1.7 'Hanken Grotesk', system-ui, sans-serif;
+}
+.seo-article > p:first-child{
+  font-size:11px;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:#cfb487;
+  margin:0 0 14px;
+}
+.seo-article h1{
+  font-family:'Instrument Serif', Georgia, serif;
+  font-size:clamp(28px,4vw,44px);
+  font-weight:400;
+  line-height:1.12;
+  letter-spacing:-.5px;
+  margin:0 0 18px;
+}
+.seo-article blockquote{
+  margin:0 0 22px;
+  padding-left:18px;
+  border-left:2px solid #cfb48755;
+  font-family:'Instrument Serif', Georgia, serif;
+  font-size:20px;
+  font-style:italic;
+  line-height:1.4;
+  color:#d8d2c4;
+}
+.seo-article h2{
+  font-family:'Instrument Serif', Georgia, serif;
+  font-size:25px;
+  font-weight:400;
+  margin:34px 0 12px;
+  padding-top:20px;
+  border-top:1px solid #e7ddbb1f;
+}
+.seo-article h3{
+  font-size:15px;
+  font-weight:600;
+  margin:0 0 6px;
+  color:#f2eee4;
+}
+.seo-article p{ margin:0 0 15px; color:#c9c5b8; }
+.seo-article ol, .seo-article ul{ margin:0 0 15px; padding-left:22px; }
+.seo-article li{ margin-bottom:13px; color:#c9c5b8; }
+.seo-article ol li h3 + p{ margin-bottom:0; }
+.seo-article a{ color:#8ed4d0; text-decoration:none; }
+.seo-article a:hover{ text-decoration:underline; }
+.seo-article nav ul{ list-style:none; padding-left:0; }
+
+@media (max-width:760px){
+  .seo-article{ padding:24px 20px 36px; font-size:15px; }
+  .seo-article h2{ font-size:22px; }
+}

@@ -27,7 +27,7 @@ const TEMPLATE = `<!doctype html>
   <meta name="robots" content="index,follow">
   <script id="seoStructuredData" type="application/ld+json">{}</script>
 </head>
-<body></body>
+<body><div id="modelInfo" class="modelPanel"></div></body>
 </html>`;
 
 const MODEL = {
@@ -44,7 +44,7 @@ const MODEL = {
   refs: ['Example (2020).']
 };
 
-test('la página inglesa genera metadatos, hreflang y noscript localizados', () => {
+test('la página inglesa genera metadatos, hreflang y el artículo indexable localizado', () => {
   const html = renderModelPage(MODEL, [MODEL], TEMPLATE, 'en', new Set([MODEL.id]));
 
   assert.match(html, /<html lang="en" data-translation-status="reviewed">/);
@@ -61,6 +61,12 @@ test('la página inglesa genera metadatos, hreflang y noscript localizados', () 
   assert.match(html, /<h2>Core ideas<\/h2>/);
   assert.doesNotMatch(html, /Teoría del cambio|Ideas fundamentales|Modelos relacionados/);
   assert.match(html, /"inLanguage": "en"/);
+
+  // El contenido tiene que llegar en el HTML y dentro del panel de la ficha.
+  // Estuvo dentro de <noscript>, donde ningun buscador lo veia porque todos
+  // ejecutan JavaScript; ese fue el motivo de que no se indexara nada.
+  assert.match(html, /<div id="modelInfo" class="modelPanel">\s*<article class="seo-article" id="seoArticle">/);
+  assert.doesNotMatch(html, /<noscript>/);
 });
 
 test('la portada inglesa se genera como página estática indexable', () => {

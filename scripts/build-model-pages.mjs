@@ -668,14 +668,18 @@ function modelUrl(modelId, locale) {
   return `${BASE_URL}/${locale.path}/${encodeURIComponent(modelId)}`;
 }
 
-function renderNoScriptFallback(model, related, locale) {
+// El contenido de la ficha se escribe en el HTML, dentro del panel donde el
+// Atlas pintara despues la ficha viva. No va en <noscript>: los buscadores
+// ejecutan JavaScript, de modo que ese bloque nunca lo veian, y todo el
+// contenido dependia de peticiones a /api/data desde el navegador.
+// Al montarse, la app reemplaza el innerHTML de #modelInfo y este articulo
+// desaparece solo. Es el mismo contenido en el mismo sitio: no hay cloaking.
+function renderSeoArticle(model, related, locale) {
   const theory = compactText(model?.teoriaCambio?.resumen || '');
   const ideas = model.ideasPrincipales.slice(0, 10);
   const references = model.refs.map(compactText).filter(Boolean).slice(0, 20);
 
-  return `<noscript>
-    <style>.seo-noscript{max-width:980px;margin:40px auto;padding:32px;color:#f0ece5;background:#0b1016;font:16px/1.65 system-ui,sans-serif}.seo-noscript h1,.seo-noscript h2{font-family:Georgia,serif;font-weight:400}.seo-noscript a{color:#8ed4d0}</style>
-    <article class="seo-noscript">
+  return `    <article class="seo-article" id="seoArticle">
       <p>${escapeHtml([model.grupo, model.year].filter(Boolean).join(' · '))}</p>
       <h1>${escapeHtml(model.label)}</h1>
       ${model.frase ? `<blockquote>${escapeHtml(model.frase)}</blockquote>` : ''}
@@ -685,8 +689,7 @@ function renderNoScriptFallback(model, related, locale) {
       ${model.influencias.length ? `<section><h2>${escapeHtml(locale.influences)}</h2>${renderSimpleList(model.influencias)}</section>` : ''}
       ${references.length ? `<section><h2>${escapeHtml(locale.references)}</h2>${renderSimpleList(references)}</section>` : ''}
       ${related.length ? `<nav aria-label="${escapeHtml(locale.related)}"><h2>${escapeHtml(locale.related)}</h2><ul>${related.map((item) => `<li><a href="/${locale.path}/${encodeURIComponent(item.id)}">${escapeHtml(item.label)}</a></li>`).join('')}</ul></nav>` : ''}
-    </article>
-  </noscript>`;
+    </article>`;
 }
 
 export function renderModelPage(model, allModels, interactiveTemplate, localeCode = 'es', englishModelIds = new Set()) {
@@ -772,7 +775,11 @@ export function renderModelPage(model, allModels, interactiveTemplate, localeCod
       : [])
   ].join('\n  ');
   if (localeMetadata) html = html.replace('</head>', `  ${localeMetadata}\n</head>`);
-  html = html.replace('</body>', `${renderNoScriptFallback(model, related, locale)}\n</body>`);
+  const modelPanelTag = '<div id="modelInfo" class="modelPanel">';
+  if (!html.includes(modelPanelTag)) {
+    throw new Error('No se encontro #modelInfo en la plantilla: el articulo indexable no se puede insertar');
+  }
+  html = html.replace(modelPanelTag, `${modelPanelTag}${renderSeoArticle(model, related, locale)}`);
   return html;
 }
 
