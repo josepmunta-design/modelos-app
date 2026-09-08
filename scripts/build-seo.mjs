@@ -93,6 +93,7 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModifie
     sitemapUrl(`${baseUrl}/`, lastModified),
     sitemapUrl(libraryAlternates.es, lastModified, libraryAlternates),
     sitemapUrl(libraryAlternates.en, lastModified, libraryAlternates),
+    sitemapUrl(`${baseUrl}/escuelas/`, lastModified),
     sitemapUrl(`${baseUrl}/genealogia`, lastModified),
     ...esIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;

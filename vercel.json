@@ -40,6 +40,10 @@
       "destination": "/en/models/:id/index.html"
     },
     {
+      "source": "/escuelas",
+      "destination": "/escuelas/index.html"
+    },
+    {
       "source": "/procesos",
       "destination": "/procesos/index.html"
     },
