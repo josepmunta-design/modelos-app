@@ -11,7 +11,8 @@
     "validate:generated-i18n": "node scripts/validate-generated-i18n.mjs",
     "seo:build": "node scripts/build-seo.mjs",
     "test:i18n": "node --test scripts/i18n-build.test.mjs",
-    "test:build-fetch": "node --test scripts/build-model-pages-retry.test.mjs"
+    "test:build-fetch": "node --test scripts/build-model-pages-retry.test.mjs",
+    "test:billing": "node --test scripts/billing-rest.test.mjs"
   }
 }
 

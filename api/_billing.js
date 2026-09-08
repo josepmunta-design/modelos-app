@@ -82,8 +82,20 @@ export async function supabaseRest(path, options = {}) {
     throw new Error(`Supabase REST error ${response.status}: ${text}`);
   }
 
+  // PostgREST responde 201 con el cuerpo VACIO cuando se pide
+  // `Prefer: return=minimal`, no 204. Llamar a .json() sobre un cuerpo vacio
+  // lanza SyntaxError, asi que la insercion parecia fallar cuando en realidad
+  // habia funcionado. Se lee como texto y solo se parsea si hay algo.
   if (response.status === 204) return null;
-  return response.json();
+
+  const text = await response.text();
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    throw new Error(`Supabase REST devolvio una respuesta no JSON: ${text.slice(0, 200)}`);
+  }
 }
 
 export async function getSubscriptionByUserId(userId) {

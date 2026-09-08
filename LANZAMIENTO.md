@@ -15,6 +15,37 @@ sugiere; el cuello de botella es de distribución y de medición, no de producto
 Bitácora de lo que ya está hecho, para poder retomar el trabajo sin releer todo
 el plan. Entrada nueva por sesión, la más reciente arriba.
 
+### 8 de septiembre de 2026 (tarde) — arreglo del 500 en la captura de email
+
+Josep probó el formulario en producción y la consola devolvió
+`POST /api/subscribe-list 500`. El email nunca llegaba a guardarse.
+
+**Causa:** `supabaseRest()` terminaba con `return response.json()`. PostgREST,
+cuando se le pide `Prefer: return=minimal`, responde **201 con el cuerpo
+vacío** — no 204, que era el único caso contemplado. Llamar a `.json()` sobre
+un cuerpo vacío lanza `SyntaxError: Unexpected end of JSON input`, el `catch`
+del endpoint lo convertía en 500 y la inserción parecía fallar **aunque
+probablemente hubiera funcionado**.
+
+Solo se notó ahora porque el único consumidor anterior de `supabaseRest`,
+`upsertSubscription`, usa `return=representation`, que sí devuelve cuerpo.
+Afectaba a los tres sitios nuevos: `subscribe-list`, `track` y el
+`recordTrialUsage` restaurado esta misma mañana.
+
+- [x] `supabaseRest` lee la respuesta como texto y solo parsea si hay algo.
+      Un 200 con cuerpo no-JSON ahora falla con un mensaje legible en vez de
+      con un error de parseo.
+- [x] `scripts/billing-rest.test.mjs` — 6 tests de regresión sobre
+      `supabaseRest`: 201 vacío, 204, cuerpo JSON, error de Supabase
+      propagado, respuesta no-JSON y cabeceras de servicio. `npm run
+      test:billing`.
+- [x] Suite completa: 28/28.
+
+**Lección para el resto del plan:** los endpoints nuevos se han escrito contra
+una suposición sobre PostgREST sin comprobarla. Antes de dar por buena la
+Fase 1, probar cada endpoint contra Supabase de verdad, no solo que el módulo
+cargue.
+
 ### 8 de septiembre de 2026 — Fase 0 implementada + arreglo crítico de pagos
 
 #### Arreglo crítico: los pagos llevaban rotos desde el 2 de julio
@@ -166,8 +197,7 @@ a la misma base sin tocar nada del código.
       respuesta correcta del handler. Antes reventaba con un 500 al cargar el
       módulo. `GET /api/subscribe-list` también responde 405.
 - [x] El formulario de la home se ve en producción.
-- [ ] **Ejecutar `supabase/eventos.sql`** en Supabase. Sin esa tabla, los
-      eventos se pierden (en silencio y sin romper nada, pero se pierden).
+- [x] `supabase/eventos.sql` ejecutado en Supabase (confirmado por Josep 8/9).
 - [ ] Prueba manual pendiente: dejar un email, y hacer el recorrido crear
       cuenta → Suscribirse → llegar a Stripe.
 
