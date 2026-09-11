@@ -7703,6 +7703,35 @@ function colorForSchoolLabel(label){
   return '#D9AA3F';
 }
 
+function getAtlasMapGroups(){
+  const models = getAllModelsPool().filter(isTherapyModel);
+  const sourceGroups = uniq(models.map((model) => String(model?.grupo || '').trim()).filter(Boolean));
+  const schoolOrder = ['psicoanalisis', 'conductismo', 'humanista', 'cognitivo', 'sistemico', 'constructivista', 'integrativo'];
+  const schoolRank = new Map(schoolOrder.map((key, index) => [key, index]));
+  const schools = sourceGroups
+    .filter(isCanonicalSchoolName)
+    .sort((a, b) => (schoolRank.get(normalizeModelDataKey(a)) ?? 999) - (schoolRank.get(normalizeModelDataKey(b)) ?? 999))
+    .map((group) => ({
+      id: `school:${normalizeModelDataKey(group)}`,
+      kind: 'school',
+      label: schoolDisplayLabel(group) || group,
+      color: colorForSchoolLabel(group),
+      groups: [group]
+    }));
+  const collections = COLLECTION_DEFS.map((collection) => {
+    const groups = sourceGroups.filter((group) => collection.sourceKeys.includes(normalizeModelDataKey(group)));
+    if (!groups.length) return null;
+    return {
+      id: `collection:${collection.id}`,
+      kind: 'collection',
+      label: collectionDisplayLabel(collection),
+      color: colorForSchoolLabel(groups[0]),
+      groups
+    };
+  }).filter(Boolean);
+  return [...schools, ...collections];
+}
+
 
 function renderModelsList(){
   queueMicrotask(() => document.dispatchEvent(new Event('atlas:library-change')));
@@ -15513,6 +15542,9 @@ let atlasLegacyViewQueue = Promise.resolve();
 const atlasLibrary = {
   models: () => getAllModelsPool().filter(isTherapyModel),
   filteredModels: getAtlasFilteredModels,
+  mapModels: () => getAllModelsPool().filter(isTherapyModel)
+    .filter(model => !modelSearchQuery || modelMatchesSearch(model, modelSearchQuery)),
+  mapGroups: getAtlasMapGroups,
   selectedId: () => String(currentModelId || ''),
   filters: () => ({ group: listGroupingMode, target: groupingTarget, query: modelSearchQuery }),
   color: colorForSchoolLabel,

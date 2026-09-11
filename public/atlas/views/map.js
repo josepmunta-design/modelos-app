@@ -14,6 +14,7 @@ export async function createView(host, context) {
   host.innerHTML = `
     <div class="atlas-view-tools">
       <span>${text('El origen geográfico de las ideas', 'The geographical origin of ideas')}</span>
+      <div class="atlas-map-group-filters" data-group-filters></div>
       <button type="button" data-fit>${text('Ver todos', 'Fit all')}</button>
       <button type="button" data-labels aria-pressed="false">${text('Nombres del mapa', 'Map labels')}</button>
     </div>
@@ -68,6 +69,40 @@ export async function createView(host, context) {
         html: `<div class="atlas-cluster-ring" style="background:conic-gradient(${escapeHtml(gradient)})"><span class="atlas-cluster-core">${cluster.getChildCount()}</span></div>` });
     },
   }).addTo(map);
+  const groupFilters = host.querySelector('[data-group-filters]');
+  const filterGroups = (context.mapGroups?.() || []).filter(group => group?.id && group?.groups?.length);
+  const groupIdBySource = new Map(filterGroups.flatMap(group => group.groups.map(source => [source, group.id])));
+  const enabledGroups = new Set(filterGroups.map(group => group.id));
+  const groupNoun = kind => kind === 'collection' ? text('Colección', 'Collection') : text('Escuela', 'School');
+  for (const kind of ['school', 'collection']) {
+    const groups = filterGroups.filter(group => group.kind === kind);
+    if (!groups.length) continue;
+    const set = document.createElement('div');
+    set.className = `atlas-map-filter-set atlas-map-filter-set-${kind}`;
+    set.setAttribute('role', 'group');
+    set.setAttribute('aria-label', kind === 'collection' ? text('Colecciones', 'Collections') : text('Escuelas', 'Schools'));
+    for (const group of groups) {
+      const button = document.createElement('button');
+      button.type = 'button'; button.dataset.groupId = group.id; button.dataset.tooltip = group.label;
+      button.setAttribute('aria-pressed', 'true');
+      button.setAttribute('aria-label', `${groupNoun(kind)}: ${group.label}`);
+      button.style.setProperty('--filter-color', group.color);
+      button.innerHTML = '<span aria-hidden="true"></span>';
+      set.append(button);
+    }
+    groupFilters.append(set);
+  }
+  function syncGroupFilters() {
+    groupFilters.querySelectorAll('[data-group-id]').forEach(button => {
+      const on = enabledGroups.has(button.dataset.groupId);
+      button.classList.toggle('is-off', !on);
+      button.setAttribute('aria-pressed', String(on));
+    });
+  }
+  function groupEnabled(model) {
+    const id = groupIdBySource.get(String(model?.grupo || '').trim());
+    return !id || enabledGroups.has(id);
+  }
   let models = [], selectedId = '', markers = new Map(), signature = '', initialFit = false, timer = null, active = false;
   const slider = host.querySelector('input'), output = host.querySelector('output'), play = host.querySelector('[data-play]');
   const years = context.data.models().map(modelYear).filter(Boolean);
@@ -92,7 +127,7 @@ export async function createView(host, context) {
   function draw() {
     output.textContent = slider.value;
     const located = models.filter(model => coordinates(model));
-    const visible = located.filter(model => !modelYear(model) || modelYear(model) <= Number(slider.value));
+    const visible = located.filter(model => groupEnabled(model) && (!modelYear(model) || modelYear(model) <= Number(slider.value)));
     const cityPoints = cityCoordinates(context.data.models());
     const pointFor = model => cityPoints.get(cityKey(model)) || coordinates(model);
     const next = visible.map(model => `${model.id}:${pointFor(model)}`).join('|');
@@ -133,6 +168,13 @@ export async function createView(host, context) {
     marker.getElement()?.classList.add('is-selected'); marker.openTooltip();
   }
   slider.addEventListener('input', () => { stop(); draw(); });
+  groupFilters.addEventListener('click', event => {
+    const button = event.target.closest('[data-group-id]');
+    if (!button) return;
+    const id = button.dataset.groupId;
+    if (enabledGroups.has(id)) enabledGroups.delete(id); else enabledGroups.add(id);
+    syncGroupFilters(); draw();
+  });
   host.querySelector('[data-fit]').addEventListener('click', fit);
   host.querySelector('[data-labels]').addEventListener('click', event => { labelsOn = !labelsOn; labels(); event.currentTarget.setAttribute('aria-pressed', String(labelsOn)); });
   host.querySelector('[data-present]').addEventListener('click', () => { stop(); slider.value = max; draw(); });
@@ -152,9 +194,9 @@ export async function createView(host, context) {
   const themeObserver = new MutationObserver(theme); themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
   // Missing coordinates are completed through the same public-model cache as
   // the ficha. Do not block the first useful map on those optional requests.
-  context.data.locate().then(() => { if (active) { models = context.data.filtered(); draw(); } }).catch(() => {});
+  context.data.locate().then(() => { if (active) { models = context.data.mapFiltered(); draw(); } }).catch(() => {});
   return {
-    update(nextModels, state) { const changed = selectedId !== state.modelId; models = nextModels; selectedId = state.modelId; draw(); if (changed) focusSelection(); },
+    update(_nextModels, state) { const changed = selectedId !== state.modelId; models = context.data.mapFiltered(); selectedId = state.modelId; draw(); if (changed) focusSelection(); },
     activate() { active = true; map.invalidateSize({ animate: false }); draw(); focusSelection(); },
     deactivate() { active = false; stop(); },
     destroy() { stop(); resize.disconnect(); themeObserver.disconnect(); map.remove(); },

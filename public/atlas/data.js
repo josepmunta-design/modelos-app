@@ -34,6 +34,8 @@ export function createAtlasData(library) {
   // Reuse the library's authenticated request path, public/full model caches
   // and in-flight school loads. Views never create sessions or fetch fichas.
   const extraCoordinates = new Map();
+  const enrich = models => models.map(model => extraCoordinates.has(model.id)
+    ? { ...model, ...extraCoordinates.get(model.id) } : model);
   let geoPromise, influencePromise;
   const influenceRecords = () => {
     if (!influencePromise) influencePromise = library.readJson('Core/Influencias/modelos_influencias.json')
@@ -42,10 +44,9 @@ export function createAtlasData(library) {
     return influencePromise;
   };
   return {
-    models: () => library.models().map(model => extraCoordinates.has(model.id)
-      ? { ...model, ...extraCoordinates.get(model.id) } : model),
-    filtered: () => library.filteredModels().map(model => extraCoordinates.has(model.id)
-      ? { ...model, ...extraCoordinates.get(model.id) } : model),
+    models: () => enrich(library.models()),
+    filtered: () => enrich(library.filteredModels()),
+    mapFiltered: () => enrich(library.mapModels ? library.mapModels() : library.filteredModels()),
     async ready() { await library.loadCatalog(); },
     async locate() {
       if (geoPromise) return geoPromise;

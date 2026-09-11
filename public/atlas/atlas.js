@@ -65,7 +65,10 @@ export async function mountAtlas(library) {
       const host = document.createElement('section'); host.className = `atlas-view atlas-view-${name}`; host.hidden = true;
       stage.append(host);
       try {
-        const view = await module.createView(host, { data, select, color: library.color, schoolLabel: library.schoolLabel });
+        const view = await module.createView(host, {
+          data, select, color: library.color, schoolLabel: library.schoolLabel,
+          mapGroups: library.mapGroups,
+        });
         const instance = { host, view }; views.set(name, instance); return instance;
       } catch (error) { host.remove(); throw error; }
     })().finally(() => loading.delete(name));

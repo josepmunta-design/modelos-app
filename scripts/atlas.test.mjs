@@ -73,12 +73,14 @@ test('views share catalog and ficha cache; failed influence requests can retry',
   const models = [{ id: 'a', label: 'A', file: 'a.json' }, { id: 'b', label: 'B', lat: 40, lon: 2 }];
   const data = createAtlasData({
     models: () => models, filteredModels: () => [models[0]], loadCatalog: async () => {},
+    mapModels: () => [models[1]],
     publicModel: async model => { fichas++; return { ...model, lat: 10, lon: 20 }; },
     readJson: async () => { reads++; if (reads === 1) throw new Error('offline'); return []; },
   });
   await Promise.all([data.locate(), data.locate()]);
   assert.equal(fichas, 1);
   assert.deepEqual(coordinates(data.filtered()[0]), [10, 20]);
+  assert.deepEqual(data.mapFiltered().map(model => model.id), ['b']);
   assert.equal(models[0].lat, undefined, 'view enrichment does not mutate the canonical catalog');
   await assert.rejects(data.influences());
   await Promise.all([data.influences(), data.influences()]);
