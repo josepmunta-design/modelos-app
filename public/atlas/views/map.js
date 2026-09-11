@@ -172,7 +172,9 @@ export async function createView(host, context) {
     const button = event.target.closest('[data-group-id]');
     if (!button) return;
     const id = button.dataset.groupId;
-    if (enabledGroups.has(id)) enabledGroups.delete(id); else enabledGroups.add(id);
+    if (event.ctrlKey || event.metaKey) {
+      enabledGroups.clear(); enabledGroups.add(id);
+    } else if (enabledGroups.has(id)) enabledGroups.delete(id); else enabledGroups.add(id);
     syncGroupFilters(); draw();
   });
   host.querySelector('[data-fit]').addEventListener('click', fit);
