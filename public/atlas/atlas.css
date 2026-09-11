@@ -14,9 +14,9 @@
 .atlas-views { display: flex; align-items: center; gap: 18px; margin-right:auto; }
 .atlas-views .compactLabel { margin: 0; color: var(--atlas-muted); font-size: 11px; }
 .atlas-header .libraryViewToggle { display: flex; gap: 6px; background: none; border: 0; padding: 0; border-radius: 0; }
-.atlas-header .libraryViewToggle button { background: transparent; color: var(--atlas-muted); border: 0; border-bottom: 2px solid transparent; border-radius: 0; box-shadow: none; padding: 12px 12px; font: 13px 'Hanken Grotesk', sans-serif; cursor: pointer; }
-.atlas-header .libraryViewToggle button.is-active { color: var(--atlas-ink); border-bottom-color: var(--atlas-accent); background: none; }
-.atlas-header .libraryViewToggle button { flex: none; width: auto; white-space: nowrap; }
+.atlas-header .libraryViewToggle :is(button, a) { background: transparent; color: var(--atlas-muted); border: 0; border-bottom: 2px solid transparent; border-radius: 0; box-shadow: none; padding: 12px 12px; font: 13px 'Hanken Grotesk', sans-serif; cursor: pointer; }
+.atlas-header .libraryViewToggle :is(button, a).is-active { color: var(--atlas-ink); border-bottom-color: var(--atlas-accent); background: none; }
+.atlas-header .libraryViewToggle :is(button, a) { flex: none; width: auto; white-space: nowrap; }
 .atlas-enabled body::before, .atlas-enabled body::after { content: none !important; }
 .atlas-enabled .accessEditorialAside::after, .atlas-enabled .landingMasthead::after { content: none !important; }
 #atlasMobileView { color: var(--atlas-ink) !important; -webkit-text-fill-color: var(--atlas-ink) !important; background: var(--atlas-surface) !important; border: 1px solid var(--atlas-line) !important; opacity: 1; }
@@ -145,7 +145,7 @@
     flex-wrap:nowrap;
     min-width:max-content;
   }
-  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle button {
+  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle :is(button, a) {
     padding:9px 8px;
     font-size:11px;
   }
@@ -167,7 +167,7 @@
   .atlas-enabled body[data-atlas-view="network"] .atlas-brand-title { font-size:20px; }
   .atlas-enabled body[data-atlas-view="network"] .atlas-brand-kicker { display:none; }
   .atlas-enabled body[data-atlas-view="network"] .atlas-views { grid-column:auto; grid-row:auto; }
-  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle button {
+  .atlas-enabled body[data-atlas-view="network"] .atlas-header .libraryViewToggle :is(button, a) {
     padding:8px 6px;
     font-size:10px;
   }

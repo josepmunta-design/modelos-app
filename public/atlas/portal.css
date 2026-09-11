@@ -3,7 +3,7 @@
    en canvas (portal.js) y aquí solo queda la composición editorial. */
 
 .tmps-portal[hidden] { display: none !important; }
-.tmps-portal :where(div, span, p, h1, dl, dt, dd, nav, a, button, canvas, footer) {
+.tmps-portal :where(div, span, p, h1, h2, dl, dt, dd, nav, a, button, canvas, footer) {
   margin: 0; padding: 0; border: 0; background: none; box-shadow: none;
   font: inherit; color: inherit; text-transform: none; letter-spacing: normal; text-align: inherit;
 }

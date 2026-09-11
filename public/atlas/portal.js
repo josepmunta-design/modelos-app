@@ -583,7 +583,7 @@ function build() {
   const main = element('div', 'pt-main');
   const hero = element('div', 'pt-hero');
   hero.append(element('p', 'pt-kicker', t('Biblioteca clínica · Edición 2026', 'Clinical library · 2026 edition')));
-  const title = element('h1', 'pt-title');
+  const title = element('h2', 'pt-title');
   title.append(document.createTextNode(t('Atlas de la ', 'Atlas of ')), element('em', null, t('psicoterapia', 'psychotherapy')));
   hero.append(title);
   hero.append(element('p', 'pt-lead', t(

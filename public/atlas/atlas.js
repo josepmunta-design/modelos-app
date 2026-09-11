@@ -158,7 +158,11 @@ export async function mountAtlas(library) {
   document.getElementById('atlasViewGenealogy').textContent = text('Ver en genealogía', 'View in genealogy');
   header.querySelectorAll('[data-view-mode]').forEach(button => {
     if (['list', 'network'].includes(button.dataset.viewMode)) return; // library adapter owns the original buttons
-    button.addEventListener('click', () => setView(button.dataset.viewMode));
+    button.addEventListener('click', event => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      setView(button.dataset.viewMode);
+    });
   });
   document.getElementById('atlasMobileView').addEventListener('change', event => setView(event.target.value));
   document.getElementById('atlasViewMap').addEventListener('click', () => setView('map'));

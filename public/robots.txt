@@ -1,10 +1,5 @@
 User-agent: *
 Allow: /
-
-# /api/data es el proxy de solo lectura del que cuelga TODO el contenido del
-# Atlas. Bloquearlo impedia que Google renderizara una sola ficha: al rastrear,
-# no puede pedir los subrecursos prohibidos, asi que veia paginas vacias.
-# El resto de /api/ (pagos, sesion, eventos) sigue fuera del rastreo.
 Allow: /api/data
 Disallow: /api/
 

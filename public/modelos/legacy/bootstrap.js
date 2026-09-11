@@ -62,7 +62,7 @@ const SEO_LOCALE = MODELOS_LOCALE === 'en'
       shortTitle: 'Atlas de la psicoterapia',
       description: 'Explora modelos de psicoterapia por escuelas, procesos y dimensiones. Compara fundamentos, técnicas, influencias y referencias clínicas.',
       collectionName: 'Atlas de la psicoterapia',
-      modelSuffix: 'Modelo de Psicoterapia',
+      modelSuffix: 'Atlas de la psicoterapia',
       imageAlt: 'Ficha clínica de un modelo de psicoterapia',
       language: 'es'
     };
@@ -119,8 +119,16 @@ function setSeoMeta(selector, value){
 }
 
 function setSeoAlternate(id, href){
-  const link = document.getElementById(id);
-  if (link && href) link.href = href;
+  let link = document.getElementById(id);
+  if (!href) { link?.remove(); return; }
+  if (!link) {
+    link = document.createElement('link');
+    link.id = id;
+    link.rel = 'alternate';
+    link.hreflang = { seoAlternateEs: 'es', seoAlternateEn: 'en', seoAlternateDefault: 'x-default' }[id];
+    document.head.append(link);
+  }
+  link.href = href;
 }
 
 function setLibrarySeo(){
@@ -160,8 +168,6 @@ function setModelSeo(model){
   const label = compactSeoText(model?.label || model?.templabel || SEO_LOCALE.modelSuffix);
   if (!id || !label) return;
 
-  const authors = compactSeoText(model?.autores || '');
-  const school = compactSeoText(model?.grupo || '');
   const sourceDescription = model?.summary
     || model?.descripcion
     || model?.teoriaCambio?.resumen
@@ -170,8 +176,7 @@ function setModelSeo(model){
       : `${label}: fundamentos, procesos de cambio, técnicas, influencias y referencias clínicas.`);
   const description = truncateSeoText(sourceDescription, 158);
   const url = `https://apps.tumentorpsicologia.com${buildModelPath(id)}`;
-  const titleBase = truncateSeoText(label, 48);
-  const title = `${titleBase} | ${SEO_LOCALE.modelSuffix}`;
+  const title = `${label} | ${SEO_LOCALE.modelSuffix}`;
 
   document.title = title;
   const canonical = document.getElementById('seoCanonical');
@@ -179,7 +184,9 @@ function setModelSeo(model){
   const esUrl = `https://apps.tumentorpsicologia.com/modelos/${encodeURIComponent(id)}`;
   const enUrl = `https://apps.tumentorpsicologia.com/en/models/${encodeURIComponent(id)}`;
   setSeoAlternate('seoAlternateEs', esUrl);
-  setSeoAlternate('seoAlternateEn', enUrl);
+  const generated = window.TMPS_GENERATED_MODEL_SEO?.url === url ? window.TMPS_GENERATED_MODEL_SEO : null;
+  const reviewedEnglish = generated?.english === enUrl || (MODELOS_LOCALE === 'en' && model?.__translation?.status === 'reviewed');
+  setSeoAlternate('seoAlternateEn', reviewedEnglish ? enUrl : '');
   setSeoAlternate('seoAlternateDefault', esUrl);
   const descriptionNode = document.getElementById('seoDescription');
   if (descriptionNode) descriptionNode.setAttribute('content', description);
@@ -191,25 +198,20 @@ function setModelSeo(model){
   setSeoMeta('#seoOgImageAlt', `${SEO_LOCALE.imageAlt}: ${label}`);
 
   const structuredData = document.getElementById('seoStructuredData');
-  if (structuredData){
-    const about = [{ '@type': 'Thing', name: label }];
-    if (school) about.push({ '@type': 'Thing', name: school });
-    structuredData.textContent = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'Article',
-      '@id': `${url}#article`,
-      url,
-      mainEntityOfPage: url,
-      headline: label,
-      description,
-      inLanguage: SEO_LOCALE.language,
-      about,
-      author: { '@id': 'https://apps.tumentorpsicologia.com/#organization' },
-      publisher: { '@id': 'https://apps.tumentorpsicologia.com/#organization' },
-      isPartOf: { '@id': `${SEO_LIBRARY_URL}#collection` },
-      ...(authors ? { mentions: { '@type': 'Person', name: authors } } : {})
-    });
-  }
+  const breadcrumbs = [
+    { name: SEO_LOCALE.shortTitle, item: 'https://apps.tumentorpsicologia.com/' },
+    { name: MODELOS_LOCALE === 'en' ? 'Models' : 'Modelos', item: SEO_LIBRARY_URL },
+    { name: label, item: url }
+  ];
+  if (structuredData) structuredData.textContent = generated?.schema || JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'WebPage', '@id': `${url}#webpage`, url, name: title, description, inLanguage: SEO_LOCALE.language,
+        about: { '@type': 'Thing', name: label }, breadcrumb: { '@id': `${url}#breadcrumb` } },
+      { '@type': 'BreadcrumbList', '@id': `${url}#breadcrumb`, itemListElement: breadcrumbs.map((item, i) => ({ '@type': 'ListItem', position: i + 1, ...item })) }
+    ]
+  });
+
 }
 
   // ✅ evita TDZ (Cannot access before initialization)

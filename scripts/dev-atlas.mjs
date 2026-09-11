@@ -27,8 +27,13 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/data') file = inside(dataRoot, (url.searchParams.get('path') || '').replace(/^\/?data\//, ''));
     else if (/^\/(modelos|en\/models)(\/.*)?$/.test(url.pathname)) {
       const requested = inside(publicRoot, decodeURIComponent(url.pathname));
-      // Serve the live shell on model routes, without requiring an SEO build.
-      file = path.extname(requested) && !requested.endsWith('index.html') ? requested : path.join(publicRoot, 'modelos', 'index.html');
+      // Prefer generated HTML so preview verifies what the crawler receives.
+      file = requested;
+      try { await fs.stat(file); }
+      catch {
+        if (process.env.ATLAS_REQUIRE_GENERATED === '1') throw new Error('Generated route missing');
+        file = path.extname(requested) && !requested.endsWith('index.html') ? requested : path.join(publicRoot, 'modelos', 'index.html');
+      }
     } else if (url.pathname === '/atlas' || url.pathname === '/atlas/') file = path.join(publicRoot, 'modelos', 'index.html');
     else file = inside(publicRoot, decodeURIComponent(url.pathname));
     const stat = await fs.stat(file);

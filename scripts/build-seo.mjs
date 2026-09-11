@@ -6,7 +6,6 @@ const ROOT = process.cwd();
 const PUBLIC_DIR = process.env.MODEL_PAGES_OUTPUT_DIR
   ? path.resolve(process.env.MODEL_PAGES_OUTPUT_DIR)
   : path.join(ROOT, 'public');
-const MODEL_INDEX_PATH = path.join(PUBLIC_DIR, 'assets', 'Repo', 'modelos-index.json');
 const GENERATED_MANIFEST_PATH = path.join(PUBLIC_DIR, 'modelos', '.generated-pages.json');
 const BASE_URL = String(process.env.PUBLIC_APP_URL || 'https://apps.tumentorpsicologia.com')
   .replace(/\/+$/, '');
@@ -35,31 +34,10 @@ async function readJson(filePath) {
 
 async function readModelIdsByLocale() {
   const manifest = await readJson(GENERATED_MANIFEST_PATH);
-  if (manifest?.locales && typeof manifest.locales === 'object') {
-    return {
-      es: (manifest.locales.es?.indexableModels || manifest.locales.es?.models || [])
-        .map(cleanModelId).filter(Boolean),
-      en: (manifest.locales.en?.indexableModels || manifest.locales.en?.models || [])
-        .map(cleanModelId).filter(Boolean)
-    };
+  if (!Array.isArray(manifest?.locales?.es?.indexableModels) || !Array.isArray(manifest?.locales?.en?.indexableModels)) {
+    throw new Error('Genera primero las páginas: falta el manifiesto con modelos indexables por idioma.');
   }
-  if (Array.isArray(manifest?.indexableModels) || Array.isArray(manifest?.models)) {
-    return {
-      es: (manifest.indexableModels || manifest.models).map(cleanModelId).filter(Boolean),
-      en: []
-    };
-  }
-
-  const index = await readJson(MODEL_INDEX_PATH);
-  const sourceModels = Array.isArray(index) ? index : index?.models;
-  if (Array.isArray(sourceModels)) {
-    return {
-      es: sourceModels.map((model) => cleanModelId(model?.id)).filter(Boolean),
-      en: []
-    };
-  }
-
-  throw new Error('No existe un manifiesto ni un índice válido de modelos.');
+  return { es: manifest.locales.es.indexableModels.map(cleanModelId).filter(Boolean), en: manifest.locales.en.indexableModels.map(cleanModelId).filter(Boolean) };
 }
 
 function alternateLinks(esUrl, enUrl = '') {
@@ -71,48 +49,46 @@ function alternateLinks(esUrl, enUrl = '') {
   return links;
 }
 
-function sitemapUrl(url, lastModified, alternates = null) {
+function sitemapUrl(url, alternates = null) {
   return [
     '  <url>',
     `    <loc>${escapeXml(url)}</loc>`,
-    `    <lastmod>${lastModified}</lastmod>`,
     ...(alternates ? alternateLinks(alternates.es, alternates.en) : []),
     '  </url>'
   ].join('\n');
 }
 
-export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModified, escuelaIds = [] }) {
+export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, escuelaIds = [] }) {
   const esIds = [...new Set(modelIdsByLocale.es)].sort((a, b) => a.localeCompare(b, 'es'));
-  const enIds = [...new Set(modelIdsByLocale.en)].sort((a, b) => a.localeCompare(b, 'en'));
+  const enIds = [...new Set(modelIdsByLocale.en.filter(id => esIds.includes(id)))].sort((a, b) => a.localeCompare(b, 'en'));
   const enSet = new Set(enIds);
   const libraryAlternates = {
     es: `${baseUrl}/modelos/`,
     en: `${baseUrl}/en/models/`
   };
   const entries = [
-    sitemapUrl(`${baseUrl}/`, lastModified),
-    sitemapUrl(libraryAlternates.es, lastModified, libraryAlternates),
-    sitemapUrl(libraryAlternates.en, lastModified, libraryAlternates),
-    sitemapUrl(`${baseUrl}/escuelas/`, lastModified),
-    sitemapUrl(`${baseUrl}/genealogia`, lastModified),
+    sitemapUrl(`${baseUrl}/`),
+    sitemapUrl(libraryAlternates.es, libraryAlternates),
+    sitemapUrl(libraryAlternates.en, libraryAlternates),
+    sitemapUrl(`${baseUrl}/escuelas/`),
     // Metamodelos es una pieza editorial larga y autocontenida: no depende de
     // /api/data y responde a busquedas propias ("por que funciona la
     // psicoterapia", "factores comunes"). Faltaba en el sitemap.
-    sitemapUrl(`${baseUrl}/metamodelos/`, lastModified),
+    sitemapUrl(`${baseUrl}/metamodelos/`),
     // Paginas hub por escuela: dan jerarquia a las 260 fichas y posicionan por
     // los terminos amplios que una ficha suelta no alcanza. La lista viene del
     // manifiesto del build, no de una constante: una escuela sin modelos no se
     // genera, y anunciar en el sitemap una URL que da 404 es peor que omitirla.
-    ...escuelaIds.map((id) => sitemapUrl(`${baseUrl}/escuelas/${encodeURIComponent(id)}/`, lastModified)),
+    ...[...new Set(escuelaIds)].map((id) => sitemapUrl(`${baseUrl}/escuelas/${encodeURIComponent(id)}/`)),
     ...esIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;
       const en = enSet.has(id) ? `${baseUrl}/en/models/${encodeURIComponent(id)}` : '';
-      return sitemapUrl(es, lastModified, en ? { es, en } : null);
+      return sitemapUrl(es, en ? { es, en } : null);
     }),
     ...enIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;
       const en = `${baseUrl}/en/models/${encodeURIComponent(id)}`;
-      return sitemapUrl(en, lastModified, { es, en });
+      return sitemapUrl(en, { es, en });
     })
   ];
 
@@ -128,13 +104,24 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, lastModifie
 async function buildSeoFiles() {
   const modelIdsByLocale = await readModelIdsByLocale();
   const manifest = await readJson(GENERATED_MANIFEST_PATH);
-  const generatedAt = String(manifest?.generatedAt || '');
-  const lastModified = /^\d{4}-\d{2}-\d{2}/.test(generatedAt)
-    ? generatedAt.slice(0, 10)
-    : new Date().toISOString().slice(0, 10);
-
+  // El corpus no ofrece fechas de modificación editorial de estas páginas.
+  // generatedAt solo registra la ejecución: no se usa como lastmod.
   const escuelaIds = Array.isArray(manifest?.escuelas) ? manifest.escuelas : [];
-  const sitemap = buildSitemap({ modelIdsByLocale, lastModified, escuelaIds });
+  const sitemap = buildSitemap({ modelIdsByLocale, escuelaIds });
+
+  // Fail closed: jamás publicar un sitemap con una salida ausente, noindex
+  // o cuyo canonical apunta a otra página.
+  for (const match of sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)) {
+    const url = new URL(match[1]);
+    const relative = decodeURIComponent(url.pathname).replace(/^\/+/, '');
+    const target = path.resolve(PUBLIC_DIR, relative, 'index.html');
+    if (!target.startsWith(path.resolve(PUBLIC_DIR) + path.sep)) throw new Error(`Ruta insegura: ${url}`);
+    const html = await fs.readFile(target, 'utf8');
+    if (/<meta\b(?=[^>]*name=["']robots["'])[^>]*content=["'][^"']*noindex/i.test(html)) throw new Error(`Sitemap contiene noindex: ${url}`);
+    const canonical = html.match(/<link\b(?=[^>]*rel=["']canonical["'])[^>]*href=["']([^"']+)/i)?.[1];
+    if (canonical !== url.href) throw new Error(`Canonical incorrecto: ${url} -> ${canonical}`);
+    if (url.pathname.startsWith('/en/models/') && !html.includes('data-translation-status="reviewed"')) throw new Error(`EN sin revisión: ${url}`);
+  }
 
   // OJO: este archivo se regenera en cada build y pisa cualquier edicion
   // manual de public/robots.txt. Los cambios se hacen aqui.

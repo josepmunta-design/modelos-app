@@ -2,9 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { buildEscuelaPages } from './build-escuela-pages.mjs';
-
-// grupo del modelo -> id de su pagina de escuela.
-const ESCUELA_SLUGS = new Map(Object.entries({"psicoanálisis": "psicoanalisis", "conductismo": "conductismo", "cognitivo": "cognitivo", "humanista": "humanista", "sistémico": "sistemico", "constructivista": "constructivista", "integrativo": "integrativo", "transversal": "transversal", "otros": "otros", "epistemología": "epistemologia", "psicodélicos": "psicodelicos", "fronteras": "fronteras", "terapias expresivas y creativas": "terapias-expresivas-y-creativas"}));
+import { schoolFor, normalizeGroup, renderDirectory, replaceDirectory, replaceModelContent, buildSchoolsIndex } from './seo-navigation.mjs';
 
 const ROOT = process.cwd();
 const SOURCE_PUBLIC_DIR = path.join(ROOT, 'public');
@@ -38,7 +36,7 @@ const LOCALES = {
     code: 'es',
     path: 'modelos',
     libraryName: 'Modelos',
-    pageSuffix: 'Modelo de psicoterapia',
+    pageSuffix: 'Atlas de la psicoterapia',
     home: 'Inicio',
     theory: 'Teoría del cambio',
     ideas: 'Ideas fundamentales',
@@ -182,12 +180,34 @@ export function mergeModelOverlay(source, overlay, pathLabel = '$') {
   return merged;
 }
 
+// Check the text actually rendered in the public profile. References, IDs,
+// authors and taxonomies are canonical or localized separately.
+export function hasCompletePublicTranslation(source, overlay) {
+  const translated = (value, target) => {
+    if (typeof value === 'string') return !value.trim() || (typeof target === 'string' && Boolean(target.trim()));
+    if (Array.isArray(value)) return value.every(item => {
+      const key = typeof item === 'string' ? item : (item.id || item.codigo);
+      const entry = Array.isArray(target) ? target.find(t => (t.id || t.codigo) === key) : target?.[key];
+      return translated(item, entry);
+    });
+    if (isPlainObject(value)) return Object.entries(value).every(([key, child]) => ['id', 'codigo'].includes(key) || translated(child, target?.[key]));
+    return true;
+  };
+  return ['label', 'descripcion', 'frase', 'ideasPrincipales', 'influencias'].every(key => translated(source[key], overlay?.[key]))
+    && translated(source.teoriaCambio?.resumen, overlay?.teoriaCambio?.resumen);
+}
+
 function applyReviewedOverlay(source, overlay) {
   if (!isPlainObject(overlay) || overlay?._translation?.status !== 'reviewed') return null;
   if (String(overlay.id || '') !== String(source.id || '')) return null;
+  if (!hasCompletePublicTranslation(source, overlay)) {
+    console.warn(`[en incompleto, omitido] ${source.id}`);
+    return null;
+  }
   return {
     ...mergeModelOverlay(source, overlay),
     __locale: 'en',
+    __canonicalGroup: source.grupo,
     __translation: overlay._translation
   };
 }
@@ -568,9 +588,9 @@ function renderSimpleList(items, className = '') {
     .join('')}</ul>`;
 }
 
-function relatedModelsFor(model, models, localeCode) {
+export function relatedModelsFor(model, models, localeCode) {
   return models
-    .filter((candidate) => candidate.id !== model.id && candidate.grupo === model.grupo)
+    .filter((candidate) => candidate.id !== model.id && normalizeGroup(candidate.__canonicalGroup || candidate.grupo) === normalizeGroup(model.__canonicalGroup || model.grupo))
     .sort((a, b) => {
       const yearA = a.year ?? 9999;
       const yearB = b.year ?? 9999;
@@ -578,7 +598,7 @@ function relatedModelsFor(model, models, localeCode) {
       const distanceB = model.year ? Math.abs(yearB - model.year) : yearB;
       return distanceA - distanceB || a.label.localeCompare(b.label, localeCode);
     })
-    .slice(0, 5);
+    .slice(0, 6);
 }
 
 function escapeRegExp(value) {
@@ -685,7 +705,7 @@ function renderGrupoLink(model, locale) {
   const partes = [];
 
   if (model.grupo) {
-    const slug = ESCUELA_SLUGS.get(String(model.grupo).trim().toLowerCase());
+    const slug = schoolFor(model)?.id;
     partes.push(slug && locale.code === 'es'
       ? `<a href="/escuelas/${encodeURIComponent(slug)}/">${escapeHtml(model.grupo)}</a>`
       : escapeHtml(model.grupo));
@@ -693,6 +713,16 @@ function renderGrupoLink(model, locale) {
 
   if (model.year) partes.push(escapeHtml(String(model.year)));
   return partes.join(' · ');
+}
+
+function modelBreadcrumbs(model, locale) {
+  const school = schoolFor(model);
+  return [
+    { name: locale.code === 'es' ? 'Atlas de la psicoterapia' : 'Atlas of psychotherapy', item: `${BASE_URL}/` },
+    school ? { name: school.titulo, item: `${BASE_URL}/escuelas/${school.id}/` }
+      : { name: locale.libraryName, item: `${BASE_URL}/${locale.path}/` },
+    { name: model.label, item: modelUrl(model.id, locale) }
+  ];
 }
 
 function renderSeoArticle(model, related, locale) {
@@ -709,18 +739,22 @@ function renderSeoArticle(model, related, locale) {
       ${ideas.length ? `<section><h2>${escapeHtml(locale.ideas)}</h2><ol>${ideas.map((idea) => renderIdea(idea, locale)).join('')}</ol></section>` : ''}
       ${model.influencias.length ? `<section><h2>${escapeHtml(locale.influences)}</h2>${renderSimpleList(model.influencias)}</section>` : ''}
       ${references.length ? `<section><h2>${escapeHtml(locale.references)}</h2>${renderSimpleList(references)}</section>` : ''}
-      ${related.length ? `<nav aria-label="${escapeHtml(locale.related)}"><h2>${escapeHtml(locale.related)}</h2><ul>${related.map((item) => `<li><a href="/${locale.path}/${encodeURIComponent(item.id)}">${escapeHtml(item.label)}</a></li>`).join('')}</ul></nav>` : ''}
+      ${related.length ? `<nav class="model-related" aria-label="${escapeHtml(locale.related)}"><h2>${escapeHtml(locale.related)}</h2><ul>${related.map((item) => `<li><a href="/${item.__locale === 'es' ? 'modelos' : locale.path}/${encodeURIComponent(item.id)}"${item.__locale === 'es' && locale.code === 'en' ? ' lang="es"' : ''}>${escapeHtml(item.label)}</a>${item.__locale === 'es' && locale.code === 'en' ? ' (Spanish)' : ''}</li>`).join('')}</ul></nav>` : ''}
     </article>`;
 }
 
-export function renderModelPage(model, allModels, interactiveTemplate, localeCode = 'es', englishModelIds = new Set()) {
+export function renderModelPage(model, allModels, interactiveTemplate, localeCode = 'es', englishModelIds = new Set(), canonicalModels = []) {
   const locale = LOCALES[localeCode];
   if (!locale) throw new Error(`Locale no soportado: ${localeCode}`);
   const url = modelUrl(model.id, locale);
   const description = truncateText(model.descripcion, 158);
   const title = `${model.label} | ${locale.pageSuffix}`;
   const related = relatedModelsFor(model, allModels, localeCode);
-  const indexable = model.descripcion.length >= 160;
+  if (localeCode === 'en' && related.length < 4) {
+    const translatedIds = new Set(allModels.map(item => item.id));
+    related.push(...relatedModelsFor(model, canonicalModels.filter(item => !translatedIds.has(item.id)), 'es').slice(0, 6 - related.length).map(item => ({ ...item, __locale: 'es' })));
+  }
+  const indexable = isIndexableModel(model);
   const spanishUrl = modelUrl(model.id, LOCALES.es);
   const englishUrl = modelUrl(model.id, LOCALES.en);
 
@@ -736,33 +770,20 @@ export function renderModelPage(model, allModels, interactiveTemplate, localeCod
         inLanguage: locale.code,
         isPartOf: { '@id': `${BASE_URL}/#website` },
         breadcrumb: { '@id': `${url}#breadcrumb` },
-        mainEntity: { '@id': `${url}#article` }
-      },
-      {
-        '@type': 'Article',
-        '@id': `${url}#article`,
-        headline: model.label,
-        description,
-        author: model.autores ? { '@type': 'Person', name: model.autores } : undefined,
-        publisher: { '@id': `${BASE_URL}/#organization` },
-        about: [model.grupo, locale.psychotherapy].filter(Boolean),
-        inLanguage: locale.code
+        about: { '@type': 'Thing', name: model.label }
       },
       {
         '@type': 'BreadcrumbList',
         '@id': `${url}#breadcrumb`,
-        itemListElement: [
-          { '@type': 'ListItem', position: 1, name: locale.home, item: `${BASE_URL}/` },
-          { '@type': 'ListItem', position: 2, name: locale.libraryName, item: `${BASE_URL}/${locale.path}/` },
-          { '@type': 'ListItem', position: 3, name: model.label, item: url }
-        ]
+        itemListElement: modelBreadcrumbs(model, locale).map((item, i) => ({ '@type': 'ListItem', position: i + 1, ...item }))
       }
     ]
   };
 
-  let html = interactiveTemplate;
+  let html = replaceDirectory(interactiveTemplate);
   html = html.replace(/<html\b([^>]*)\blang=(['"])[^'"]*\2/i, `<html$1lang="${locale.code}"`);
   if (localeCode === 'en') {
+    html = html.replaceAll('href="/modelos/?view=', 'href="/en/models/?view=');
     html = html.replace(/<html\b([^>]*)>/i, '<html$1 data-translation-status="reviewed">');
   }
   html = replaceElementTextById(html, 'title', 'seoTitle', title);
@@ -779,7 +800,7 @@ export function renderModelPage(model, allModels, interactiveTemplate, localeCod
   html = replaceAttributeById(html, 'meta', 'seoTwitterTitle', 'content', title);
   html = replaceAttributeById(html, 'meta', 'seoTwitterDescription', 'content', description);
   html = replaceAttributeById(html, 'meta', 'seoOgImageAlt', 'content', `${locale.imageAlt}: ${model.label}`);
-  html = replaceMetaByProperty(html, 'og:type', 'article');
+  html = replaceMetaByProperty(html, 'og:type', 'website');
   html = replaceMetaByProperty(html, 'og:locale', localeCode === 'en' ? 'en_GB' : 'es_ES');
   html = html.replace(
     /<meta\b(?=[^>]*\bname=["']robots["'])[^>]*>/i,
@@ -800,11 +821,11 @@ export function renderModelPage(model, allModels, interactiveTemplate, localeCod
   if (!html.includes(modelPanelTag)) {
     throw new Error('No se encontro #modelInfo en la plantilla: el articulo indexable no se puede insertar');
   }
-  html = html.replace(modelPanelTag, `${modelPanelTag}${renderSeoArticle(model, related, locale)}`);
+  html = replaceModelContent(html, renderSeoArticle(model, related, locale));
   return html;
 }
 
-export function renderEnglishLibraryPage(interactiveTemplate) {
+export function renderEnglishLibraryPage(interactiveTemplate, models = []) {
   const url = `${BASE_URL}/en/models/`;
   const spanishUrl = `${BASE_URL}/modelos/`;
   const title = 'Atlas of psychotherapy | Tu Mentor Psicología';
@@ -820,7 +841,8 @@ export function renderEnglishLibraryPage(interactiveTemplate) {
     isPartOf: { '@id': `${BASE_URL}/#website` }
   };
 
-  let html = interactiveTemplate;
+  let html = replaceDirectory(interactiveTemplate);
+  html = html.replaceAll('href="/modelos/?view=', 'href="/en/models/?view=');
   html = html.replace(/<html\b([^>]*)\blang=(['"])[^'"]*\2/i, '<html$1lang="en"');
   html = html.replace(/<html\b([^>]*)>/i, '<html$1 data-translation-status="reviewed">');
   html = replaceElementTextById(html, 'title', 'seoTitle', title);
@@ -846,13 +868,8 @@ export function renderEnglishLibraryPage(interactiveTemplate) {
     `<script id="seoStructuredData" type="application/ld+json">${safeJsonForHtml(structuredData)}</script>`
   );
   html = html.replace('</head>', '  <meta name="translation-status" content="reviewed">\n  <meta property="og:locale:alternate" content="es_ES">\n</head>');
-  html = html.replace('</body>', `<noscript>
-    <article class="seo-noscript" lang="en">
-      <h1>Atlas of psychotherapy</h1>
-      <p>${escapeHtml(description)}</p>
-      <p>Enable JavaScript to search, filter, and open the reviewed English model profiles.</p>
-    </article>
-  </noscript>\n</body>`);
+  html = replaceModelContent(html, `<article class="seo-article"><h1>Atlas of psychotherapy</h1><p>${escapeHtml(description)}</p></article>`);
+  html = replaceDirectory(html, renderDirectory(models, 'en'));
   return html;
 }
 
@@ -886,19 +903,23 @@ async function removePreviousGeneratedPages(ids, outputDir) {
   }));
 }
 
+export function isIndexableModel(model) {
+  return model.__seoDetail !== false && model.descripcion.length >= 160;
+}
+
 function uniqueModels(models, localeCode) {
   return [...new Map(models.map((model) => [model.id, model])).values()]
     .sort((a, b) => a.label.localeCompare(b.label, localeCode));
 }
 
-async function writeLocalePages(models, outputDir, interactiveTemplate, localeCode, englishModelIds) {
+async function writeLocalePages(models, outputDir, interactiveTemplate, localeCode, englishModelIds, canonicalModels = []) {
   await fs.mkdir(outputDir, { recursive: true });
   for (const model of models) {
     const modelDir = assertGeneratedPath(model.id, outputDir);
     await fs.mkdir(modelDir, { recursive: true });
     await fs.writeFile(
       path.join(modelDir, 'index.html'),
-      renderModelPage(model, models, interactiveTemplate, localeCode, englishModelIds),
+      renderModelPage(model, models, interactiveTemplate, localeCode, englishModelIds, canonicalModels),
       'utf8'
     );
   }
@@ -920,24 +941,26 @@ export async function build() {
     removePreviousGeneratedPages(previous.en, EN_MODELS_DIR)
   ]);
   const interactiveTemplate = await prepareInteractiveTemplate();
+  const spanishIndexable = new Set(modelsByLocale.es.filter(isIndexableModel).map(model => model.id));
+  modelsByLocale.en = modelsByLocale.en.filter(model => isIndexableModel(model) && spanishIndexable.has(model.id));
   const englishModelIds = new Set(modelsByLocale.en.map((model) => model.id));
 
   await writeLocalePages(modelsByLocale.es, MODELS_DIR, interactiveTemplate, 'es', englishModelIds);
-  await writeLocalePages(modelsByLocale.en, EN_MODELS_DIR, interactiveTemplate, 'en', englishModelIds);
-  await fs.writeFile(path.join(EN_MODELS_DIR, 'index.html'), renderEnglishLibraryPage(interactiveTemplate), 'utf8');
+  await writeLocalePages(modelsByLocale.en, EN_MODELS_DIR, interactiveTemplate, 'en', englishModelIds, modelsByLocale.es);
+  await fs.writeFile(path.join(EN_MODELS_DIR, 'index.html'), renderEnglishLibraryPage(interactiveTemplate, modelsByLocale.en), 'utf8');
 
   const manifestFor = (models) => ({
     count: models.length,
     models: models.map((model) => model.id),
     indexableModels: models
-      .filter((model) => model.descripcion.length >= 160)
+      .filter(isIndexableModel)
       .map((model) => model.id)
   });
 
   const manifest = {
     version: 2,
     generatedAt: new Date().toISOString(),
-    source: GITHUB_OWNER && GITHUB_REPO && GITHUB_TOKEN
+    source: MODEL_PAGES_DATA_ROOT ? 'local-data-repository' : GITHUB_OWNER && GITHUB_REPO && GITHUB_TOKEN
       ? `github:${GITHUB_OWNER}/${GITHUB_REPO}:modelos-publicos`
       : (!FORCE_REMOTE && await fileExists(LOCAL_INDEX_PATH) ? 'local-index' : DATA_API_URL),
     count: modelsByLocale.es.length,
@@ -954,6 +977,11 @@ export async function build() {
   // dos fuentes de verdad ni un listado que se quede atras al crecer el Atlas.
   const escuelas = await buildEscuelaPages(modelsByLocale.es, PUBLIC_DIR);
   manifest.escuelas = escuelas.generadas.map((e) => e.id);
+  const libraryTemplate = await fs.readFile(APP_TEMPLATE_PATH, 'utf8');
+  await fs.writeFile(path.join(MODELS_DIR, 'index.html'), replaceDirectory(libraryTemplate, renderDirectory(modelsByLocale.es)), 'utf8');
+  const schoolsTemplate = await fs.readFile(path.join(SOURCE_PUBLIC_DIR, 'escuelas', 'index.html'), 'utf8');
+  await fs.mkdir(path.join(PUBLIC_DIR, 'escuelas'), { recursive: true });
+  await fs.writeFile(path.join(PUBLIC_DIR, 'escuelas', 'index.html'), await buildSchoolsIndex(modelsByLocale.es, schoolsTemplate), 'utf8');
   await fs.writeFile(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
 
   console.log(`Páginas HTML generadas: ${modelsByLocale.es.length} es, ${modelsByLocale.en.length} en.`);

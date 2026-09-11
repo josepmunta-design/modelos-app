@@ -8,15 +8,7 @@ const url = path => DATA + encodeURIComponent(path);
 
 /* Orden editorial de las escuelas troncales: el mismo que usa la biblioteca en
    buildSchoolOptions(). Las colecciones y los cajones tematicos quedan fuera. */
-const SCHOOLS = [
-  { id: 'psicoanalisis',   desc: 'El inconsciente, el conflicto y la relación que lo revive.' },
-  { id: 'conductismo',     desc: 'La conducta como aprendizaje: lo que se adquiere puede reaprenderse.' },
-  { id: 'humanista',       desc: 'La persona entera, su experiencia y su tendencia a crecer.' },
-  { id: 'cognitivo',       desc: 'El significado que damos a las cosas y cómo llega a sostener el malestar.' },
-  { id: 'sistemico',       desc: 'El síntoma dentro de la trama de relaciones que lo mantiene.' },
-  { id: 'constructivista', desc: 'La realidad como construcción: narrar de otro modo es vivir de otro modo.' },
-  { id: 'integrativo',     desc: 'Lo que funciona, venga de donde venga, con criterio para combinarlo.' },
-];
+import { SCHOOLS } from './catalog.js';
 
 /* Las imagenes son las de la ficha del modelo: Core/imagenes/vida, 16:9 en
    color, las mismas que ilustran la ficha en la biblioteca. */
@@ -32,7 +24,6 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const grid = document.getElementById('schoolsGrid');
 const state = document.getElementById('schoolsState');
-const totals = document.getElementById('schoolsTotals');
 
 async function readJson(path) {
   const response = await fetch(url(path), { headers: { accept: 'application/json' } });
@@ -69,36 +60,6 @@ function stills(models, imageByModel, basePath) {
       return true;
     })
     .slice(0, MAX_PHOTOS);
-}
-
-function listUrl(label) {
-  const params = new URLSearchParams({ view: 'list', group: 'school', target: label });
-  return `/modelos/?${params}`;
-}
-
-function card(school, index) {
-  const node = document.createElement('a');
-  node.className = 'school';
-  node.href = listUrl(school.label);
-  node.setAttribute('aria-label', `${school.label} · ver sus ${school.count} modelos en la biblioteca`);
-  node.innerHTML = `
-    <div class="school-stage" aria-hidden="true"></div>
-    <div class="school-shade" aria-hidden="true"></div>
-    <div class="school-light" aria-hidden="true"></div>
-    <div class="school-top">
-      <span class="school-index">${String(index + 1).padStart(2, '0')}</span>
-      <span class="school-count">${school.count} modelos</span>
-    </div>
-    <p class="school-caption" aria-hidden="true"></p>
-    <div class="school-content">
-      <h3 class="school-name"></h3>
-      <p class="school-desc"></p>
-      <span class="school-action">Ver la escuela <span class="arrow-circle" aria-hidden="true">↗</span></span>
-    </div>
-    <span class="school-edge" aria-hidden="true"></span>`;
-  node.querySelector('.school-name').textContent = school.label;
-  node.querySelector('.school-desc').textContent = school.desc;
-  return node;
 }
 
 /* Dos capas de imagen que se relevan por opacidad. La siguiente foto se precarga
@@ -211,20 +172,18 @@ async function render() {
 
   if (!schools.length) throw new Error('El indice de escuelas ha llegado vacio');
 
-  grid.replaceChildren(...schools.map((school, position) => {
-    const node = card(school, position);
-    if (school.photos.length) animate(node, school.photos);
-    return node;
-  }));
-
+  // El catálogo HTML del build es la fuente de navegación. Solo enriquecemos imágenes.
+  for (const school of schools) {
+    const node = grid.querySelector(`[data-school-id="${school.id}"]`);
+    if (node && school.photos.length) animate(node, school.photos);
+  }
   state.hidden = true;
-  grid.hidden = false;
-  const models = schools.reduce((sum, school) => sum + school.count, 0);
-  totals.textContent = `${schools.length} escuelas · ${models} modelos`;
+
 }
 
 render().catch(error => {
   console.error('[escuelas]', error);
+  if (grid.querySelector('a[href]')) return;
   grid.hidden = true;
   state.hidden = false;
   state.innerHTML = 'No hemos podido cargar las escuelas. '

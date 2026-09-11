@@ -1,3 +1,10 @@
+// Preserve the reviewed, build-time navigation and metadata through hydration.
+window.TMPS_GENERATED_MODEL_SEO = {
+  url: document.getElementById('seoCanonical')?.href,
+  schema: document.getElementById('seoStructuredData')?.textContent,
+  english: document.getElementById('seoAlternateEn')?.href
+};
+
 (async function setupAccessGate(){
       await window.TMPS_MODELOS_I18N?.ready;
       const form = document.getElementById('accessForm');
@@ -6595,7 +6602,7 @@ function buildModelListItemMarkup(model, options = {}){
     : buildModelCardAvatarHtml(model);
 
   return `
-  <div class="mi-item ${active} ${marcoClass} ${dependentClass}" data-id="${safeId}"${pendeAttr} style="--schoolColor:${escapeHtml(schoolColor)}">
+  <a href="${buildModelPath(model.id)}" class="mi-item ${active} ${marcoClass} ${dependentClass}" data-id="${safeId}"${pendeAttr} style="--schoolColor:${escapeHtml(schoolColor)}">
     <div class="mi-shell">
       <div class="mi-avatar">${avatarHtml}</div>
       <div class="mi-body">
@@ -6611,7 +6618,7 @@ function buildModelListItemMarkup(model, options = {}){
         <div class="mi-sub">${authorText}</div>
       </div>
     </div>
-  </div>
+  </a>
 `;
 }
 
@@ -7672,7 +7679,9 @@ function setupGroupingControls(){
 
   if (libraryListViewButtonEl && !libraryListViewButtonEl.__bound){
     libraryListViewButtonEl.__bound = true;
-    libraryListViewButtonEl.addEventListener('click', async () => {
+    libraryListViewButtonEl.addEventListener('click', async (event) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
       if (window.TMPS_ATLAS) return window.TMPS_ATLAS.setView('list');
       if (groupingMode === 'network') await handleGroupingModeChange(listGroupingMode || 'all');
     });
@@ -7680,7 +7689,9 @@ function setupGroupingControls(){
 
   if (libraryNetworkViewButtonEl && !libraryNetworkViewButtonEl.__bound){
     libraryNetworkViewButtonEl.__bound = true;
-    libraryNetworkViewButtonEl.addEventListener('click', async () => {
+    libraryNetworkViewButtonEl.addEventListener('click', async (event) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
       if (window.TMPS_ATLAS) return window.TMPS_ATLAS.setView('network');
       if (groupingMode !== 'network') await handleGroupingModeChange('network');
     });
@@ -8019,6 +8030,8 @@ function renderModelsList(){
     return;
   }
 
+  if (evt.metaKey || evt.ctrlKey || evt.shiftKey || evt.altKey) return;
+  evt.preventDefault();
   const raw = item.getAttribute('data-id') || '';
   const id = decodeURIComponent(raw);
 
@@ -12734,7 +12747,7 @@ function markModelAsPublicView(model){
     modelInfoEl.innerHTML = `
       <div class="mp-hero">
         <div class="mp-hero-eyebrow">${escapeHtml(uiText('welcome.eyebrow', 'Biblioteca viva'))}</div>
-        <div class="mp-hero-title">${escapeHtml(uiText('welcome.title', 'Modelos psicoterapéuticos'))}</div>
+        <h1 class="mp-hero-title">${escapeHtml(uiText('welcome.title', 'Modelos psicoterapéuticos'))}</h1>
         <div class="mp-hero-text">
           ${escapeHtml(uiText('welcome.description', 'Explora cómo distintas escuelas entienden el cambio, el sufrimiento y la intervención clínica.'))}
         </div>
