@@ -8862,7 +8862,7 @@ function bindNetworkLegendHandlers(){
     if (!school) return;
 
     const active = NETWORK_FILTER_STATE.activeSchools;
-    const onlyThis = evt.altKey || evt.metaKey;
+    const onlyThis = evt.ctrlKey || evt.metaKey;
 
     if (onlyThis){
       active.clear();
@@ -8906,12 +8906,13 @@ function bindNetworkLegendHandlers(){
 function buildNetworkOverviewHtml(){
   const grouped = getNetworkFilterGroups();
   const accessLocked = !hasNetworkGraphAccess();
-  const renderFilterChips = (groups) => groups.map((s) => {
+  const renderFilterChips = (groups, kind) => groups.map((s) => {
     const c = colorForSchoolLabel(s);
     const on = NETWORK_FILTER_STATE.activeSchools.has(s);
-    return `<button type="button" class="chip ${on ? 'is-on' : 'is-off'}" data-school="${escapeHtml(s)}" aria-pressed="${on ? 'true' : 'false'}" style="--filter-color:${escapeHtml(c)}"><span class="dot" style="background:${escapeHtml(c)}"></span><span>${escapeHtml(navigationGroupDisplayLabel(s))}</span></button>`;
+    const label = navigationGroupDisplayLabel(s);
+    const noun = kind === 'collections' ? uiText('group.collection', 'Colección') : uiText('group.school', 'Escuela');
+    return `<button type="button" class="chip ${on ? 'is-on' : 'is-off'}" data-school="${escapeHtml(s)}" data-tooltip="${escapeHtml(label)}" aria-label="${escapeHtml(`${noun}: ${label}`)}" aria-pressed="${on ? 'true' : 'false'}" style="--filter-color:${escapeHtml(c)}"><span class="dot" aria-hidden="true" style="background:${escapeHtml(c)}"></span></button>`;
   }).join('');
-  const resetLegend = `<button type="button" class="chip reset" title="${escapeHtml(uiText('network.showAllGroups', 'Mostrar todos los grupos'))}">${escapeHtml(uiText('network.showAll', 'Mostrar todas'))}</button>`;
   const activeMode = String(NETWORK_FILTER_STATE.profileMode || 'process');
   const modeButtons = [
     { id:'process', label:uiText('network.processes', 'Procesos'), desc:uiText('network.processesDescription', 'Afinidad por procesos de cambio') },
@@ -8922,21 +8923,10 @@ function buildNetworkOverviewHtml(){
       <small>${escapeHtml(mode.desc)}</small>
     </button>
   `).join('');
-  const filterGroup = (scope, title, groups) => {
-    const enabled = groups.filter((group) => NETWORK_FILTER_STATE.activeSchools.has(group)).length;
-    return `
-      <section class="networkFilterGroup networkFilterGroup-${scope}" aria-labelledby="network-filter-${scope}">
-        <div class="networkFilterGroupHead">
-          <div class="networkFilterTitleRow">
-            <h3 id="network-filter-${scope}">${escapeHtml(title)}</h3>
-            <span class="networkFilterCount" data-network-filter-count="${scope}">${enabled}/${groups.length}</span>
-          </div>
-          <button type="button" class="networkFilterScopeAction" data-network-filter-scope="${scope}" aria-pressed="${enabled === groups.length ? 'true' : 'false'}">${escapeHtml(enabled === groups.length ? uiText('network.hideAll', 'Ocultar todas') : uiText('network.showAll', 'Mostrar todas'))}</button>
-        </div>
-        <div class="networkFilterChips">${renderFilterChips(groups)}</div>
-      </section>
-    `;
-  };
+  const filterGroup = (scope, title, groups) => `
+    <section class="networkFilterGroup networkFilterGroup-${scope}" role="group" aria-label="${escapeHtml(title)}">
+      <div class="networkFilterChips">${renderFilterChips(groups, scope)}</div>
+    </section>`;
 
   return `
     <div class="networkView">
@@ -8952,7 +8942,6 @@ function buildNetworkOverviewHtml(){
         <div class="networkLegend">
           ${filterGroup('schools', uiText('library.group.school', 'Escuelas'), grouped.schools)}
           ${filterGroup('collections', uiText('library.group.collection', 'Colecciones'), grouped.collections)}
-          <div class="networkLegendReset">${resetLegend}</div>
         </div>
       </div>
       <div class="networkCanvas ${accessLocked ? 'is-access-preview' : ''}" id="networkCanvas">

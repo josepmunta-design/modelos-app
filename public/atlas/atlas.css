@@ -30,7 +30,7 @@
 .atlas-enabled body .app { position: fixed; inset: var(--atlas-header-height) 0 0; width: 100%; height: auto; max-height: none; padding: 0; display: block; }
 .atlas-enabled body .app > .panel.left { position: absolute !important; inset: 0 auto 0 0 !important; width: var(--atlas-sidebar-width) !important; height: 100% !important; max-height: 100% !important; max-width: none; margin: 0; padding: 18px 18px 24px; border-right: 1px solid var(--atlas-line); border-radius: 0; transform: none !important; }
 .atlas-enabled body .app > .panel.right { position: absolute !important; inset: 0 0 0 var(--atlas-sidebar-width) !important; width: auto !important; height: 100% !important; max-height: none !important; max-width: none; margin: 0; border-radius: 0; overflow-y: auto; transform: none; }
-.atlas-enabled .appsHomeLink, .atlas-enabled #tmpsAppsNav, .atlas-enabled .nav-speed, .atlas-enabled #btnModelClose { display: none !important; }
+.atlas-enabled .appsHomeLink, .atlas-enabled #tmpsAppsNav, .atlas-enabled .nav-speed { display: none !important; }
 .atlas-enabled body .authUserMenu { top: 17px; right: 24px; bottom: auto; z-index: 10030; }
 .atlas-enabled .authMenuButton { width: 32px; height: 32px; }
 .atlas-enabled .authMenuDropdown { top: 42px; bottom: auto; }
@@ -167,4 +167,26 @@
   }
   .atlas-enabled body[data-atlas-view="network"] #atlasFiltersButton,
   .atlas-enabled body[data-atlas-view="network"] .atlasLocaleSwitch { display:none; }
+}
+
+@media (max-width:600px) {
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-header {
+    display:flex;
+    gap:6px;
+    min-height:54px;
+    padding:7px 54px 7px 10px;
+  }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-brand-kicker { display:none; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-brand-title { font-size:18px; white-space:nowrap; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-mobile-view { flex:0 0 auto; min-width:0; margin-left:auto; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-mobile-view > span { display:none; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-mobile-view select { width:104px; padding:6px; font-size:11px; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlasLocaleSwitch { flex:0 0 auto; margin-right:0; }
+  .atlas-enabled body[data-atlas-view="genealogy"] #atlasFiltersButton { display:none; }
+}
+
+@media (max-width:350px) {
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-brand-title { font-size:0; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-brand-title::after { content:'Atlas'; font-size:18px; }
+  .atlas-enabled body[data-atlas-view="genealogy"] .atlas-mobile-view select { width:96px; }
 }

@@ -17554,6 +17554,135 @@ body.network-mode .networkModelGraphPanel{
   body.network-mode .networkLegend .chip{ flex:0 0 auto; }
 }
 
+/* La leyenda de la red comparte el lenguaje compacto del Mapamundi: el color
+   identifica el grupo y el nombre aparece solo al pasar el cursor o enfocarlo. */
+body.network-mode .networkLegend{
+  display:flex;
+  grid-template-columns:none;
+  align-items:center;
+  justify-content:flex-end;
+  gap:7px;
+  overflow:visible;
+}
+
+body.network-mode .networkFilterGroup{
+  display:flex;
+  flex:0 0 auto;
+  gap:3px;
+  overflow:visible;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+}
+
+body.network-mode .networkFilterGroup-collections{
+  padding-left:8px;
+  border-left:1px solid var(--network-hairline);
+}
+
+body.network-mode .networkFilterChips{
+  display:flex;
+  flex-wrap:nowrap;
+  gap:3px;
+  overflow:visible;
+  padding:0;
+}
+
+body.network-mode .networkLegend .chip{
+  position:relative;
+  display:grid;
+  place-items:center;
+  flex:0 0 25px;
+  width:25px;
+  min-width:25px;
+  height:25px;
+  min-height:25px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  box-shadow:none;
+}
+
+body.network-mode .networkLegend .chip .dot{
+  width:15px;
+  height:15px;
+  border:0;
+  border-radius:50%;
+  background:var(--filter-color) !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.2),0 2px 6px rgba(0,0,0,.45);
+  transition:opacity .18s ease,transform .18s ease,box-shadow .18s ease;
+}
+
+body.network-mode .networkLegend .chip:hover,
+body.network-mode .networkLegend .chip:focus-visible{
+  border:0;
+  background:transparent;
+  outline:none;
+  box-shadow:none;
+  transform:none;
+}
+
+body.network-mode .networkLegend .chip:hover .dot,
+body.network-mode .networkLegend .chip:focus-visible .dot{
+  transform:scale(1.22);
+  box-shadow:0 0 0 2px var(--network-paper),0 0 0 3px var(--filter-color),0 3px 9px rgba(0,0,0,.55);
+}
+
+body.network-mode .networkLegend .chip.is-off{
+  opacity:1;
+  border:0;
+  background:transparent;
+}
+
+body.network-mode .networkLegend .chip.is-off .dot{
+  opacity:.25;
+  transform:scale(.78);
+  border:0;
+  background:var(--filter-color) !important;
+  box-shadow:0 0 0 1px var(--filter-color);
+}
+
+body.network-mode .networkLegend .chip::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  z-index:1000;
+  left:50%;
+  top:calc(100% + 7px);
+  width:max-content;
+  max-width:210px;
+  padding:6px 8px;
+  border:1px solid var(--network-hairline);
+  border-radius:6px;
+  background:var(--network-paper);
+  color:var(--network-cream);
+  box-shadow:0 7px 20px rgba(0,0,0,.48);
+  font:500 11px/1.25 'Hanken Grotesk',sans-serif;
+  white-space:normal;
+  pointer-events:none;
+  opacity:0;
+  transform:translate(-50%,-3px);
+  transition:opacity .14s ease,transform .14s ease;
+}
+
+body.network-mode .networkLegend .chip:hover::after,
+body.network-mode .networkLegend .chip:focus-visible::after{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+@media (max-width:560px){
+  body.network-mode .networkLegend{
+    justify-content:flex-start;
+    overflow-x:auto;
+    padding:2px 0;
+    scrollbar-width:none;
+  }
+  body.network-mode .networkLegend::-webkit-scrollbar{ display:none; }
+  body.network-mode .networkFilterChips{ overflow:visible; }
+}
+
 /* ================================================================
    Articulo indexable de la ficha.
    Lo escribe scripts/build-model-pages.mjs dentro de #modelInfo. Es el
