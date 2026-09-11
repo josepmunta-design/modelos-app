@@ -103,6 +103,16 @@ export async function createView(host, context) {
     const id = groupIdBySource.get(String(model?.grupo || '').trim());
     return !id || enabledGroups.has(id);
   }
+  function showOnlyGroupOrRestoreAll(id) {
+    const restoreAll = enabledGroups.size === 1 && enabledGroups.has(id);
+    enabledGroups.clear();
+    if (restoreAll) filterGroups.forEach(group => enabledGroups.add(group.id));
+    else enabledGroups.add(id);
+  }
+  function refreshGroupSelection() {
+    syncGroupFilters();
+    draw();
+  }
   let models = [], selectedId = '', markers = new Map(), signature = '', initialFit = false, timer = null, active = false;
   const slider = host.querySelector('input'), output = host.querySelector('output'), play = host.querySelector('[data-play]');
   const years = context.data.models().map(modelYear).filter(Boolean);
@@ -173,9 +183,17 @@ export async function createView(host, context) {
     if (!button) return;
     const id = button.dataset.groupId;
     if (event.ctrlKey || event.metaKey) {
-      enabledGroups.clear(); enabledGroups.add(id);
+      showOnlyGroupOrRestoreAll(id);
     } else if (enabledGroups.has(id)) enabledGroups.delete(id); else enabledGroups.add(id);
-    syncGroupFilters(); draw();
+    refreshGroupSelection();
+  });
+  groupFilters.addEventListener('dblclick', event => {
+    if (event.ctrlKey || event.metaKey) return;
+    const button = event.target.closest('[data-group-id]');
+    if (!button) return;
+    event.preventDefault();
+    showOnlyGroupOrRestoreAll(button.dataset.groupId);
+    refreshGroupSelection();
   });
   host.querySelector('[data-fit]').addEventListener('click', fit);
   host.querySelector('[data-labels]').addEventListener('click', event => { labelsOn = !labelsOn; labels(); event.currentTarget.setAttribute('aria-pressed', String(labelsOn)); });

@@ -8854,6 +8854,18 @@ function bindNetworkLegendHandlers(){
   if (!legend || legend.__bound) return;
   legend.__bound = true;
 
+  const showOnlySchoolOrRestoreAll = (school) => {
+    const active = NETWORK_FILTER_STATE.activeSchools;
+    const restoreAll = active.size === 1 && active.has(school);
+    active.clear();
+    if (restoreAll) getNetworkSchoolList().forEach((value) => active.add(value));
+    else active.add(school);
+  };
+  const refreshSchoolSelection = () => {
+    updateNetworkLegendUi();
+    renderNetworkGraphLazy();
+  };
+
   legend.addEventListener('click', (evt) => {
     const chip = evt.target.closest('.chip[data-school]');
     if (!chip) return;
@@ -8865,8 +8877,7 @@ function bindNetworkLegendHandlers(){
     const onlyThis = evt.ctrlKey || evt.metaKey;
 
     if (onlyThis){
-      active.clear();
-      active.add(school);
+      showOnlySchoolOrRestoreAll(school);
     }else{
       if (active.has(school)){
         active.delete(school);
@@ -8875,8 +8886,18 @@ function bindNetworkLegendHandlers(){
       }
     }
 
-    updateNetworkLegendUi();
-    renderNetworkGraphLazy();
+    refreshSchoolSelection();
+  });
+
+  legend.addEventListener('dblclick', (evt) => {
+    if (evt.ctrlKey || evt.metaKey) return;
+    const chip = evt.target.closest('.chip[data-school]');
+    if (!chip) return;
+    const school = String(chip.getAttribute('data-school') || '');
+    if (!school) return;
+    evt.preventDefault();
+    showOnlySchoolOrRestoreAll(school);
+    refreshSchoolSelection();
   });
 
   legend.addEventListener('click', (evt) => {
