@@ -41,6 +41,9 @@
 .atlas-enabled .atlas-spatial .app > .panel.right { display: none !important; }
 .atlas-enabled .atlas-spatial.atlas-has-selection .app > .panel.right { display: block !important; inset: 0 0 0 auto !important; width: min(500px, 43vw) !important; z-index: 620; background: var(--atlas-bg); border-left: 1px solid var(--atlas-line); box-shadow: -12px 0 40px #0003; }
 .atlas-enabled .atlas-spatial.atlas-has-selection .atlas-stage { right: min(500px, 43vw); }
+.atlas-enabled body.model-info-pending.atlas-spatial .app > .panel.right { display:none !important; }
+.atlas-enabled body.model-info-pending.atlas-spatial .atlas-stage { right:0 !important; }
+.atlas-enabled body.model-info-pending :is(.atlas-profile-actions,.modelCloseBtn) { display:none !important; }
 .atlas-enabled body.infoFull:not(.atlas-spatial) .app > .panel.right { inset: 0 !important; z-index: 800; }
 .atlas-enabled .atlas-profile-actions:not([hidden]) { display:flex; align-items:flex-start; flex-wrap:wrap; gap:6px; position:sticky; top:0; height:0; padding:0 14px; transform:translateY(12px); color:var(--atlas-ink); z-index:100; pointer-events:none; }
 .atlas-profile-actions button { pointer-events:auto; font:600 11px 'Hanken Grotesk', sans-serif; padding:7px 10px; color:inherit; background:color-mix(in srgb,var(--atlas-bg) 82%,transparent); border:1px solid color-mix(in srgb,var(--atlas-line) 88%,transparent); border-radius:999px; box-shadow:0 5px 18px #0005; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); cursor:pointer; }
@@ -97,6 +100,9 @@
   .atlas-enabled .atlas-spatial.atlas-filters-open .app > .panel.left { width: min(var(--atlas-sidebar-width), 92vw) !important; }
   .atlas-enabled .atlas-spatial .atlas-stage { left: 0 !important; right: 0 !important; }
   .atlas-enabled .atlas-spatial.atlas-has-selection .app > .panel.right { inset: 0 !important; width: 100% !important; }
+  .atlas-enabled body.model-info-pending .app > .panel.right { display:none !important; }
+  .atlas-enabled body.model-info-pending:not(.atlas-spatial) .app > .panel.left { display:block !important; }
+  .atlas-enabled body.model-info-pending.atlas-spatial .app > .panel.left { display:none !important; }
   .atlas-enabled #btnInfoFull { display: none !important; }
   .atlas-view-tools { gap: 7px; padding: 10px; }
   .atlas-view-tools > span:first-child { flex-basis: 100%; }

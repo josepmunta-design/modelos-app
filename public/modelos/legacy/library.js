@@ -5571,6 +5571,24 @@ function infoFadeIn(){
   }));
 }
 
+function beginModelInfoPending(id){
+  const key = String(id ?? '').trim();
+  const hasOpenProfile = document.body.classList.contains('model-info-open') && !!String(currentModelId ?? '').trim();
+  document.body.dataset.pendingModelId = key;
+  modelInfoEl?.setAttribute('aria-busy', 'true');
+  // Keep the source view visible on the first opening. When changing between
+  // open fiches, the current fiche stays in place until its replacement exists.
+  if (!hasOpenProfile) document.body.classList.add('model-info-pending');
+}
+
+function endModelInfoPending(id){
+  const key = String(id ?? '').trim();
+  if (key && document.body.dataset.pendingModelId !== key) return;
+  document.body.classList.remove('model-info-pending');
+  delete document.body.dataset.pendingModelId;
+  modelInfoEl?.removeAttribute('aria-busy');
+}
+
 // ================= MODO LECTURA PANEL DERECHO (SUAVE) =================
 
 const leftPanel  = document.querySelector('.panel.left');
@@ -5723,6 +5741,7 @@ function openMobileModelFullscreen(){
 
 function closeMobileModelInfoToList(){
   if (window.TMPS_ATLAS) return window.TMPS_ATLAS.closeSelection();
+  endModelInfoPending();
   setInfoFullscreen(false);
   setModelInfoOpen(false);
   if (window.__SMH) window.__SMH.hide();
@@ -8008,6 +8027,7 @@ function renderModelsList(){
   modelsListEl.__loading = true;
 
   try{
+    beginModelInfoPending(id);
     // ✅ 1) pinta selección INMEDIATA (sin esperar red)
     currentModelId = id;
     window.__CURRENT_MODEL_ID = id;
@@ -8032,6 +8052,7 @@ function renderModelsList(){
     console.error('openModel falló:', id, err);
   }finally{
     modelsListEl.__loading = false;
+    endModelInfoPending(id);
     infoFadeIn(); // por si openModel no lo hace siempre
   }
 });
@@ -15173,6 +15194,7 @@ function resetModelPanelToTop(){
 
 async function openModel(id, options = {}){
   try{
+    beginModelInfoPending(id);
     window.TMPS_ATLAS?.recordSelection(id, options.updateUrl !== false);
     currentModelId = id;
     window.__CURRENT_MODEL_ID = id;
@@ -15255,6 +15277,7 @@ async function openModel(id, options = {}){
       if (String(currentModelId) !== String(id)) return;
       renderModelInfo(fullModel);
       setModelSeo(fullModel);
+      endModelInfoPending(id);
       if (window.__SMH) window.__SMH.rescan();
       infoFadeIn();
       return;
@@ -15263,6 +15286,7 @@ async function openModel(id, options = {}){
     // 2) Pintar la version publica.
     renderModelInfo(publicModel);
     setModelSeo(publicModel);
+    endModelInfoPending(id);
     infoFadeIn();
 
     if (window.__SMH) {
@@ -15321,6 +15345,7 @@ async function openModel(id, options = {}){
   }catch(err){
     console.error("openModel error:", err);
   }finally{
+    endModelInfoPending(id);
     infoFadeIn();
   }
 }
@@ -15334,6 +15359,7 @@ window.addEventListener('popstate', async () => {
     return;
   }
 
+  endModelInfoPending();
   currentModelId = null;
   window.__CURRENT_MODEL_ID = '';
   setLibrarySeo();
@@ -15571,6 +15597,7 @@ const atlasLibrary = {
   hideWelcome: () => { try { hideLanding(); } catch {} },
   openModel: id => openModel(id, { updateUrl: false }),
   closeProfile: () => {
+    endModelInfoPending();
     currentModelId = null; window.__CURRENT_MODEL_ID = '';
     setModelInfoOpen(false); setInfoFullscreen(false); setMobileModelPanelLowered(false);
     window.__SMH?.hide(); renderModelInfo(null); setLibrarySeo(); renderModelsList();
