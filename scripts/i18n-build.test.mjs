@@ -250,6 +250,13 @@ test('los enlaces de idioma conservan la ficha en enlaces directos y al navegar 
   listeners.get('popstate')();
   assert.equal(links[0].href, '/modelos/second-model');
   assert.equal(links[1].href, '/en/models/second-model');
+
+  location.pathname = '/modelos/escuelas/cognitivo/';
+  listeners.get('popstate')();
+  assert.equal(window.TMPS_MODELOS_I18N.getModelId(), '');
+  assert.equal(window.TMPS_MODELOS_I18N.getSchoolId(), 'cognitivo');
+  assert.equal(links[0].href, '/modelos/escuelas/cognitivo/');
+  assert.equal(links[1].href, '/en/models/schools/cognitivo/');
   location.pathname = '/modelos/';
   location.search = '?view=map&open=freud&group=school&target=Psicoan%C3%A1lisis';
   listeners.get('popstate')();

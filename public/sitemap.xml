@@ -16,49 +16,7 @@
     <xhtml:link rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/" />
   </url>
   <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/</loc>
-  </url>
-  <url>
     <loc>https://apps.tumentorpsicologia.com/metamodelos/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/psicoanalisis/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/conductismo/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/cognitivo/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/humanista/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/sistemico/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/constructivista/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/integrativo/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/transversal/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/otros/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/epistemologia/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/psicodelicos/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/fronteras/</loc>
-  </url>
-  <url>
-    <loc>https://apps.tumentorpsicologia.com/escuelas/terapias-expresivas-y-creativas/</loc>
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/a2naikan1940</loc>
@@ -322,6 +280,9 @@
     <loc>https://apps.tumentorpsicologia.com/modelos/dream-back-bosnak-2026</loc>
   </url>
   <url>
+    <loc>https://apps.tumentorpsicologia.com/modelos/dynamic-interpersonal-therapy-lemma-target-fonagy-2010</loc>
+  </url>
+  <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/economia-fichas-ayllon-azrin-1965</loc>
     <xhtml:link rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/economia-fichas-ayllon-azrin-1965" />
     <xhtml:link rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/economia-fichas-ayllon-azrin-1965" />
@@ -407,6 +368,9 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/expressive-therapies-continuum-kagin-lusebrink-1978" />
     <xhtml:link rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/expressive-therapies-continuum-kagin-lusebrink-1978" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/expressive-therapies-continuum-kagin-lusebrink-1978" />
+  </url>
+  <url>
+    <loc>https://apps.tumentorpsicologia.com/modelos/family-based-treatment-lock-le-grange-2001</loc>
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/feedback-informed-treatment-duncan-miller-2000</loc>
@@ -608,6 +572,9 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/manejo-contingencias-adicciones-1994" />
     <xhtml:link rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/manejo-contingencias-adicciones-1994" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/manejo-contingencias-adicciones-1994" />
+  </url>
+  <url>
+    <loc>https://apps.tumentorpsicologia.com/modelos/mantra-schmidt-treasure-2006</loc>
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/marco-poder-amenaza-significado-johnstone-boyle-2018</loc>
@@ -1304,6 +1271,9 @@
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/terapia-familiar-simbolico-experiencial-1969</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/terapia-familiar-simbolico-experiencial-1969" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/terapia-familiar-simbolico-experiencial-1969" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/terapia-familiar-simbolico-experiencial-1969" />
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/terapia-familiar-sistemica-milan-1975</loc>
@@ -1376,6 +1346,9 @@
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/terapias-catarticas-abreactivas-breuer-freud-1895</loc>
+  </url>
+  <url>
+    <loc>https://apps.tumentorpsicologia.com/modelos/tf-cbt-cohen-mannarino-deblinger-2004</loc>
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/modelos/tfp-transference-focused-psychotherapy-kernberg-1995</loc>
@@ -2507,6 +2480,12 @@
     <xhtml:link rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/terapia-experiencial-1970" />
     <xhtml:link rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/terapia-experiencial-1970" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/terapia-experiencial-1970" />
+  </url>
+  <url>
+    <loc>https://apps.tumentorpsicologia.com/en/models/terapia-familiar-simbolico-experiencial-1969</loc>
+    <xhtml:link rel="alternate" hreflang="es" href="https://apps.tumentorpsicologia.com/modelos/terapia-familiar-simbolico-experiencial-1969" />
+    <xhtml:link rel="alternate" hreflang="en" href="https://apps.tumentorpsicologia.com/en/models/terapia-familiar-simbolico-experiencial-1969" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://apps.tumentorpsicologia.com/modelos/terapia-familiar-simbolico-experiencial-1969" />
   </url>
   <url>
     <loc>https://apps.tumentorpsicologia.com/en/models/terapia-familiar-sistemica-milan-1975</loc>

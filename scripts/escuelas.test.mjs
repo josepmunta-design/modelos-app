@@ -93,26 +93,24 @@ test('el contenido editorial está completo para las 13 escuelas', async () => {
   }
 });
 
-test('el sitemap solo anuncia las escuelas que el build ha generado', () => {
-  // Una escuela sin modelos no genera pagina: anunciarla seria un 404.
+test('el sitemap deja las escuelas dentro de la app y no publica las rutas antiguas', () => {
   const xml = buildSitemap({
     modelIdsByLocale: { es: ['palo-alto-1959'], en: [] },
     lastModified: '2026-09-08',
     escuelaIds: ['sistemico', 'cognitivo']
   });
 
-  assert.match(xml, /\/escuelas\/sistemico\//);
-  assert.match(xml, /\/escuelas\/cognitivo\//);
+  assert.doesNotMatch(xml, /\/escuelas\/sistemico\//);
+  assert.doesNotMatch(xml, /\/escuelas\/cognitivo\//);
   assert.doesNotMatch(xml, /\/escuelas\/terapias-expresivas-y-creativas\//);
   assert.match(xml, /\/metamodelos\//);
 });
 
-test('sin escuelas generadas el sitemap no inventa URLs de escuela', () => {
+test('el sitemap no anuncia una portada de escuelas independiente', () => {
   const xml = buildSitemap({
     modelIdsByLocale: { es: [], en: [] },
     lastModified: '2026-09-08'
   });
   assert.equal((xml.match(/\/escuelas\/[a-z-]+\//g) || []).length, 0);
-  // La portada de escuelas sí sigue estando.
-  assert.match(xml, /<loc>https:\/\/apps\.tumentorpsicologia\.com\/escuelas\/<\/loc>/);
+  assert.doesNotMatch(xml, /<loc>https:\/\/apps\.tumentorpsicologia\.com\/escuelas\/<\/loc>/);
 });

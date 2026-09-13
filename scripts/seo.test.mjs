@@ -38,7 +38,7 @@ test('el directorio enlaza también grupos no reconocidos y no se duplica al reg
   const directory = renderDirectory(models);
   assert.ok(directory.includes('href="/modelos/a"') && directory.includes('A &amp; B'));
   assert.ok(directory.includes('href="/modelos/b"'));
-  assert.ok(directory.includes('/escuelas/cognitivo/'));
+  assert.ok(directory.includes('/modelos/escuelas/cognitivo/'));
   const template = '<!-- ATLAS DIRECTORY START --><!-- ATLAS DIRECTORY END -->';
   const first = replaceDirectory(template, directory);
   assert.equal(replaceDirectory(first, directory), first);
@@ -48,7 +48,7 @@ test('los hubs del índice existen como tarjetas HTML aun sin JS y se regeneran 
   const template = '<div class="schools" id="schoolsGrid"></div><!-- SCHOOLS GRID END -->';
   const models = [{id:'a', label:'A', grupo:'Cognitivo'}];
   const first = await buildSchoolsIndex(models, template);
-  assert.ok(first.includes('href="/escuelas/cognitivo/"'));
+  assert.ok(first.includes('href="/modelos/escuelas/cognitivo/"'));
   assert.ok(!first.includes(' hidden'));
   assert.equal(await buildSchoolsIndex(models, first), first);
 });
@@ -58,7 +58,7 @@ test('la plantilla real produce un solo H1, breadcrumb coherente y WebPage sin a
   const model = {id:'a', label:'Modelo A', grupo:'Cognitivo', descripcion:'Texto '.repeat(40), ideasPrincipales:[], influencias:[], refs:[]};
   const html = renderModelPage(model, [model, {...model, id:'b', label:'Modelo B'}], template);
   assert.equal((html.match(/<h1\b/g) || []).length, 1);
-  assert.ok(html.includes('/escuelas/cognitivo/'));
+  assert.ok(html.includes('/modelos/escuelas/cognitivo/'));
   assert.ok(html.includes('<a href="/modelos/b"'));
   assert.ok(!html.includes('"@type": "Article"'));
   assert.ok(!html.includes('"@type": "Person"'));

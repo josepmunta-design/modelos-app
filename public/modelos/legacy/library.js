@@ -4844,6 +4844,36 @@ function groupingModeForSchool(value){
   return 'school';
 }
 
+function schoolRouteEntry(value){
+  const key = slugify(String(value || '').trim());
+  if (!key) return null;
+  return (GH_SCHOOLS || []).find((entry) => {
+    const id = String(entry?.id || '').trim();
+    const label = String(entry?.label || '').trim();
+    return id === key || slugify(label) === key;
+  }) || null;
+}
+
+function routeStateForSchool(routeId){
+  const entry = schoolRouteEntry(routeId);
+  const label = String(entry?.label || '').trim();
+  if (!entry || !label) return null;
+  const group = groupingModeForSchool(label);
+  if (group === 'collection') return { group, target: collectionDefinitionForSchool(label)?.id || label };
+  if (group === 'epistemology') return { group, target: '' };
+  return { group, target: label };
+}
+
+function routePathForSchool(group, target){
+  let label = '';
+  if (group === 'school') label = String(target || '').trim();
+  else if (group === 'collection') label = collectionSourceLabel(target);
+  else if (group === 'epistemology') label = getEpistemologiaSchoolLabel();
+  const entry = schoolRouteEntry(label);
+  if (!entry?.id) return '';
+  return window.TMPS_MODELOS_I18N?.buildSchoolPath(entry.id) || `/modelos/escuelas/${encodeURIComponent(entry.id)}/`;
+}
+
 function navigationGroupDisplayLabel(value){
   const collection = collectionDefinitionForSchool(value);
   return collection ? collectionDisplayLabel(collection) : (schoolDisplayLabel(value) || String(value || ''));
@@ -15598,6 +15628,8 @@ const atlasLibrary = {
   filters: () => ({ group: listGroupingMode, target: groupingTarget, query: modelSearchQuery }),
   color: colorForSchoolLabel,
   schoolLabel: schoolDisplayLabel,
+  routeForSchool: routeStateForSchool,
+  schoolPathFor: routePathForSchool,
   loadCatalog: ensureAllSchoolsLoadedForGrouping,
   publicModel: ensureModelPublic,
   readJson: async path => {

@@ -2,8 +2,8 @@
   const SUPPORTED_LOCALES = Object.freeze(['es', 'en']);
   const DEFAULT_LOCALE = 'es';
   const ROUTES = Object.freeze({
-    es: Object.freeze({ library: '/modelos/', segment: 'modelos' }),
-    en: Object.freeze({ library: '/en/models/', segment: 'models' })
+    es: Object.freeze({ library: '/modelos/', segment: 'modelos', schools: 'escuelas' }),
+    en: Object.freeze({ library: '/en/models/', segment: 'models', schools: 'schools' })
   });
 
   function detectLocale(pathname = location.pathname) {
@@ -22,7 +22,16 @@
     const segment = ROUTES[locale].segment;
     const segmentIndex = parts.findIndex((part) => part.toLowerCase() === segment);
     if (segmentIndex < 0) return '';
-    return decodeURIComponent(parts[segmentIndex + 1] || '').trim();
+    const candidate = decodeURIComponent(parts[segmentIndex + 1] || '').trim();
+    return candidate.toLowerCase() === ROUTES[locale].schools ? '' : candidate;
+  }
+
+  function getSchoolId(pathname = location.pathname) {
+    const parts = String(pathname || '').split('/').filter(Boolean);
+    const locale = detectLocale(pathname);
+    const segmentIndex = parts.findIndex((part) => part.toLowerCase() === ROUTES[locale].segment);
+    if (segmentIndex < 0 || parts[segmentIndex + 1]?.toLowerCase() !== ROUTES[locale].schools) return '';
+    return decodeURIComponent(parts[segmentIndex + 2] || '').trim();
   }
 
   let messages = {};
@@ -42,6 +51,12 @@
     const cleanId = String(modelId || '').trim();
     const libraryPath = buildLibraryPath(locale);
     return cleanId ? `${libraryPath}${encodeURIComponent(cleanId)}` : libraryPath;
+  }
+
+  function buildSchoolPath(schoolId, locale = currentLocale) {
+    const targetLocale = normalizeLocale(locale);
+    const cleanId = String(schoolId || '').trim();
+    return cleanId ? `${buildLibraryPath(targetLocale)}${ROUTES[targetLocale].schools}/${encodeURIComponent(cleanId)}/` : buildLibraryPath(targetLocale);
   }
 
   function interpolate(message, variables = {}) {
@@ -95,9 +110,11 @@
   function updateLanguageLinks(root = document) {
     const params = new URLSearchParams(location.search || '');
     const modelId = getModelId() || params.get('open') || '';
+    const schoolId = getSchoolId();
     root.querySelectorAll('[data-locale-link]').forEach((link) => {
       const targetLocale = normalizeLocale(link.dataset.localeLink);
-      link.href = buildModelPath(modelId, targetLocale) + (params.toString() ? `?${params}` : '');
+      const targetPath = schoolId ? buildSchoolPath(schoolId, targetLocale) : buildModelPath(modelId, targetLocale);
+      link.href = targetPath + (params.toString() ? `?${params}` : '');
       if (targetLocale === currentLocale) {
         link.setAttribute('aria-current', 'page');
       } else {
@@ -141,8 +158,10 @@
     ready,
     detectLocale,
     getModelId,
+    getSchoolId,
     buildLibraryPath,
     buildModelPath,
+    buildSchoolPath,
     t,
     translateDom,
     updateLanguageLinks

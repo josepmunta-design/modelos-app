@@ -58,7 +58,7 @@ function sitemapUrl(url, alternates = null) {
   ].join('\n');
 }
 
-export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, escuelaIds = [] }) {
+export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale }) {
   const esIds = [...new Set(modelIdsByLocale.es)].sort((a, b) => a.localeCompare(b, 'es'));
   const enIds = [...new Set(modelIdsByLocale.en.filter(id => esIds.includes(id)))].sort((a, b) => a.localeCompare(b, 'en'));
   const enSet = new Set(enIds);
@@ -70,16 +70,10 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, escuelaIds 
     sitemapUrl(`${baseUrl}/`),
     sitemapUrl(libraryAlternates.es, libraryAlternates),
     sitemapUrl(libraryAlternates.en, libraryAlternates),
-    sitemapUrl(`${baseUrl}/escuelas/`),
     // Metamodelos es una pieza editorial larga y autocontenida: no depende de
     // /api/data y responde a busquedas propias ("por que funciona la
     // psicoterapia", "factores comunes"). Faltaba en el sitemap.
     sitemapUrl(`${baseUrl}/metamodelos/`),
-    // Paginas hub por escuela: dan jerarquia a las 260 fichas y posicionan por
-    // los terminos amplios que una ficha suelta no alcanza. La lista viene del
-    // manifiesto del build, no de una constante: una escuela sin modelos no se
-    // genera, y anunciar en el sitemap una URL que da 404 es peor que omitirla.
-    ...[...new Set(escuelaIds)].map((id) => sitemapUrl(`${baseUrl}/escuelas/${encodeURIComponent(id)}/`)),
     ...esIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;
       const en = enSet.has(id) ? `${baseUrl}/en/models/${encodeURIComponent(id)}` : '';
@@ -103,11 +97,9 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale, escuelaIds 
 
 async function buildSeoFiles() {
   const modelIdsByLocale = await readModelIdsByLocale();
-  const manifest = await readJson(GENERATED_MANIFEST_PATH);
   // El corpus no ofrece fechas de modificación editorial de estas páginas.
   // generatedAt solo registra la ejecución: no se usa como lastmod.
-  const escuelaIds = Array.isArray(manifest?.escuelas) ? manifest.escuelas : [];
-  const sitemap = buildSitemap({ modelIdsByLocale, escuelaIds });
+  const sitemap = buildSitemap({ modelIdsByLocale });
 
   // Fail closed: jamás publicar un sitemap con una salida ausente, noindex
   // o cuyo canonical apunta a otra página.
@@ -155,4 +147,3 @@ if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.ar
     process.exitCode = 1;
   });
 }
-

@@ -58,8 +58,7 @@ for (const [locale, ids] of [['es', esIds], ['en', enIds]]) {
 }
 
 for (const id of manifest.escuelas) {
-  const url = `${base}/escuelas/${id}/`;
-  assert.ok(pages.has(url));
+  const url = `${base}/modelos/escuelas/${id}/`;
   assert.ok(pages.get(`${base}/modelos/`).links.some(link => link.href === url), `Escuela huérfana: ${id}`);
 }
 
@@ -75,7 +74,7 @@ while (queue.length) {
 for (const url of urls) assert.ok(reached.has(url), `Huérfana desde la home: ${url}`);
 for (const {links} of pages.values()) for (const link of links) {
   if (link.origin !== base || link.search || link.hash) continue;
-  if (/^\/(?:modelos|en\/models)\/[^/]+$|^\/escuelas\/[^/]+\/$/.test(link.pathname)) {
+  if (/^\/(?:modelos|en\/models)\/[^/]+$/.test(link.pathname)) {
     await fs.access(path.join(root, decodeURIComponent(link.pathname), 'index.html'));
   }
 }
@@ -90,7 +89,7 @@ if (process.env.SEO_CHECK_HTTP) {
   }));
 }
 console.log(`SEO verificado: ${urls.length} URLs canónicas, alcanzables desde HTML; ${esIds.size} ES, ${enIds.size} EN, ${manifest.escuelas.length} escuelas. Sin lastmod artificial.`);
-for (const route of ['/modelos/', '/escuelas/psicoanalisis/', '/modelos/act-hayes-strosahl-wilson-1999']) {
+for (const route of ['/modelos/', '/modelos/act-hayes-strosahl-wilson-1999']) {
   const page = pages.get(base + route);
   if (page) console.log(`${route}: ${page.links.filter(link => link.origin === base).length} enlaces internos, 1 H1.`);
 }

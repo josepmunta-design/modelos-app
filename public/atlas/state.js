@@ -1,31 +1,40 @@
 export const VIEWS = Object.freeze(['list', 'network', 'map', 'genealogy']);
 
-// La biblioteca entra por escuelas: es la lectura util del catalogo, mientras
-// que `all` es el listado completo sin agrupar y vive al final del desplegable.
-export const DEFAULT_GROUP = 'school';
+// La biblioteca limpia abre el catalogo completo. Las escuelas son rutas y
+// filtros de la misma app, no una pantalla intermedia obligatoria.
+export const DEFAULT_GROUP = 'all';
+
+export function schoolIdFromPath(url) {
+  const pathname = new URL(url, 'https://atlas.local').pathname;
+  const match = pathname.match(/^\/(?:modelos\/escuelas|en\/models\/schools)\/([^/]+)\/?$/i);
+  return match ? decodeURIComponent(match[1]).trim() : '';
+}
 
 export function readRoute(url) {
-  const params = new URL(url, 'https://atlas.local').searchParams;
+  const parsed = new URL(url, 'https://atlas.local');
+  const params = parsed.searchParams;
+  const schoolId = schoolIdFromPath(parsed);
   return {
     view: VIEWS.includes(params.get('view')) ? params.get('view') : 'list',
     group: params.get('group') || DEFAULT_GROUP,
-    target: params.get('target') || params.get('school') || '',
+    target: params.get('target') || params.get('school') || schoolId,
     query: params.get('q') || '',
     modelId: params.get('open') || '',
+    schoolId,
   };
 }
 
-export function routeUrl(url, state, libraryPath = '/modelos/') {
+export function routeUrl(url, state, libraryPath = '/modelos/', schoolPath = '') {
   const next = new URL(url, 'https://atlas.local');
-  next.pathname = libraryPath;
+  next.pathname = schoolPath || libraryPath;
   for (const key of ['view', 'group', 'target', 'q', 'open', 'school']) next.searchParams.delete(key);
-  // La vista siempre viaja en la URL: la biblioteca sin `view` es el portal de inicio.
-  next.searchParams.set('view', state.view);
-  // El grupo por defecto se omite de la URL, y cualquier otro se escribe. El
-  // centinela tiene que ser el mismo que lee readRoute: si se omitiera `all`
-  // como antes, al recargar volveria leido como el nuevo defecto.
-  if (state.group !== DEFAULT_GROUP) next.searchParams.set('group', state.group);
-  if (state.target) next.searchParams.set('target', state.target);
+  // La URL limpia ya es la lista. Solo las otras perspectivas necesitan indicar
+  // la vista, tanto en la biblioteca general como en una escuela.
+  if (state.view !== 'list') next.searchParams.set('view', state.view);
+  // El grupo por defecto se omite de la URL; los filtros restantes conservan
+  // URLs compartibles sin convertir la biblioteca limpia en otra portada.
+  if (!schoolPath && state.group !== DEFAULT_GROUP) next.searchParams.set('group', state.group);
+  if (!schoolPath && state.target) next.searchParams.set('target', state.target);
   if (state.query) next.searchParams.set('q', state.query);
   if (state.modelId) next.searchParams.set('open', state.modelId);
   return next.pathname + next.search + next.hash;
@@ -34,7 +43,7 @@ export function routeUrl(url, state, libraryPath = '/modelos/') {
 // A small synchronous store. Transient view state (zoom/scroll/year) stays in
 // the mounted view; URL state is the common, shareable exploration context.
 export function createStore(initial) {
-  let state = Object.freeze({ view: 'list', group: DEFAULT_GROUP, target: '', query: '', modelId: '', ...initial });
+  let state = Object.freeze({ view: 'list', group: DEFAULT_GROUP, target: '', query: '', modelId: '', schoolId: '', ...initial });
   const listeners = new Set();
   return {
     get: () => state,

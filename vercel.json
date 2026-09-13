@@ -13,6 +13,26 @@
       "permanent": true
     },
     {
+      "source": "/escuelas",
+      "destination": "/modelos/",
+      "permanent": true
+    },
+    {
+      "source": "/escuelas/",
+      "destination": "/modelos/",
+      "permanent": true
+    },
+    {
+      "source": "/escuelas/:id",
+      "destination": "/modelos/escuelas/:id/",
+      "permanent": true
+    },
+    {
+      "source": "/escuelas/:id/",
+      "destination": "/modelos/escuelas/:id/",
+      "permanent": true
+    },
+    {
       "source": "/genealogia/index.html",
       "destination": "/genealogia",
       "permanent": true
@@ -28,6 +48,22 @@
       "destination": "/modelos/index.html"
     },
     {
+      "source": "/modelos/escuelas/:id",
+      "destination": "/modelos/index.html"
+    },
+    {
+      "source": "/modelos/escuelas/:id/",
+      "destination": "/modelos/index.html"
+    },
+    {
+      "source": "/en/models/schools/:id",
+      "destination": "/en/models/index.html"
+    },
+    {
+      "source": "/en/models/schools/:id/",
+      "destination": "/en/models/index.html"
+    },
+    {
       "source": "/en/models",
       "destination": "/en/models/index.html"
     },
@@ -38,10 +74,6 @@
     {
       "source": "/en/models/:id",
       "destination": "/en/models/:id/index.html"
-    },
-    {
-      "source": "/escuelas",
-      "destination": "/escuelas/index.html"
     },
     {
       "source": "/procesos",
@@ -72,4 +104,3 @@
     }
   ]
 }
-

@@ -707,7 +707,7 @@ function renderGrupoLink(model, locale) {
   if (model.grupo) {
     const slug = schoolFor(model)?.id;
     partes.push(slug && locale.code === 'es'
-      ? `<a href="/escuelas/${encodeURIComponent(slug)}/">${escapeHtml(model.grupo)}</a>`
+      ? `<a href="/modelos/escuelas/${encodeURIComponent(slug)}/">${escapeHtml(model.grupo)}</a>`
       : escapeHtml(model.grupo));
   }
 
@@ -719,7 +719,7 @@ function modelBreadcrumbs(model, locale) {
   const school = schoolFor(model);
   return [
     { name: locale.code === 'es' ? 'Atlas de la psicoterapia' : 'Atlas of psychotherapy', item: `${BASE_URL}/` },
-    school ? { name: school.titulo, item: `${BASE_URL}/escuelas/${school.id}/` }
+    school ? { name: school.titulo, item: `${BASE_URL}/modelos/escuelas/${school.id}/` }
       : { name: locale.libraryName, item: `${BASE_URL}/${locale.path}/` },
     { name: model.label, item: modelUrl(model.id, locale) }
   ];
