@@ -103,7 +103,7 @@ test('el sitemap deja las escuelas dentro de la app y no publica las rutas antig
   assert.doesNotMatch(xml, /\/escuelas\/sistemico\//);
   assert.doesNotMatch(xml, /\/escuelas\/cognitivo\//);
   assert.doesNotMatch(xml, /\/escuelas\/terapias-expresivas-y-creativas\//);
-  assert.match(xml, /\/metamodelos\//);
+  assert.doesNotMatch(xml, /\/metamodelos\//);
 });
 
 test('el sitemap no anuncia una portada de escuelas independiente', () => {

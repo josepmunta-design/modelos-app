@@ -21,8 +21,7 @@
   const apps = [
     { id: 'modelos', label: isEnglish ? 'Library' : 'Biblioteca', href: isEnglish ? '/en/models/' : '/modelos/' },
     { id: 'genealogia', label: isEnglish ? 'Genealogy' : 'Genealogía', href: '/modelos/?view=genealogy' },
-    { id: 'mapamundi', label: isEnglish ? 'World map' : 'Mapamundi', href: '/modelos/?view=map' },
-    { id: 'metamodelos', label: 'Metamodelos', href: '/metamodelos/' }
+    { id: 'mapamundi', label: isEnglish ? 'World map' : 'Mapamundi', href: '/modelos/?view=map' }
   ];
 
   const path = `${location.pathname.replace(/\/+$/, '')}/`;

@@ -70,10 +70,6 @@ export function buildSitemap({ baseUrl = BASE_URL, modelIdsByLocale }) {
     sitemapUrl(`${baseUrl}/`),
     sitemapUrl(libraryAlternates.es, libraryAlternates),
     sitemapUrl(libraryAlternates.en, libraryAlternates),
-    // Metamodelos es una pieza editorial larga y autocontenida: no depende de
-    // /api/data y responde a busquedas propias ("por que funciona la
-    // psicoterapia", "factores comunes"). Faltaba en el sitemap.
-    sitemapUrl(`${baseUrl}/metamodelos/`),
     ...esIds.map((id) => {
       const es = `${baseUrl}/modelos/${encodeURIComponent(id)}`;
       const en = enSet.has(id) ? `${baseUrl}/en/models/${encodeURIComponent(id)}` : '';

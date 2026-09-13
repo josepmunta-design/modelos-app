@@ -239,7 +239,7 @@ ${renderListaModelos(modelos)}
   </main>
   <footer class="footer">
     <a class="brand" href="/">TU MENTOR <span class="footer-atlas">/ Atlas de la psicoterapia</span></a>
-    <nav aria-label="Otros recursos"><a href="/escuelas/">Escuelas</a><a href="/metamodelos/">Metamodelos ↗</a><a href="/en/models/">English ↗</a></nav>
+    <nav aria-label="Otros recursos"><a href="/escuelas/">Escuelas</a><a href="/en/models/">English ↗</a></nav>
     <span>© 2026 Tu Mentor Psicología</span>
   </footer>
 </body>

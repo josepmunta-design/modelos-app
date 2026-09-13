@@ -637,12 +637,10 @@ function build() {
 
   const foot = element('div', 'pt-foot');
   const links = element('div', 'pt-foot-links');
-  const meta = element('a', null, t('Metamodelos', 'Metamodels'));
-  meta.href = '/metamodelos/';
   const skip = element('a', null, t('Ir directamente a la lista', 'Go straight to the list'));
   skip.href = `${LIBRARY_PATH}?view=list`;
   skip.dataset.view = 'list';
-  links.append(meta, skip);
+  links.append(skip);
   foot.append(links, element('p', null, t('© 2026 Tu Mentor Psicología', '© 2026 Tu Mentor Psicología')));
 
   shell.append(top, main, foot);
