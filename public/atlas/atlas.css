@@ -39,8 +39,8 @@
 .atlas-enabled .atlas-spatial.atlas-filters-open .app > .panel.left { display: block !important; z-index: 610; background: var(--atlas-bg); }
 .atlas-enabled .atlas-spatial.atlas-filters-open .atlas-stage { left: var(--atlas-sidebar-width); }
 .atlas-enabled .atlas-spatial .app > .panel.right { display: none !important; }
-.atlas-enabled .atlas-spatial.atlas-has-selection .app > .panel.right { display: block !important; inset: 0 0 0 auto !important; width: min(500px, 43vw) !important; z-index: 620; background: var(--atlas-bg); border-left: 1px solid var(--atlas-line); box-shadow: -12px 0 40px #0003; }
-.atlas-enabled .atlas-spatial.atlas-has-selection .atlas-stage { right: min(500px, 43vw); }
+.atlas-enabled .atlas-spatial.atlas-profile-open .app > .panel.right { display: block !important; inset: 0 0 0 auto !important; width: min(500px, 43vw) !important; z-index: 620; background: var(--atlas-bg); border-left: 1px solid var(--atlas-line); box-shadow: -12px 0 40px #0003; }
+.atlas-enabled .atlas-spatial.atlas-profile-open .atlas-stage { right: min(500px, 43vw); }
 .atlas-enabled body.model-info-pending.atlas-spatial .app > .panel.right { display:none !important; }
 .atlas-enabled body.model-info-pending.atlas-spatial .atlas-stage { right:0 !important; }
 .atlas-enabled body.model-info-pending :is(.atlas-profile-actions,.modelCloseBtn) { display:none !important; }
@@ -99,7 +99,7 @@
   .atlas-enabled body[data-atlas-view="network"].atlas-filters-open .app > .panel.left { display: block !important; width: min(var(--atlas-sidebar-width), 92vw) !important; z-index: 710; background: var(--atlas-bg); }
   .atlas-enabled .atlas-spatial.atlas-filters-open .app > .panel.left { width: min(var(--atlas-sidebar-width), 92vw) !important; }
   .atlas-enabled .atlas-spatial .atlas-stage { left: 0 !important; right: 0 !important; }
-  .atlas-enabled .atlas-spatial.atlas-has-selection .app > .panel.right { inset: 0 !important; width: 100% !important; }
+  .atlas-enabled .atlas-spatial.atlas-profile-open .app > .panel.right { inset: 0 !important; width: 100% !important; }
   .atlas-enabled body.model-info-pending .app > .panel.right { display:none !important; }
   .atlas-enabled body.model-info-pending:not(.atlas-spatial) .app > .panel.left { display:block !important; }
   .atlas-enabled body.model-info-pending.atlas-spatial .app > .panel.left { display:none !important; }

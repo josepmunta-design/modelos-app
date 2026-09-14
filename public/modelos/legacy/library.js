@@ -15641,6 +15641,11 @@ const atlasLibrary = {
   modelIdFromPath: getModelIdFromPath,
   hideWelcome: () => { try { hideLanding(); } catch {} },
   openModel: id => openModel(id, { updateUrl: false }),
+  dismissProfile: () => {
+    endModelInfoPending();
+    setModelInfoOpen(false); setInfoFullscreen(false); setMobileModelPanelLowered(false);
+    window.__SMH?.hide();
+  },
   closeProfile: () => {
     endModelInfoPending();
     currentModelId = null; window.__CURRENT_MODEL_ID = '';

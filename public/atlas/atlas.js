@@ -17,6 +17,7 @@ export async function mountAtlas(library) {
   const header = document.getElementById('atlasHeader');
   const views = new Map(), loading = new Map();
   let transition = 0, applying = false, refreshQueued = false, profileFocus = null;
+  let profileVisible = !!initial.modelId;
   const labels = { list: text('Lista', 'List'), network: text('Red de afinidades', 'Affinity network'), map: text('Mapamundi', 'World map'), genealogy: text('Genealogía', 'Genealogy') };
   const spatial = () => ['map', 'genealogy'].includes(store.get().view);
 
@@ -32,6 +33,7 @@ export async function mountAtlas(library) {
     document.body.dataset.atlasView = state.view;
     document.body.classList.toggle('atlas-spatial', spatial());
     document.body.classList.toggle('atlas-has-selection', !!state.modelId);
+    document.body.classList.toggle('atlas-profile-open', !!state.modelId && profileVisible);
     header.querySelectorAll('[data-view-mode]').forEach(button => {
       button.classList.toggle('is-active', button.dataset.viewMode === state.view);
       button.setAttribute('aria-pressed', String(button.dataset.viewMode === state.view));
@@ -109,6 +111,7 @@ export async function mountAtlas(library) {
   }
   async function select(id) {
     profileFocus = document.activeElement;
+    profileVisible = true;
     recordSelection(id);
     await library.openModel(id);
     if (store.get().modelId !== id) return;
@@ -116,11 +119,13 @@ export async function mountAtlas(library) {
     if (spatial() && matchMedia('(max-width: 980px)').matches) document.getElementById('atlasCloseProfile').focus();
   }
   function recordSelection(id, history = true) {
+    if (!applying) profileVisible = !!id;
     store.set({ modelId: String(id || '') }); syncControls();
     if (history && !applying) writeHistory();
     views.get(store.get().view)?.view.update(data.filtered(), store.get());
   }
   function closeSelection() {
+    profileVisible = false;
     store.set({ modelId: '' }); library.closeProfile(); syncControls(); writeHistory();
     views.get(store.get().view)?.view.update(data.filtered(), store.get());
     if (profileFocus?.isConnected) profileFocus.focus();
@@ -129,12 +134,21 @@ export async function mountAtlas(library) {
   async function restoreRoute() {
     applying = true;
     const route = routeFromLocation();
+    profileVisible = !!route.modelId;
     store.set(route);
     await library.restoreFilters(route);
     await setView(route.view, { restore: true });
     if (route.modelId && route.view !== 'network') await library.openModel(route.modelId);
     else library.closeProfile();
     syncControls();
+  }
+  function showSelectedInSpatialView(name) {
+    if (store.get().modelId && matchMedia('(max-width: 980px)').matches) {
+      profileVisible = false;
+      library.dismissProfile?.();
+      syncControls();
+    }
+    return setView(name);
   }
   window.TMPS_ATLAS = { setView, recordSelection, closeSelection, select, getState: store.get };
   // The profile stays the same DOM node in every view, including its section
@@ -162,8 +176,8 @@ export async function mountAtlas(library) {
     });
   });
   document.getElementById('atlasMobileView').addEventListener('change', event => setView(event.target.value));
-  document.getElementById('atlasViewMap').addEventListener('click', () => setView('map'));
-  document.getElementById('atlasViewGenealogy').addEventListener('click', () => setView('genealogy'));
+  document.getElementById('atlasViewMap').addEventListener('click', () => showSelectedInSpatialView('map'));
+  document.getElementById('atlasViewGenealogy').addEventListener('click', () => showSelectedInSpatialView('genealogy'));
   document.getElementById('atlasCloseProfile').addEventListener('click', closeSelection);
   document.getElementById('atlasFiltersButton').addEventListener('click', event => {
     if (!spatial() && store.get().view !== 'network' && store.get().modelId && matchMedia('(max-width: 980px)').matches) return closeSelection();
