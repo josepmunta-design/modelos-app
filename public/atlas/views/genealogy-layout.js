@@ -1,9 +1,13 @@
 import { modelYear } from '../data.js';
 
 export const CARD_WIDTH = 168, CARD_HEIGHT = 46, YEAR_SCALE = 26, YEAR_TOP = 170;
+// Seven years of clearance before a lane is reused: matches the vertical air of
+// the original bands (median 214px between cards sharing a lane) without their width.
+const LANE_REUSE = YEAR_SCALE * 7;
 
-// Original Genealogy geometry: real years, symmetric bands and lateral space
-// for incoming/outgoing influence cards. Missing dates never become invented years.
+// Original Genealogy geometry: real years, a symmetric school axis and lateral
+// space for incoming/outgoing influence cards. Cards braid around that axis
+// reusing lanes. Missing dates never become invented years.
 export function layoutGenealogy(models) {
   const dated = models.filter(model => modelYear(model) >= 1890);
   const years = dated.map(modelYear);
@@ -22,15 +26,24 @@ export function layoutGenealogy(models) {
   for (const [label, entries] of [...groups].sort(([a], [b]) => rank(a) - rank(b) || a.localeCompare(b))) {
     const arranged = [...entries].sort((a, b) => modelYear(a) - modelYear(b) || a.label.localeCompare(b.label))
       .map(model => ({ ...model, year: modelYear(model), y: YEAR_TOP + (modelYear(model) - min) * YEAR_SCALE, width: CARD_WIDTH, height: CARD_HEIGHT }));
-    let maxLanes = 1;
-    for (let i = 0; i < arranged.length;) {
-      let j = i + 1;
-      while (j < arranged.length && arranged[j].y - arranged[j - 1].y < CARD_HEIGHT + 12) j++;
-      maxLanes = Math.max(maxLanes, j - i);
-      for (let k = i; k < j; k++) arranged[k].lane = k - i - (j - i - 1) / 2;
-      i = j;
+    // A lane reopens only LANE_REUSE below the card holding it, so a long chain
+    // of consecutive years braids back around the school axis instead of
+    // drifting sideways forever, while columns keep the original breathing room
+    // rather than stacking. The lane closest to the axis wins; ties go to the
+    // one vacant for longest, and new lanes grow alternating sides.
+    const lanes = new Map([[0, -Infinity]]);
+    for (const node of arranged) {
+      let best = null;
+      for (const entry of lanes) {
+        if (node.y - entry[1] < LANE_REUSE) continue;
+        if (!best || Math.abs(entry[0]) < Math.abs(best[0]) || (Math.abs(entry[0]) === Math.abs(best[0]) && entry[1] < best[1])) best = entry;
+      }
+      const used = [...lanes.keys()], low = Math.min(...used), high = Math.max(...used);
+      node.lane = best ? best[0] : (-low <= high ? low - 1 : high + 1);
+      lanes.set(node.lane, node.y);
     }
-    const center = Math.max((maxLanes - 1) / 2 * (CARD_WIDTH + 20) + CARD_WIDTH / 2 + 30, 700);
+    const halfLanes = Math.max(0, ...arranged.map(node => Math.abs(node.lane)));
+    const center = Math.max(halfLanes * (CARD_WIDTH + 20) + CARD_WIDTH / 2 + 30, 700);
     for (const node of arranged) node.x = left + center + node.lane * (CARD_WIDTH + 20) - CARD_WIDTH / 2;
     schools.push({ label, x: left, width: center * 2, center: left + center });
     nodes.push(...arranged); left += center * 2 + 240;
