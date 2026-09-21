@@ -14777,11 +14777,11 @@ body:not(.network-mode) #modelsList .mi-item.active:not(.networkModeCard)::befor
 }
 
 body:not(.network-mode) #modelsList .mi-dependencyGroup{
-  --branchX:22px;
   --branchIndent:36px;
   --childInset:18px;
-  /* Solape deliberado entre tramos: mantiene un unico tronco incluso con zoom o fuentes tardias. */
-  --branchStep:104px;
+  --branchOffset:17px;
+  --branchParentReach:57px;
+  --branchCardHalf:49px;
   --branchLine:color-mix(in srgb, var(--schoolColor, #D9AA3F) 38%, rgba(255,255,255,0.13));
   position:relative;
   display:grid;
@@ -14791,7 +14791,14 @@ body:not(.network-mode) #modelsList .mi-dependencyGroup{
 }
 
 body:not(.network-mode) #modelsList .mi-dependencyGroup::before{
-  content:none;
+  content:"";
+  position:absolute;
+  left:calc(-1 * var(--branchOffset));
+  top:calc(-1 * var(--branchParentReach));
+  bottom:calc(var(--branchCardHalf) + 2px);
+  width:1px;
+  background:var(--branchLine);
+  pointer-events:none;
 }
 
 body:not(.network-mode) #modelsList .mi-item.is-dependent-program{
@@ -14812,20 +14819,11 @@ body:not(.network-mode) #modelsList .mi-item.is-dependent-program{
 body:not(.network-mode) #modelsList .mi-item.is-dependent-program::after{
   content:"";
   position:absolute;
-  left:calc((var(--branchIndent) - var(--branchX) + var(--childInset)) * -1);
-  bottom:50%;
-  width:calc(var(--branchIndent) - var(--branchX) + var(--childInset) - 3px);
-  height:var(--branchStep);
-  border-left:1px solid var(--branchLine);
+  left:calc(-1 * (var(--branchOffset) + var(--childInset)));
+  top:50%;
+  width:calc(var(--branchOffset) + var(--childInset) - 3px);
   border-bottom:1px solid var(--branchLine);
-  border-bottom-left-radius:5px;
-  background:none;
-  box-shadow:-1px 1px 7px color-mix(in srgb, var(--schoolColor, #D9AA3F) 7%, transparent);
   pointer-events:none;
-}
-
-body:not(.network-mode) #modelsList .mi-dependencyGroup > .mi-item.is-dependent-program:first-child::after{
-  height:calc(50% + 12px);
 }
 
 body:not(.network-mode) #modelsList .mi-item.is-dependent-program .mi-shell{
@@ -14985,10 +14983,10 @@ body:not(.network-mode) #modelsList .mi-item.active:not(.networkModeCard) .mi-ye
   }
 
   body:not(.network-mode) #modelsList .mi-dependencyGroup{
-    --branchX:20px;
     --branchIndent:30px;
     --childInset:12px;
-    --branchStep:96px;
+    --branchParentReach:45px;
+    --branchCardHalf:40px;
     gap:5px;
     margin-top:-1px;
   }
@@ -15052,19 +15050,34 @@ body:not(.network-mode) #modelsList .mi-item.is-dependent-program .mi-sub{
 }
 
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup{
-  --branchX:10px;
-  --branchIndent:18px;
-  --childInset:8px;
-  margin-left:18px;
+  --childInset:14px;
+  --branchParentReach:53px;
+  margin-left:24px;
+}
+
+body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup::after{
+  content:"";
+  position:absolute;
+  left:calc(-1 * var(--branchOffset));
+  top:calc(-1 * var(--branchParentReach));
+  width:11px;
+  border-bottom:1px solid var(--branchLine);
+  pointer-events:none;
 }
 
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup > .mi-item.is-dependent-program{
-  width:calc(100% - 8px);
+  width:calc(100% - 14px);
 }
 
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup .mi-titleWrap,
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup .mi-sub{
   padding-right:34px;
+}
+
+@media (max-width: 980px){
+  body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup{
+    --branchParentReach:45px;
+  }
 }
 
 /* =========================
