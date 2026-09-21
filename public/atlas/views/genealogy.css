@@ -53,6 +53,11 @@
 .atlas-view-genealogy [role="button"]:focus-visible .cross-card-bg { stroke:var(--atlas-accent); stroke-width:3; stroke-opacity:1; }
 .theme-light .atlas-view-genealogy .tnode.lit .node-card { stroke:#635024; }
 .atlas-view-genealogy .atlas-genealogy-scroll { touch-action:pan-x pan-y; }
+.atlas-view-genealogy .atlas-genealogy-scroll,
+.atlas-view-genealogy .atlas-genealogy-scroll * {
+  -webkit-user-select: none;
+  user-select: none;
+}
 
 .genealogy-minimap { position:absolute; right:20px; bottom:48px; z-index:40; width:460px; max-width:calc(100% - 40px); color:var(--atlas-ink); background:linear-gradient(155deg,#101411f5,#0c100ef5); border:1px solid color-mix(in srgb,var(--atlas-accent) 28%,var(--atlas-line)); border-radius:13px; box-shadow:0 14px 38px #0005,inset 0 1px 0 #ffffff05; backdrop-filter:blur(18px); overflow:hidden; }
 .genealogy-minimap summary { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:12px 14px 4px; color:var(--atlas-accent); font:600 10px 'Hanken Grotesk',sans-serif; letter-spacing:.17em; text-transform:uppercase; cursor:pointer; list-style:none; }
