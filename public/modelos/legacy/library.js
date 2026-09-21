@@ -6626,20 +6626,25 @@ function buildModelListItemMarkup(model, options = {}){
     ? ` data-pende="${escapeHtml(getModelDependencyParentId(model))}"`
     : '';
   const authorText = escapeHtml(model.autores ?? '-');
+  const fullLabel = String(model.label ?? '-');
+  const nestedAcronym = options.depth > 1
+    ? (String(model.templabel ?? '').trim() || fullLabel.match(/\(([A-Z][A-Z0-9-]{1,9})\)$/)?.[1])
+    : '';
+  const visibleLabel = nestedAcronym || fullLabel;
   const isEpistemologiaList = isEpistemologiaListMode();
   const avatarHtml = isEpistemologiaList
     ? `<div class="mi-avatarFallback" aria-hidden="true">${escapeHtml(getAuthorInitials(model?.autores))}</div>`
     : buildModelCardAvatarHtml(model);
 
   return `
-  <a href="${buildModelPath(model.id)}" class="mi-item ${active} ${marcoClass} ${dependentClass}" data-id="${safeId}"${pendeAttr} style="--schoolColor:${escapeHtml(schoolColor)}">
+  <a href="${buildModelPath(model.id)}" class="mi-item ${active} ${marcoClass} ${dependentClass}" data-id="${safeId}"${pendeAttr} title="${escapeHtml(fullLabel)}" style="--schoolColor:${escapeHtml(schoolColor)}">
     <div class="mi-shell">
       <div class="mi-avatar">${avatarHtml}</div>
       <div class="mi-body">
         <div class="mi-top">
           <div class="mi-titleWrap">
             <span class="mi-accentDot" aria-hidden="true"></span>
-            <div class="mi-title">${escapeHtml(model.label ?? '-')}</div>
+            <div class="mi-title">${escapeHtml(visibleLabel)}</div>
           </div>
           <div class="mi-meta">
             <div class="mi-year">${escapeHtml(model.year ?? '-')}</div>
@@ -6650,6 +6655,20 @@ function buildModelListItemMarkup(model, options = {}){
     </div>
   </a>
 `;
+}
+
+function buildModelBranchMarkup(model, childrenByParent, depth = 0, ancestors = new Set()){
+  const id = String(model?.id ?? '').trim();
+  const card = buildModelListItemMarkup(model, { dependent: depth > 0, depth });
+  if (!id || ancestors.has(id)) return card;
+
+  const nextAncestors = new Set(ancestors);
+  nextAncestors.add(id);
+  const children = (childrenByParent.get(id) || [])
+    .filter((child) => !nextAncestors.has(String(child?.id ?? '').trim()));
+  if (!children.length) return card;
+
+  return card + `<div class="mi-dependencyGroup" data-parent-id="${escapeHtml(id)}" data-depth="${depth + 1}" style="--schoolColor:${escapeHtml(colorForSchoolLabel(model.grupo))}">${children.map((child) => buildModelBranchMarkup(child, childrenByParent, depth + 1, nextAncestors)).join('')}</div>`;
 }
 
 function buildModelSectionsMarkup(list){
@@ -6674,14 +6693,7 @@ function buildModelSectionsMarkup(list){
             <span class="mi-sectionLabel">${escapeHtml(section.label)}</span>
             <span class="mi-sectionLine"></span>
           </div>
-          ${rows.map((model) => {
-            const parentId = String(model?.id ?? '').trim();
-            const children = childrenByParent.get(parentId) || [];
-            const childMarkup = children.length
-              ? `<div class="mi-dependencyGroup" data-parent-id="${escapeHtml(parentId)}" style="--schoolColor:${escapeHtml(colorForSchoolLabel(model.grupo))}">${children.map((child) => buildModelListItemMarkup(child, { dependent:true })).join('')}</div>`
-              : '';
-            return buildModelListItemMarkup(model) + childMarkup;
-          }).join('')}
+          ${rows.map((model) => buildModelBranchMarkup(model, childrenByParent)).join('')}
         </section>
       `;
     })

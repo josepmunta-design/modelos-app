@@ -15051,6 +15051,22 @@ body:not(.network-mode) #modelsList .mi-item.is-dependent-program .mi-sub{
   }
 }
 
+body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup{
+  --branchX:10px;
+  --branchIndent:18px;
+  --childInset:8px;
+  margin-left:18px;
+}
+
+body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup > .mi-item.is-dependent-program{
+  width:calc(100% - 8px);
+}
+
+body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup .mi-titleWrap,
+body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup .mi-sub{
+  padding-right:34px;
+}
+
 /* =========================
    Textura film en graficos inferiores
    ========================= */
