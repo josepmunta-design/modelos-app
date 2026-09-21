@@ -40,10 +40,20 @@ export async function createView(host, context) {
     host.querySelector('[data-zoom]').textContent = `${Math.round(zoom * 100)}%`;
     minimap.sync();
   }
+  function zoomAt(nextZoom, clientX, clientY, anchor) {
+    const bounds = scroll.getBoundingClientRect();
+    const x = clientX - bounds.left, y = clientY - bounds.top;
+    const worldX = anchor?.x ?? (scroll.scrollLeft + x) / zoom;
+    const worldY = anchor?.y ?? (scroll.scrollTop + y) / zoom;
+    zoom = Math.max(.3, Math.min(1.7, nextZoom));
+    scale();
+    scroll.scrollLeft = worldX * zoom - x;
+    scroll.scrollTop = worldY * zoom - y;
+    minimap.sync();
+  }
   function zoomBy(factor) {
-    const previous = zoom; zoom = Math.max(.3, Math.min(1.7, zoom * factor)); scale();
-    scroll.scrollLeft = (scroll.scrollLeft + scroll.clientWidth / 2) * zoom / previous - scroll.clientWidth / 2;
-    scroll.scrollTop = (scroll.scrollTop + scroll.clientHeight / 2) * zoom / previous - scroll.clientHeight / 2;
+    const bounds = scroll.getBoundingClientRect();
+    zoomAt(zoom * factor, bounds.left + scroll.clientWidth / 2, bounds.top + scroll.clientHeight / 2);
   }
   function focus(id = interaction?.pinned || selectedId) {
     const node = layout?.nodes.find(model => model.id === id);
@@ -167,6 +177,34 @@ export async function createView(host, context) {
     const first = layout.nodes.find(node => node.grupo === event.target.value);
     if (school) scroll.scrollTo({ left: school.center * zoom - scroll.clientWidth / 2, top: first ? Math.max(0, first.y * zoom - 120) : 0, behavior: 'auto' });
   });
+  scroll.addEventListener('wheel', event => {
+    if (!active || !layout || !event.deltaY) return;
+    event.preventDefault();
+    const pixels = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroll.clientHeight : 1);
+    zoomAt(zoom * Math.exp(-pixels * .002), event.clientX, event.clientY);
+  }, { passive: false });
+  let pinch;
+  scroll.addEventListener('touchstart', event => {
+    if (event.touches.length !== 2) { pinch = null; return; }
+    const [first, second] = event.touches;
+    const distance = Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+    if (!distance) return;
+    const bounds = scroll.getBoundingClientRect();
+    const x = (first.clientX + second.clientX) / 2 - bounds.left;
+    const y = (first.clientY + second.clientY) / 2 - bounds.top;
+    pinch = { distance, zoom, anchor: { x: (scroll.scrollLeft + x) / zoom, y: (scroll.scrollTop + y) / zoom } };
+    scroll._suppressClick = true;
+  }, { passive: true });
+  scroll.addEventListener('touchmove', event => {
+    if (!pinch || event.touches.length !== 2) return;
+    event.preventDefault();
+    const [first, second] = event.touches;
+    const distance = Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
+    if (distance) zoomAt(pinch.zoom * distance / pinch.distance,
+      (first.clientX + second.clientX) / 2, (first.clientY + second.clientY) / 2, pinch.anchor);
+  }, { passive: false });
+  scroll.addEventListener('touchend', event => { if (event.touches.length < 2) pinch = null; });
+  scroll.addEventListener('touchcancel', () => { pinch = null; });
   let drag;
   scroll.addEventListener('pointerdown', event => {
     if (event.pointerType !== 'mouse' || event.button !== 0 || event.target.closest('[role="button"],.cross-card')) return;
