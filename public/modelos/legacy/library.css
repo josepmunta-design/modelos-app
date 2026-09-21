@@ -14780,7 +14780,7 @@ body:not(.network-mode) #modelsList .mi-dependencyGroup{
   --branchIndent:36px;
   --childInset:18px;
   --branchOffset:17px;
-  --branchParentReach:57px;
+  --branchParentReach:7px;
   --branchCardHalf:49px;
   --branchLine:color-mix(in srgb, var(--schoolColor, #D9AA3F) 38%, rgba(255,255,255,0.13));
   position:relative;
@@ -14985,7 +14985,7 @@ body:not(.network-mode) #modelsList .mi-item.active:not(.networkModeCard) .mi-ye
   body:not(.network-mode) #modelsList .mi-dependencyGroup{
     --branchIndent:30px;
     --childInset:12px;
-    --branchParentReach:45px;
+    --branchParentReach:4px;
     --branchCardHalf:40px;
     gap:5px;
     margin-top:-1px;
@@ -15051,7 +15051,7 @@ body:not(.network-mode) #modelsList .mi-item.is-dependent-program .mi-sub{
 
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup{
   --childInset:14px;
-  --branchParentReach:53px;
+  --branchParentReach:3px;
   margin-left:24px;
 }
 
@@ -15072,12 +15072,6 @@ body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup > .m
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup .mi-titleWrap,
 body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup .mi-sub{
   padding-right:34px;
-}
-
-@media (max-width: 980px){
-  body:not(.network-mode) #modelsList .mi-dependencyGroup .mi-dependencyGroup{
-    --branchParentReach:45px;
-  }
 }
 
 /* =========================
