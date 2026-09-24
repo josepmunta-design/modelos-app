@@ -1329,13 +1329,13 @@
          "nombre": "Detectar excepción funcional"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_excepcion_recurso",
          "tipo": "micro",
          "nombre": "Convertir excepción en recurso"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_revision_literal",
          "tipo": "micro",
          "nombre": "Revisión literal del cumplimiento"
@@ -5006,13 +5006,13 @@
          "nombre": "Pregunta por regla implícita"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_pregunta_intentos",
          "tipo": "micro",
          "nombre": "Pregunta por lo que ya se ha intentado"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_dialogo_estrategico",
          "tipo": "procedimiento",
          "nombre": "Diálogo estratégico"
@@ -7318,7 +7318,7 @@
          "nombre": "Señalar un punto de resistencia"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_pregunta_alternativa",
          "tipo": "micro",
          "nombre": "Pregunta de alternativa estratégica"
@@ -10788,13 +10788,13 @@
          "nombre": "Profundización experiencial de la vulnerabilidad"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_trampa_solucion",
          "tipo": "micro",
          "nombre": "Nombrar la trampa de la solución"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_logica_perceptivo_reactiva",
          "tipo": "procedimiento",
          "nombre": "Reconstrucción de la lógica perceptivo-reactiva"
@@ -12582,7 +12582,7 @@
          "nombre": "Normalización de la necesidad de apego"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_normalizacion_retroceso",
          "tipo": "micro",
          "nombre": "Normalización del retroceso"
@@ -13033,7 +13033,7 @@
          "nombre": "Uso de metáfora de la danza"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_metafora_estrategica",
          "tipo": "micro",
          "nombre": "Uso de metáfora estratégica"
@@ -13684,13 +13684,13 @@
          "nombre": "Reformulación relacional del síntoma"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_silencio_estrategico",
          "tipo": "micro",
          "nombre": "Silencio estratégico"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_reformulacion_estrategica",
          "tipo": "procedimiento",
          "nombre": "Reformulación estratégica del síntoma"
@@ -17205,13 +17205,13 @@
          "nombre": "Micro-reparación guiada"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_resistencia_proteccion",
          "tipo": "micro",
          "nombre": "Redefinir resistencia como protección"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_dialogo_estrategico",
          "tipo": "procedimiento",
          "nombre": "Diálogo estratégico"
@@ -18741,7 +18741,7 @@
          "nombre": "Programas encadenados"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_peor_fantasia",
          "tipo": "procedimiento",
          "nombre": "Peor fantasía"
@@ -19552,7 +19552,7 @@
          "nombre": "Suavización del miembro perseguidor o crítico"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_permiso_limitado_sintoma",
          "tipo": "micro",
          "nombre": "Permiso limitado al síntoma"
@@ -23005,13 +23005,13 @@
          "nombre": "Ejercicios de vergüenza deliberada"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_violacion_evitacion",
          "tipo": "micro",
          "nombre": "Pequeña violación de la evitación"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_bloqueo_evitacion",
          "tipo": "procedimiento",
          "nombre": "Bloqueo estratégico de evitaciones"
@@ -26433,7 +26433,7 @@
          "nombre": "Asignación de tareas entre sesiones (homework multimodal)"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_prescripcion_directa",
          "tipo": "procedimiento",
          "nombre": "Prescripción estratégica directa"
@@ -26989,7 +26989,7 @@
          "nombre": "Analiza el goce y sus fijaciones"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_prescripcion_paradojica",
          "tipo": "procedimiento",
          "nombre": "Prescripción paradójica del síntoma"
@@ -27093,13 +27093,13 @@
          "nombre": "The question"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_aplazar_compulsion",
          "tipo": "micro",
          "nombre": "Aplazar una compulsión"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_ritualizacion_compulsiones",
          "tipo": "procedimiento",
          "nombre": "Ritualización y aplazamiento de compulsiones"
@@ -28927,43 +28927,43 @@
          "nombre": "Interrupción conductual de la rumiación"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_formato_ritual",
          "tipo": "micro",
          "nombre": "Prescripción en formato ritual"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_intensificacion_graduada",
          "tipo": "micro",
          "nombre": "Intensificación estratégica graduada"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_resistencia_proteccion",
          "tipo": "micro",
          "nombre": "Redefinir resistencia como protección"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_evaluacion_maniobra",
          "tipo": "procedimiento",
          "nombre": "Evaluación del efecto de la maniobra"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_patrones_relacionales",
          "tipo": "procedimiento",
          "nombre": "Intervención estratégica en patrones relacionales"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_prescripcion_indirecta",
          "tipo": "procedimiento",
          "nombre": "Prescripción indirecta y rodeo de la resistencia"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_tareas_simbolicas",
          "tipo": "procedimiento",
          "nombre": "Tareas simbólicas de cambio perceptivo"
@@ -29760,7 +29760,7 @@
          "nombre": "Detectar refuerzo diferencial del terapeuta"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_registro_efecto_tarea",
          "tipo": "micro",
          "nombre": "Registro del efecto de la tarea"
@@ -30807,7 +30807,7 @@
          "nombre": "Suavización del miembro perseguidor o crítico"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_interrupcion_tranquilizaciones",
          "tipo": "procedimiento",
          "nombre": "Interrupción de tranquilizaciones y comprobaciones"
@@ -33903,13 +33903,13 @@
          "nombre": "Mapa de ciclos relacionales (secuencia acción–reacción)"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_patrones_relacionales",
          "tipo": "procedimiento",
          "nombre": "Intervención estratégica en patrones relacionales"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_soluciones_intentadas",
          "tipo": "procedimiento",
          "nombre": "Análisis de soluciones intentadas"
@@ -37252,7 +37252,7 @@
          "nombre": "Pregunta por regla implícita"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_bloqueo_tranquilizacion_familiar",
          "tipo": "micro",
          "nombre": "Bloqueo de tranquilización familiar"
@@ -42258,7 +42258,7 @@
          "nombre": "Consolidación y prevención de recaídas"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_pregunta_recaida",
          "tipo": "micro",
          "nombre": "Pregunta de recaída estratégica"
@@ -44341,37 +44341,37 @@
          "nombre": "Evaluación de la alianza, seguridad y viabilidad del trabajo de pareja"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_aforismo_cierre",
          "tipo": "micro",
          "nombre": "Aforismo de cierre"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_permiso_limitado_sintoma",
          "tipo": "micro",
          "nombre": "Permiso limitado al síntoma"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_consolidacion_cambio",
          "tipo": "procedimiento",
          "nombre": "Consolidación y atribución estratégica del cambio"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_definicion_operativa",
          "tipo": "procedimiento",
          "nombre": "Definición operativa del problema"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_evaluacion_maniobra",
          "tipo": "procedimiento",
          "nombre": "Evaluación del efecto de la maniobra"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "p_nardone_prevencion_recaidas",
          "tipo": "procedimiento",
          "nombre": "Prevención estratégica de recaídas"
@@ -45961,7 +45961,7 @@
          "nombre": "Disputa racional multimodal"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_desvelamiento_gradual",
          "tipo": "micro",
          "nombre": "Desvelamiento gradual de la lógica de cambio"
@@ -47548,7 +47548,7 @@
          "nombre": "Definir un siguiente paso conductual mínimo"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_prohibir_prohibicion",
          "tipo": "micro",
          "nombre": "Prohibir la prohibición"
@@ -50871,7 +50871,7 @@
          "nombre": "Preparación del mensaje vulnerable"
         },
         {
-         "modeloId": "s21nardone",
+         "modeloId": "terapia-estrategica-breve-nardone",
          "codigo": "m_nardone_prohibir_prohibicion",
          "tipo": "micro",
          "nombre": "Prohibir la prohibición"
@@ -54677,13 +54677,13 @@
    "nombre": "Exploración narrativa de identidad relacional"
   },
   {
-   "modeloId": "s21nardone",
+   "modeloId": "terapia-estrategica-breve-nardone",
    "codigo": "m_nardone_contar_no_controlar",
    "tipo": "micro",
    "nombre": "Contar en lugar de controlar"
   },
   {
-   "modeloId": "s21nardone",
+   "modeloId": "terapia-estrategica-breve-nardone",
    "codigo": "m_nardone_parafrasis_reestructurante",
    "tipo": "micro",
    "nombre": "Paráfrasis reestructurante"
