@@ -13057,6 +13057,7 @@ const authorHTML =
           </div>
         </div>
         ${funcionamientoHtml}
+        ${!isPublicRender ? renderCasoIlustrativo(m) : ''}
         <div class="ed-influences">
           <div class="ed-lineage">
             <h4>${escapeHtml(uiText('fiche.theoreticalLineage', 'Linaje teórico'))}</h4>
@@ -13455,6 +13456,49 @@ function renderFuncionamiento(model){
       <span>${escapeHtml(uiText('fiche.inPractice', 'En la práctica'))}</span>
       <p>${escapeHtml(example)}</p>
     </div>` : ''}
+  </section>`;
+}
+
+function renderCasoIlustrativo(model){
+  const data = model?.casoIlustrativo;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return '';
+  const titulo = typeof data.titulo === 'string' ? data.titulo.trim() : '';
+  const escenas = Array.isArray(data.escenas)
+    ? data.escenas.filter(escena => escena && typeof escena.titulo === 'string' && escena.titulo.trim())
+    : [];
+  if (!titulo || !escenas.length) return '';
+
+  const texto = value => escapeHtml(typeof value === 'string' ? value.trim() : '');
+  return `<section class="ed-case" aria-labelledby="ed-case-title">
+    <div class="ed-case-head">
+      <p class="ed-case-kicker">${escapeHtml(uiText('fiche.illustrativeCase', 'Caso ilustrativo'))}</p>
+      <div>
+        <h3 id="ed-case-title">${texto(titulo)}</h3>
+        ${data.resumen ? `<p class="ed-case-summary">${texto(data.resumen)}</p>` : ''}
+      </div>
+    </div>
+    <details class="ed-case-details">
+      <summary>${escapeHtml(uiText('fiche.readFullCase', 'Leer el caso completo'))}<span aria-hidden="true"></span></summary>
+      <div class="ed-case-content">
+        ${data.situacion ? `<p class="ed-case-situation">${texto(data.situacion)}</p>` : ''}
+        <ol class="ed-case-scenes">${escenas.map((escena, index) => {
+          const parrafos = Array.isArray(escena.parrafos) ? escena.parrafos : [];
+          return `<li class="ed-case-scene">
+            <span class="ed-case-number">${String(index + 1).padStart(2, '0')}</span>
+            <div class="ed-case-scene-body">
+              <h4>${texto(escena.titulo)}</h4>
+              ${parrafos.map(parrafo => {
+                const body = typeof parrafo === 'string' ? parrafo : parrafo?.texto;
+                return body ? `<p>${texto(body)}</p>` : '';
+              }).join('')}
+              ${escena.lectura ? `<aside class="ed-case-reading"><span>${escapeHtml(uiText('fiche.caseReading', 'Lectura del modelo'))}</span><p>${texto(escena.lectura)}</p></aside>` : ''}
+            </div>
+          </li>`;
+        }).join('')}</ol>
+        ${data.cierre ? `<div class="ed-case-close"><span>${escapeHtml(uiText('fiche.caseInSummary', 'Qué muestra el caso'))}</span><p>${texto(data.cierre)}</p></div>` : ''}
+        ${data.nota ? `<p class="ed-case-note">${texto(data.nota)}</p>` : ''}
+      </div>
+    </details>
   </section>`;
 }
 
