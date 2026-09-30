@@ -69,6 +69,17 @@ test('la página inglesa genera metadatos, hreflang y el artículo indexable loc
   assert.doesNotMatch(html, /<noscript>/);
 });
 
+test('el resumen claro aparece solo en modelos que lo incluyen', () => {
+  const summary = 'A plain-language introduction to this model and what it proposes.';
+  const withSummary = renderModelPage({ ...MODEL, resumenClaro: summary }, [MODEL], TEMPLATE, 'en', new Set([MODEL.id]));
+  const withoutSummary = renderModelPage(MODEL, [MODEL], TEMPLATE, 'en', new Set([MODEL.id]));
+
+  assert.match(withSummary, new RegExp(`<p>${summary}</p>`));
+  assert.match(withSummary, /name="description" content="A plain-language introduction/);
+  assert.doesNotMatch(withoutSummary, /A plain-language introduction/);
+  assert.match(withoutSummary, /name="description" content="This reviewed English description/);
+});
+
 test('la portada inglesa se genera como página estática indexable', () => {
   const html = renderEnglishLibraryPage(TEMPLATE);
   assert.match(html, /<html lang="en" data-translation-status="reviewed">/);

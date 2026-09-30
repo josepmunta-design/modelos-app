@@ -13009,6 +13009,8 @@ const authorHTML =
   const epistemicNoteHtml = renderNotaEpistemologica(m);
   const changeTheorySummary = getChangeTheorySummaryText(m);
   const changeTheoryExplanation = getChangeTheoryExplanationText(m);
+  const resumenClaro = typeof m.resumenClaro === 'string' ? m.resumenClaro.trim() : '';
+  const funcionamientoHtml = renderFuncionamiento(m);
   const descAsideHtml = headerLifeImageUrl ? '' : influencesHtml + epistemicNoteHtml;
   const influencesBelowHtml = headerLifeImageUrl ? influencesHtml + epistemicNoteHtml : '';
   const mainControversiaHtml = renderControversia(m, { editorial:true });
@@ -13042,9 +13044,19 @@ const authorHTML =
             <p class="ed-changeSummary-text">${escapeHtml(changeTheorySummary || quoteRaw || m.definicionBreve || uiText('fiche.changeSummaryFallback', 'El cambio se comprende desde los principios centrales del modelo.'))}</p>
           </aside>
           <div class="ed-modelDescription">
-            <p class="ed-lead">${escapeHtml(m.descripcion ?? '—')}</p>
+            ${resumenClaro ? `
+              <div class="ed-quickRead">
+                <p class="ed-quickRead-kicker">${escapeHtml(uiText('fiche.inBrief', 'En pocas palabras'))}</p>
+                <p class="ed-quickRead-text">${escapeHtml(resumenClaro)}</p>
+              </div>
+              <details class="ed-longRead">
+                <summary>${escapeHtml(uiText('fiche.fullDescription', 'Descripción completa'))}</summary>
+                <div class="ed-longRead-body"><p class="ed-lead">${escapeHtml(m.descripcion ?? '—')}</p></div>
+              </details>`
+            : `<p class="ed-lead">${escapeHtml(m.descripcion ?? '—')}</p>`}
           </div>
         </div>
+        ${funcionamientoHtml}
         <div class="ed-influences">
           <div class="ed-lineage">
             <h4>${escapeHtml(uiText('fiche.theoreticalLineage', 'Linaje teórico'))}</h4>
@@ -13412,6 +13424,38 @@ function getChangeTheoryExplanationText(model){
       'body'
     ]) ?? ''
   ).trim();
+}
+
+function renderFuncionamiento(model){
+  const data = model?.funcionamiento;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return '';
+
+  const steps = [
+    ['queMantieneElProblema', 'fiche.whatMaintainsProblem', 'Qué mantiene el problema'],
+    ['queSeTrabaja', 'fiche.whatIsWorkedOn', 'Qué se trabaja'],
+    ['senalDeCambio', 'fiche.signOfChange', 'Señal de cambio']
+  ].map(([key, translationKey, fallback]) => ({
+    text: typeof data[key] === 'string' ? data[key].trim() : '',
+    label: uiText(translationKey, fallback)
+  })).filter(item => item.text);
+  const example = typeof data.ejemplo === 'string' ? data.ejemplo.trim() : '';
+  if (!steps.length && !example) return '';
+
+  return `<section class="ed-functioning" aria-labelledby="ed-functioning-title">
+    <div class="ed-functioning-head">
+      <p class="ed-functioning-kicker">${escapeHtml(uiText('fiche.fromProblemToChange', 'Del problema al cambio'))}</p>
+      <h3 id="ed-functioning-title">${escapeHtml(uiText('fiche.howItWorks', 'Cómo funciona'))}</h3>
+    </div>
+    ${steps.length ? `<ol class="ed-functioning-steps">${steps.map((item, index) => `
+      <li><span class="ed-functioning-number">${String(index + 1).padStart(2, '0')}</span><div>
+        <h4>${escapeHtml(item.label)}</h4>
+        <p>${escapeHtml(item.text)}</p>
+      </div></li>`).join('')}</ol>` : ''}
+    ${example ? `<div class="ed-functioning-example">
+      <span>${escapeHtml(uiText('fiche.inPractice', 'En la práctica'))}</span>
+      <p>${escapeHtml(example)}</p>
+    </div>` : ''}
+  </section>`;
 }
 
 function renderChangeTheorySection(model, mapHtml = ''){

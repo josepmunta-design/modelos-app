@@ -734,6 +734,7 @@ function renderSeoArticle(model, related, locale) {
       <p>${renderGrupoLink(model, locale)}</p>
       <h1>${escapeHtml(model.label)}</h1>
       ${model.frase ? `<blockquote>${escapeHtml(model.frase)}</blockquote>` : ''}
+      ${model.resumenClaro ? `<p>${escapeHtml(model.resumenClaro)}</p>` : ''}
       <p>${escapeHtml(model.descripcion)}</p>
       ${theory ? `<section><h2>${escapeHtml(locale.theory)}</h2><p>${escapeHtml(theory)}</p></section>` : ''}
       ${ideas.length ? `<section><h2>${escapeHtml(locale.ideas)}</h2><ol>${ideas.map((idea) => renderIdea(idea, locale)).join('')}</ol></section>` : ''}
@@ -747,7 +748,7 @@ export function renderModelPage(model, allModels, interactiveTemplate, localeCod
   const locale = LOCALES[localeCode];
   if (!locale) throw new Error(`Locale no soportado: ${localeCode}`);
   const url = modelUrl(model.id, locale);
-  const description = truncateText(model.descripcion, 158);
+  const description = truncateText(model.resumenClaro || model.descripcion, 158);
   const title = `${model.label} | ${locale.pageSuffix}`;
   const related = relatedModelsFor(model, allModels, localeCode);
   if (localeCode === 'en' && related.length < 4) {
