@@ -7170,6 +7170,7 @@ function baseListByGroupingMode(mode = groupingMode){
   if (mode === 'all'){
     return MODELS
       .filter(isTherapyModel)
+      .filter((model) => !!normSchoolName(modelSearchQuery) || collectionDefinitionForSchool(model?.grupo)?.id !== 'frontiers')
       .sort((a,b) =>
         (+a.year||0) - (+b.year||0) ||
         String(a.label || '').localeCompare(String(b.label || ''), MODELOS_LOCALE)
@@ -7921,6 +7922,11 @@ function renderModelsList(){
   const baseList = baseListByGroupingMode();
   const list = getAtlasFilteredModels();
 
+  if (groupingMode === 'all' && modelInfoEl?.querySelector('[data-all-models-overview]')){
+    modelInfoEl.innerHTML = renderAllModelsOverviewHtml();
+    bindEditorialModelTimeline(modelInfoEl);
+  }
+
   modelsListEl.style.setProperty(
     '--schoolColor',
     groupingMode === 'tags' ? TAG_FILTER_COLOR : (groupingMode === 'all' ? '#D9AA3F' : colorForSchoolLabel(currentSchool))
@@ -8543,9 +8549,7 @@ if (window.__SMH){
 }
 
 function renderAllModelsOverviewHtml(){
-  const models = MODELS
-    .filter(isTherapyModel)
-    .sort((a,b) => (+a.year||0) - (+b.year||0));
+  const models = getAtlasFilteredModels();
   const datedModels = models.filter((model) => Number(model?.year) > 0);
   const first = datedModels[0] || null;
   const latest = datedModels[datedModels.length - 1] || null;
@@ -8593,7 +8597,7 @@ function renderAllModelsOverviewHtml(){
   });
 
   return `
-    <article class="school-editorial tags-editorial" style="--schoolColor:#D9AA3F">
+    <article class="school-editorial tags-editorial" data-all-models-overview style="--schoolColor:#D9AA3F">
       <div class="school-editorialHero">
         <div class="school-editorialMain">
           <p class="school-editorialKicker">${escapeHtml(uiText('overview.all.kicker', 'Biblioteca completa'))}</p>
